@@ -1,0 +1,256 @@
+C:\Users\henri\PycharmProjects\semantic-aware-process-mining-distances\venv\Scripts\python.exe C:\Users\henri\PycharmProjects\semantic-aware-process-mining-distances\experimental_scripts\analyse_probabilities_and_occurrences_of_activities.py
+2025-02-28 14:39:45.037674: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-02-28 14:39:45.732079: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+parsing log, completed traces :: 100%|██████████| 13087/13087 [00:03<00:00, 3962.00it/s]
+parsing log, completed traces :: 100%|██████████| 13087/13087 [00:01<00:00, 9551.03it/s]
+parsing log, completed traces :: 100%|██████████| 13087/13087 [00:03<00:00, 4280.41it/s]
+parsing log, completed traces :: 100%|██████████| 5015/5015 [00:00<00:00, 8460.40it/s]
+parsing log, completed traces :: 100%|██████████| 9658/9658 [00:03<00:00, 3114.39it/s]
+parsing log, completed traces :: 100%|██████████| 9658/9658 [00:01<00:00, 6395.43it/s]
+parsing log, completed traces :: 100%|██████████| 1487/1487 [00:00<00:00, 12412.07it/s]
+parsing log, completed traces :: 100%|██████████| 7554/7554 [00:02<00:00, 3390.46it/s]
+parsing log, completed traces :: 100%|██████████| 819/819 [00:00<00:00, 11284.97it/s]
+parsing log, completed traces :: 100%|██████████| 1199/1199 [00:01<00:00, 669.88it/s]
+parsing log, completed traces :: 100%|██████████| 832/832 [00:01<00:00, 548.36it/s]
+parsing log, completed traces :: 100%|██████████| 1409/1409 [00:02<00:00, 697.82it/s]
+parsing log, completed traces :: 100%|██████████| 1053/1053 [00:01<00:00, 723.51it/s]
+parsing log, completed traces :: 100%|██████████| 1156/1156 [00:01<00:00, 596.54it/s]
+parsing log, completed traces :: 100%|██████████| 31509/31509 [00:25<00:00, 1258.31it/s]
+parsing log, completed traces :: 100%|██████████| 43809/43809 [01:34<00:00, 462.77it/s]
+parsing log, completed traces :: 100%|██████████| 251734/251734 [00:41<00:00, 6132.03it/s]
+parsing log, completed traces :: 100%|██████████| 10500/10500 [00:00<00:00, 11101.98it/s]
+parsing log, completed traces :: 100%|██████████| 6449/6449 [00:01<00:00, 5200.03it/s]
+parsing log, completed traces :: 100%|██████████| 7065/7065 [00:01<00:00, 4780.42it/s]
+parsing log, completed traces :: 100%|██████████| 2099/2099 [00:00<00:00, 3861.66it/s]
+parsing log, completed traces :: 100%|██████████| 6886/6886 [00:00<00:00, 9142.31it/s]
+parsing log, completed traces :: 100%|██████████| 20/20 [00:00<00:00, 512.82it/s]
+parsing log, completed traces :: 100%|██████████| 1434/1434 [00:00<00:00, 6401.16it/s]
+parsing log, completed traces :: 100%|██████████| 4580/4580 [00:00<00:00, 11859.09it/s]
+parsing log, completed traces :: 100%|██████████| 100000/100000 [00:11<00:00, 8650.75it/s]
+parsing log, completed traces :: 100%|██████████| 150370/150370 [00:11<00:00, 12571.92it/s]
+parsing log, completed traces :: 100%|██████████| 1050/1050 [00:00<00:00, 4486.90it/s]
+
+Log: BPIC12
+  Activity: W_Completeren aanvraag, Mean Position: 0.3889, Std Dev: 0.2531, Probability: 0.2092
+  Activity: W_Nabellen offertes, Mean Position: 0.5741, Std Dev: 0.1989, Probability: 0.1984
+  Activity: W_Nabellen incomplete dossiers, Mean Position: 0.6823, Std Dev: 0.1561, Probability: 0.0961
+  Activity: W_Valideren aanvraag, Mean Position: 0.7192, Std Dev: 0.1890, Probability: 0.0794
+  Activity: W_Afhandelen leads, Mean Position: 0.3504, Std Dev: 0.2564, Probability: 0.0632
+
+Log: BPIC12_A
+  Activity: A_SUBMITTED, Mean Position: 0.0000, Std Dev: 0.0000, Probability: 0.2151
+  Activity: A_PARTLYSUBMITTED, Mean Position: 0.2482, Std Dev: 0.0844, Probability: 0.2151
+  Activity: A_DECLINED, Mean Position: 0.6965, Std Dev: 0.0555, Probability: 0.1255
+  Activity: A_PREACCEPTED, Mean Position: 0.3644, Std Dev: 0.1034, Probability: 0.1211
+  Activity: A_ACCEPTED, Mean Position: 0.4535, Std Dev: 0.0746, Probability: 0.0840
+
+Log: BPIC12_Complete
+  Activity: W_Completeren aanvraag, Mean Position: 0.4437, Std Dev: 0.2374, Probability: 0.1457
+  Activity: W_Nabellen offertes, Mean Position: 0.6171, Std Dev: 0.1755, Probability: 0.1397
+  Activity: A_SUBMITTED, Mean Position: 0.0000, Std Dev: 0.0000, Probability: 0.0796
+  Activity: A_PARTLYSUBMITTED, Mean Position: 0.1694, Std Dev: 0.1210, Probability: 0.0796
+  Activity: W_Nabellen incomplete dossiers, Mean Position: 0.6836, Std Dev: 0.1438, Probability: 0.0693
+
+Log: BPIC12_O
+  Activity: O_SELECTED, Mean Position: 0.1258, Std Dev: 0.2133, Probability: 0.2250
+  Activity: O_CREATED, Mean Position: 0.2996, Std Dev: 0.1978, Probability: 0.2250
+  Activity: O_SENT, Mean Position: 0.4606, Std Dev: 0.1862, Probability: 0.2250
+  Activity: O_CANCELLED, Mean Position: 0.5936, Std Dev: 0.2097, Probability: 0.1170
+  Activity: O_SENT_BACK, Mean Position: 0.6336, Std Dev: 0.1213, Probability: 0.1105
+
+Log: BPIC12_W
+  Activity: W_Completeren aanvraag, Mean Position: 0.3360, Std Dev: 0.2735, Probability: 0.3224
+  Activity: W_Nabellen offertes, Mean Position: 0.5052, Std Dev: 0.2399, Probability: 0.3058
+  Activity: W_Nabellen incomplete dossiers, Mean Position: 0.6677, Std Dev: 0.1839, Probability: 0.1481
+  Activity: W_Valideren aanvraag, Mean Position: 0.7041, Std Dev: 0.2278, Probability: 0.1223
+  Activity: W_Afhandelen leads, Mean Position: 0.2269, Std Dev: 0.2478, Probability: 0.0974
+
+Log: BPIC12_W_Complete
+  Activity: W_Completeren aanvraag, Mean Position: 0.3024, Std Dev: 0.2715, Probability: 0.3310
+  Activity: W_Nabellen offertes, Mean Position: 0.4767, Std Dev: 0.2378, Probability: 0.3173
+  Activity: W_Nabellen incomplete dossiers, Mean Position: 0.6436, Std Dev: 0.1894, Probability: 0.1575
+  Activity: W_Valideren aanvraag, Mean Position: 0.6787, Std Dev: 0.2306, Probability: 0.1090
+  Activity: W_Afhandelen leads, Mean Position: 0.0654, Std Dev: 0.1622, Probability: 0.0814
+
+Log: BPIC13_closed_problems
+  Activity: Accepted-In Progress, Mean Position: 0.2573, Std Dev: 0.2764, Probability: 0.4604
+  Activity: Completed-Closed, Mean Position: 0.6754, Std Dev: 0.1676, Probability: 0.2350
+  Activity: Queued-Awaiting Assignment, Mean Position: 0.2849, Std Dev: 0.1946, Probability: 0.1314
+  Activity: Accepted-Assigned, Mean Position: 0.4356, Std Dev: 0.1786, Probability: 0.0922
+  Activity: Accepted-Wait, Mean Position: 0.4172, Std Dev: 0.2158, Probability: 0.0791
+
+Log: BPIC13_incidents
+  Activity: Accepted, Mean Position: 0.3607, Std Dev: 0.2624, Probability: 0.6122
+  Activity: Completed, Mean Position: 0.7644, Std Dev: 0.1521, Probability: 0.2116
+  Activity: Queued, Mean Position: 0.3393, Std Dev: 0.2201, Probability: 0.1762
+  Activity: Unmatched, Mean Position: 0.5002, Std Dev: 0.0995, Probability: 0.0001
+
+Log: BPIC13_open_problems
+  Activity: Accepted, Mean Position: 0.2510, Std Dev: 0.2758, Probability: 0.6725
+  Activity: Completed, Mean Position: 0.6082, Std Dev: 0.1621, Probability: 0.1646
+  Activity: Queued, Mean Position: 0.3495, Std Dev: 0.2383, Probability: 0.1629
+
+Log: BPIC15_1
+  Activity: 01_HOOFD_010, Mean Position: 0.0090, Std Dev: 0.0568, Probability: 0.0230
+  Activity: 01_HOOFD_015, Mean Position: 0.1364, Std Dev: 0.1522, Probability: 0.0230
+  Activity: 01_HOOFD_020, Mean Position: 0.0913, Std Dev: 0.0885, Probability: 0.0229
+  Activity: 01_HOOFD_180, Mean Position: 0.3625, Std Dev: 0.1391, Probability: 0.0214
+  Activity: 01_HOOFD_030_1, Mean Position: 0.1855, Std Dev: 0.1588, Probability: 0.0213
+  Activity: 01_HOOFD_030_2, Mean Position: 0.1834, Std Dev: 0.1822, Probability: 0.0202
+  Activity: 01_HOOFD_200, Mean Position: 0.4296, Std Dev: 0.1117, Probability: 0.0187
+  Activity: 09_AH_I_010, Mean Position: 0.5161, Std Dev: 0.1261, Probability: 0.0179
+  Activity: 01_HOOFD_375, Mean Position: 0.6272, Std Dev: 0.1040, Probability: 0.0179
+  Activity: 01_HOOFD_380, Mean Position: 0.5664, Std Dev: 0.1454, Probability: 0.0178
+  Activity: 01_HOOFD_490_1, Mean Position: 0.7406, Std Dev: 0.1026, Probability: 0.0177
+
+Log: BPIC15_2
+  Activity: 01_HOOFD_010, Mean Position: 0.0148, Std Dev: 0.0704, Probability: 0.0187
+  Activity: 01_HOOFD_015, Mean Position: 0.1507, Std Dev: 0.1612, Probability: 0.0187
+  Activity: 01_HOOFD_020, Mean Position: 0.0770, Std Dev: 0.0718, Probability: 0.0187
+  Activity: 01_HOOFD_180, Mean Position: 0.3204, Std Dev: 0.1286, Probability: 0.0181
+  Activity: 01_HOOFD_030_1, Mean Position: 0.1887, Std Dev: 0.1569, Probability: 0.0179
+  Activity: 01_HOOFD_030_2, Mean Position: 0.1662, Std Dev: 0.1817, Probability: 0.0177
+  Activity: 01_HOOFD_200, Mean Position: 0.3793, Std Dev: 0.1142, Probability: 0.0169
+  Activity: 01_HOOFD_490_1, Mean Position: 0.6822, Std Dev: 0.1199, Probability: 0.0161
+  Activity: 09_AH_I_010, Mean Position: 0.4553, Std Dev: 0.1338, Probability: 0.0160
+  Activity: 01_HOOFD_380, Mean Position: 0.4914, Std Dev: 0.1504, Probability: 0.0160
+  Activity: 01_HOOFD_375, Mean Position: 0.5761, Std Dev: 0.1102, Probability: 0.0160
+  Activity: 01_HOOFD_510_2, Mean Position: 0.7807, Std Dev: 0.1669, Probability: 0.0159
+
+Log: BPIC15_3
+  Activity: 01_HOOFD_010, Mean Position: 0.0023, Std Dev: 0.0208, Probability: 0.0236
+  Activity: 01_HOOFD_015, Mean Position: 0.1043, Std Dev: 0.1154, Probability: 0.0236
+  Activity: 01_HOOFD_020, Mean Position: 0.1004, Std Dev: 0.1090, Probability: 0.0236
+  Activity: 01_HOOFD_030_1, Mean Position: 0.1675, Std Dev: 0.1654, Probability: 0.0226
+  Activity: 01_HOOFD_030_2, Mean Position: 0.1465, Std Dev: 0.1684, Probability: 0.0221
+  Activity: 01_HOOFD_180, Mean Position: 0.3530, Std Dev: 0.1301, Probability: 0.0220
+  Activity: 09_AH_I_010, Mean Position: 0.5196, Std Dev: 0.1382, Probability: 0.0207
+  Activity: 01_HOOFD_380, Mean Position: 0.5723, Std Dev: 0.1558, Probability: 0.0207
+  Activity: 01_HOOFD_375, Mean Position: 0.6270, Std Dev: 0.1236, Probability: 0.0206
+  Activity: 01_HOOFD_200, Mean Position: 0.4231, Std Dev: 0.1124, Probability: 0.0200
+  Activity: 01_HOOFD_490_1, Mean Position: 0.7535, Std Dev: 0.1076, Probability: 0.0192
+
+Log: BPIC15_4
+  Activity: 01_HOOFD_010, Mean Position: 0.0184, Std Dev: 0.0777, Probability: 0.0222
+  Activity: 01_HOOFD_015, Mean Position: 0.1809, Std Dev: 0.1524, Probability: 0.0222
+  Activity: 01_HOOFD_020, Mean Position: 0.0698, Std Dev: 0.0613, Probability: 0.0222
+  Activity: 01_HOOFD_180, Mean Position: 0.3024, Std Dev: 0.1334, Probability: 0.0216
+  Activity: 01_HOOFD_065_1, Mean Position: 0.2662, Std Dev: 0.1510, Probability: 0.0213
+  Activity: 01_HOOFD_065_2, Mean Position: 0.2346, Std Dev: 0.1775, Probability: 0.0200
+  Activity: 01_HOOFD_200, Mean Position: 0.3833, Std Dev: 0.1014, Probability: 0.0193
+  Activity: 09_AH_I_010, Mean Position: 0.4733, Std Dev: 0.1219, Probability: 0.0185
+  Activity: 01_HOOFD_380, Mean Position: 0.5066, Std Dev: 0.1368, Probability: 0.0185
+  Activity: 01_HOOFD_375, Mean Position: 0.6090, Std Dev: 0.0970, Probability: 0.0184
+
+Log: BPIC15_5
+  Activity: 01_HOOFD_180, Mean Position: 0.3311, Std Dev: 0.1169, Probability: 0.0197
+  Activity: 01_HOOFD_020, Mean Position: 0.0594, Std Dev: 0.0566, Probability: 0.0195
+  Activity: 01_HOOFD_015, Mean Position: 0.1426, Std Dev: 0.1433, Probability: 0.0195
+  Activity: 01_HOOFD_010, Mean Position: 0.0040, Std Dev: 0.0327, Probability: 0.0195
+  Activity: 01_HOOFD_030_1, Mean Position: 0.1883, Std Dev: 0.1535, Probability: 0.0186
+  Activity: 01_HOOFD_030_2, Mean Position: 0.1773, Std Dev: 0.1720, Probability: 0.0182
+  Activity: 01_HOOFD_200, Mean Position: 0.3966, Std Dev: 0.1047, Probability: 0.0176
+  Activity: 09_AH_I_010, Mean Position: 0.4777, Std Dev: 0.1208, Probability: 0.0167
+  Activity: 01_HOOFD_380, Mean Position: 0.5085, Std Dev: 0.1325, Probability: 0.0167
+  Activity: 01_HOOFD_375, Mean Position: 0.6126, Std Dev: 0.0971, Probability: 0.0167
+  Activity: 01_HOOFD_490_1, Mean Position: 0.6746, Std Dev: 0.1034, Probability: 0.0165
+
+Log: BPIC17
+  Activity: W_Validate application, Mean Position: 0.6748, Std Dev: 0.1917, Probability: 0.1743
+  Activity: W_Call after offers, Mean Position: 0.5042, Std Dev: 0.2065, Probability: 0.1589
+  Activity: W_Call incomplete files, Mean Position: 0.6938, Std Dev: 0.1548, Probability: 0.1402
+  Activity: W_Complete application, Mean Position: 0.2210, Std Dev: 0.1437, Probability: 0.1238
+  Activity: W_Handle leads, Mean Position: 0.0830, Std Dev: 0.0442, Probability: 0.0393
+
+Log: BPIC18
+  Activity: calculate, Mean Position: 0.5803, Std Dev: 0.1838, Probability: 0.1854
+  Activity: finish editing, Mean Position: 0.5128, Std Dev: 0.2566, Probability: 0.1814
+  Activity: begin editing, Mean Position: 0.4513, Std Dev: 0.2487, Probability: 0.1580
+  Activity: save, Mean Position: 0.4784, Std Dev: 0.2419, Probability: 0.1149
+  Activity: initialize, Mean Position: 0.2326, Std Dev: 0.1878, Probability: 0.0816
+
+Log: BPIC19
+  Activity: Record Goods Receipt, Mean Position: 0.4141, Std Dev: 0.1874, Probability: 0.1968
+  Activity: Create Purchase Order Item, Mean Position: 0.0429, Std Dev: 0.0971, Probability: 0.1577
+  Activity: Record Invoice Receipt, Mean Position: 0.6065, Std Dev: 0.1302, Probability: 0.1433
+  Activity: Vendor creates invoice, Mean Position: 0.3243, Std Dev: 0.1541, Probability: 0.1378
+  Activity: Clear Invoice, Mean Position: 0.8160, Std Dev: 0.0671, Probability: 0.1218
+
+Log: BPIC20_DomesticDeclarations
+  Activity: Declaration SUBMITTED by EMPLOYEE, Mean Position: 0.0397, Std Dev: 0.1213, Probability: 0.2043
+  Activity: Declaration FINAL_APPROVED by SUPERVISOR, Mean Position: 0.4272, Std Dev: 0.1083, Probability: 0.1795
+  Activity: Payment Handled, Mean Position: 0.8095, Std Dev: 0.0356, Probability: 0.1780
+  Activity: Request Payment, Mean Position: 0.6191, Std Dev: 0.0712, Probability: 0.1779
+  Activity: Declaration APPROVED by ADMINISTRATION, Mean Position: 0.2203, Std Dev: 0.1029, Probability: 0.1453
+
+Log: BPIC20_InternationalDeclarations
+  Activity: Declaration SUBMITTED by EMPLOYEE, Mean Position: 0.4772, Std Dev: 0.1431, Probability: 0.1123
+  Activity: Start trip, Mean Position: 0.2882, Std Dev: 0.1651, Probability: 0.0894
+  Activity: End trip, Mean Position: 0.4104, Std Dev: 0.1818, Probability: 0.0894
+  Activity: Permit SUBMITTED by EMPLOYEE, Mean Position: 0.0288, Std Dev: 0.0755, Probability: 0.0867
+  Activity: Payment Handled, Mean Position: 0.8870, Std Dev: 0.0835, Probability: 0.0858
+
+Log: BPIC20_PermitLog
+  Activity: Declaration SUBMITTED by EMPLOYEE, Mean Position: 0.5347, Std Dev: 0.1244, Probability: 0.0875
+  Activity: Payment Handled, Mean Position: 0.8207, Std Dev: 0.1822, Probability: 0.0871
+  Activity: Request Payment, Mean Position: 0.7409, Std Dev: 0.1781, Probability: 0.0871
+  Activity: Permit SUBMITTED by EMPLOYEE, Mean Position: 0.0281, Std Dev: 0.0789, Probability: 0.0847
+  Activity: Start trip, Mean Position: 0.3357, Std Dev: 0.1846, Probability: 0.0816
+
+Log: BPIC20_PrepaidTravelCost
+  Activity: Request For Payment SUBMITTED by EMPLOYEE, Mean Position: 0.3510, Std Dev: 0.1475, Probability: 0.1249
+  Activity: Request Payment, Mean Position: 0.7581, Std Dev: 0.0636, Probability: 0.1091
+  Activity: Payment Handled, Mean Position: 0.8786, Std Dev: 0.0352, Probability: 0.1091
+  Activity: Request For Payment FINAL_APPROVED by SUPERVISOR, Mean Position: 0.6342, Std Dev: 0.0944, Probability: 0.1073
+  Activity: Permit SUBMITTED by EMPLOYEE, Mean Position: 0.0167, Std Dev: 0.0812, Probability: 0.1070
+
+Log: BPIC20_RequestForPayment
+  Activity: Request For Payment SUBMITTED by EMPLOYEE, Mean Position: 0.0362, Std Dev: 0.1164, Probability: 0.2039
+  Activity: Request For Payment FINAL_APPROVED by SUPERVISOR, Mean Position: 0.4370, Std Dev: 0.1003, Probability: 0.1724
+  Activity: Payment Handled, Mean Position: 0.8126, Std Dev: 0.0330, Probability: 0.1714
+  Activity: Request Payment, Mean Position: 0.6253, Std Dev: 0.0658, Probability: 0.1713
+  Activity: Request For Payment APPROVED by ADMINISTRATION, Mean Position: 0.2160, Std Dev: 0.0980, Probability: 0.1492
+
+Log: CCC19
+  Activity: Prepare implements, Mean Position: 0.2073, Std Dev: 0.1500, Probability: 0.0904
+  Activity: Get in sterile clothes, Mean Position: 0.0864, Std Dev: 0.0626, Probability: 0.0531
+  Activity: Ultrasound configuration, Mean Position: 0.2805, Std Dev: 0.1661, Probability: 0.0473
+  Activity: Check wire in long axis, Mean Position: 0.7788, Std Dev: 0.0944, Probability: 0.0445
+  Activity: Puncture, Mean Position: 0.5411, Std Dev: 0.1077, Probability: 0.0430
+
+Log: Env Permit
+  Activity: Confirmation of receipt, Mean Position: 0.0000, Std Dev: 0.0000, Probability: 0.1672
+  Activity: T06 Determine necessity of stop advice, Mean Position: 0.5096, Std Dev: 0.2085, Probability: 0.1651
+  Activity: T02 Check confirmation of receipt, Mean Position: 0.2269, Std Dev: 0.1407, Probability: 0.1595
+  Activity: T04 Determine confirmation of receipt, Mean Position: 0.4213, Std Dev: 0.1560, Probability: 0.1524
+  Activity: T05 Print and send confirmation of receipt, Mean Position: 0.6087, Std Dev: 0.1679, Probability: 0.1516
+
+Log: Helpdesk
+  Activity: Take in charge ticket, Mean Position: 0.2782, Std Dev: 0.1201, Probability: 0.2370
+  Activity: Resolve ticket, Mean Position: 0.5349, Std Dev: 0.1040, Probability: 0.2334
+  Activity: Assign seriousness, Mean Position: 0.0224, Std Dev: 0.0659, Probability: 0.2313
+  Activity: Closed, Mean Position: 0.7743, Std Dev: 0.0457, Probability: 0.2143
+  Activity: Wait, Mean Position: 0.3878, Std Dev: 0.0990, Probability: 0.0685
+
+Log: Hospital Billing
+  Activity: NEW, Mean Position: 0.0057, Std Dev: 0.0589, Probability: 0.2244
+  Activity: FIN, Mean Position: 0.3010, Std Dev: 0.1116, Probability: 0.1656
+  Activity: RELEASE, Mean Position: 0.4606, Std Dev: 0.0935, Probability: 0.1571
+  Activity: CODE OK, Mean Position: 0.6352, Std Dev: 0.0898, Probability: 0.1507
+  Activity: BILLED, Mean Position: 0.8111, Std Dev: 0.0763, Probability: 0.1494
+
+Log: RTFM
+  Activity: Create Fine, Mean Position: 0.0000, Std Dev: 0.0000, Probability: 0.2678
+  Activity: Send Fine, Mean Position: 0.2600, Std Dev: 0.1251, Probability: 0.1852
+  Activity: Insert Fine Notification, Mean Position: 0.3875, Std Dev: 0.0315, Probability: 0.1422
+  Activity: Add penalty, Mean Position: 0.5968, Std Dev: 0.0386, Probability: 0.1422
+  Activity: Payment, Mean Position: 0.5895, Std Dev: 0.1367, Probability: 0.1382
+
+Log: Sepsis
+  Activity: Leucocytes, Mean Position: 0.5520, Std Dev: 0.2327, Probability: 0.2224
+  Activity: CRP, Mean Position: 0.5621, Std Dev: 0.2332, Probability: 0.2144
+  Activity: LacticAcid, Mean Position: 0.4189, Std Dev: 0.2049, Probability: 0.0964
+  Activity: Admission NC, Mean Position: 0.5807, Std Dev: 0.1655, Probability: 0.0777
+  Activity: ER Triage, Mean Position: 0.1159, Std Dev: 0.0983, Probability: 0.0692
+
+Process finished with exit code 0
