@@ -1,0 +1,52 @@
+# Jupyter
+jupyter
+notebook
+jupyterlab
+ipykernel
+
+# Core scientific stack
+# numpy ceiling: tensorflow==2.19.0 requires numpy<2.2.0
+# numpy floor:   tensorflow==2.19.0 requires numpy>=1.26.0
+# numpy==2.1.3 is the latest version that satisfies both bounds
+numpy==2.1.3
+scipy==1.15.3
+# pandas 3.x requires Python 3.12+; 2.2.3 is latest Python 3.11 compatible
+pandas==2.2.3
+matplotlib==3.10.1
+seaborn==0.13.2
+
+# Machine learning
+scikit-learn==1.6.1
+xgboost==3.1.3
+lightgbm==4.6.0
+
+# Deep learning utilities
+tensorboard==2.19.0
+tqdm==4.67.1
+# TF 2.19.0: CUDA 12.x + Python 3.11 compatible; requires numpy<2.2.0 (satisfied above)
+tensorflow==2.19.0
+torchmetrics==1.9.0
+lightning==2.6.1
+
+# Graph learning
+networkx==3.4.2
+
+# Process mining
+pm4py==2.7.20.1
+
+# Data formats
+pyarrow==19.0.1
+fastparquet==2024.11.0
+
+# NLP / embeddings
+# gensim 4.4.0: drops numpy<2.0 restriction, fixes scipy.linalg.triu breakage from 4.3.3
+gensim==4.4.0
+
+# Clustering
+hdbscan==0.8.40
+
+# Utilities
+joblib==1.4.2
+python-dotenv==1.1.0
+pytz==2025.2
+psutil==7.0.0
