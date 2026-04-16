@@ -1,0 +1,33 @@
+# =============================================================================
+# Python dependencies for the SuffixTransformerNetwork / BEST repository
+# Compatible with: Python 3.11, CUDA 11.8, Ubuntu 22.04
+# =============================================================================
+
+# ── PyTorch (CUDA 11.8 wheels) ────────────────────────────────────────────────
+# Must be pulled from the PyTorch index, not PyPI
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch==2.1.2+cu118
+torchvision==0.16.2+cu118
+torchaudio==2.1.2+cu118
+
+# ── Core scientific computing ─────────────────────────────────────────────────
+numpy==1.26.4
+pandas==2.1.4
+scipy==1.11.4
+scikit-learn==1.3.2
+
+# ── Process mining (pm4py) ────────────────────────────────────────────────────
+# Used in Preprocessing/create_benchmarks.py for XES log import/export
+pm4py==2.7.8
+
+# ── Progress bars ─────────────────────────────────────────────────────────────
+tqdm==4.66.2
+
+# ── Visualization ─────────────────────────────────────────────────────────────
+matplotlib==3.8.4
+
+# ── JupyterLab environment ────────────────────────────────────────────────────
+jupyterlab==4.1.8
+notebook==7.1.3
+ipykernel==6.29.4
+ipywidgets==8.1.3

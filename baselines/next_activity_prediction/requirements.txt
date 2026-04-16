@@ -1,0 +1,17 @@
+matplotlib==3.9.0
+networkx==3.3
+numpy==1.24.3
+pandas==2.2.2
+pm4py==2.7.11.11
+pytz==2024.1
+scipy==1.13.1
+seaborn==0.13.2
+hdbscan==0.8.39
+gensim==4.3.3
+scikit-learn==1.5.1
+tensorflow==2.13.0
+#torch==2.3.1+cu121
+torchmetrics==1.6.0
+lightning==2.4.0
+psutil==6.0.0
+#ollama==0.4.8
