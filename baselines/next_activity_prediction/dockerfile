@@ -1,0 +1,46 @@
+# Base image with CUDA 11.8.0 and cuDNN 8
+FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+
+# Avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Install Python 3.11, pip, and system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 \
+    python3.11-venv \
+    python3.11-dev \
+    python3-pip \
+    build-essential \
+    curl \
+    git \
+    wget \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure python3 points to python3.11
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+
+# Upgrade pip
+RUN python3 -m pip install --upgrade pip
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN python3 -m pip install -r requirements.txt
+
+# Install Jupyter
+RUN python3 -m pip install jupyterlab notebook
+
+# Expose notebook port
+EXPOSE 8887
+
+# Start JupyterLab without token
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8887", "--allow-root", "--no-browser", "--NotebookApp.token=''"]
+
+# Build and run examples:
+# sudo docker build -t ppm-baseline-one .
+# sudo docker run -it --rm -p 127.0.0.1:8887:8887 -v $(pwd):/app --gpus all ppm-baseline-one
