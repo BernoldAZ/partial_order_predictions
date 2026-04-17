@@ -62,22 +62,22 @@ def train_eval(log_name):
     # Load preprocessed metadata dictionaries
     # -----------------------------------------------------------------------
     cardinality_dict = load_dict(
-        os.path.join(log_name, log_name + '_cardin_dict.pkl')
+        os.path.join('results_per_log', log_name, log_name + '_cardin_dict.pkl')
     )
     num_activities = cardinality_dict['concept:name'] + 2
     print("num_activities:", num_activities)
 
     num_cols_dict = load_dict(
-        os.path.join(log_name, log_name + '_num_cols_dict.pkl')
+        os.path.join('results_per_log', log_name, log_name + '_num_cols_dict.pkl')
     )
     cat_cols_dict = load_dict(
-        os.path.join(log_name, log_name + '_cat_cols_dict.pkl')
+        os.path.join('results_per_log', log_name, log_name + '_cat_cols_dict.pkl')
     )
     train_means_dict = load_dict(
-        os.path.join(log_name, log_name + '_train_means_dict.pkl')
+        os.path.join('results_per_log', log_name, log_name + '_train_means_dict.pkl')
     )
     train_std_dict = load_dict(
-        os.path.join(log_name, log_name + '_train_std_dict.pkl')
+        os.path.join('results_per_log', log_name, log_name + '_train_std_dict.pkl')
     )
 
     # Standardisation statistics used for de-standardising time predictions
@@ -96,15 +96,15 @@ def train_eval(log_name):
     # -----------------------------------------------------------------------
     # Create output directory
     # -----------------------------------------------------------------------
-    backup_path = os.path.join(log_name, "BEST_results")
+    backup_path = os.path.join('results_per_log', log_name, "BEST_results")
     os.makedirs(backup_path, exist_ok=True)
 
     # -----------------------------------------------------------------------
     # Load datasets
     # -----------------------------------------------------------------------
-    train_dataset = torch.load(os.path.join(log_name, 'train_tensordataset.pt'))
-    val_dataset   = torch.load(os.path.join(log_name, 'val_tensordataset.pt'))
-    test_dataset  = torch.load(os.path.join(log_name, 'test_tensordataset.pt'))
+    train_dataset = torch.load(os.path.join('results_per_log', log_name, 'train_tensordataset.pt'))
+    val_dataset   = torch.load(os.path.join('results_per_log', log_name, 'val_tensordataset.pt'))
+    test_dataset  = torch.load(os.path.join('results_per_log', log_name, 'test_tensordataset.pt'))
 
     # -----------------------------------------------------------------------
     # Fit BEST model on training data

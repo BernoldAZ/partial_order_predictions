@@ -116,7 +116,7 @@ def construct_BPIC17_DR_datasets():
     # Create the log_name subfolder in the root directory of the repository
     # (Should already be created when having executed the `log_to_tensors()`
     # function.)
-    output_directory = log_name
+    output_directory = os.path.join('results_per_log', log_name)
     os.makedirs(output_directory, exist_ok=True)
 
     # Save training tuples

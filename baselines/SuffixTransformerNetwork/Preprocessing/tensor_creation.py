@@ -517,7 +517,7 @@ def generate_tensordata_train_test(train_pref_suff,
     num_activities = cardinality_dict[act_label] + 2
 
     # Saving everything to disk
-    output_directory = log_name
+    output_directory = os.path.join('results_per_log', log_name)
     os.makedirs(output_directory, exist_ok=True)
 
     #   Prefix cardinalities 
