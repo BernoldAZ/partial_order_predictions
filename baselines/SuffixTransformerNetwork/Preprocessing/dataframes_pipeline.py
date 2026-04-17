@@ -493,7 +493,7 @@ def main_dataframe_pipeline(log,
     cat_cols_dict = {'prefix_df': pref_catcols, 'suffix_df': suff_catcols, 'actLabel_df': actlab_catcols}
 
     # Writing the results to disk: 
-    output_directory = log_name
+    output_directory = os.path.join('results_per_log', log_name)
     os.makedirs(output_directory, exist_ok=True)
 
     # Path for saving a dictionary 'num_cols_dict'

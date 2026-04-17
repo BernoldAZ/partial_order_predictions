@@ -106,36 +106,36 @@ def train_eval(log_name,
 
     # -----------------
     temp_string = log_name + '_cardin_dict.pkl'
-    temp_path = os.path.join(log_name, temp_string)
+    temp_path = os.path.join('results_per_log', log_name, temp_string)
     cardinality_dict = load_dict(temp_path)
     num_activities = cardinality_dict['concept:name'] + 2
     print(num_activities)
 
     # cardinality list prefix categoricals 
     temp_string = log_name + '_cardin_list_prefix.pkl'
-    temp_path = os.path.join(log_name, temp_string)
+    temp_path = os.path.join('results_per_log', log_name, temp_string)
     cardinality_list_prefix = load_dict(temp_path)
 
     temp_string = log_name + '_cardin_list_suffix.pkl'
-    temp_path = os.path.join(log_name, temp_string)
+    temp_path = os.path.join('results_per_log', log_name, temp_string)
     # cardinality list suffix categoricals
     cardinality_list_suffix = load_dict(temp_path)
 
     temp_string = log_name + '_num_cols_dict.pkl'
-    temp_path = os.path.join(log_name, temp_string)
+    temp_path = os.path.join('results_per_log', log_name, temp_string)
     # To retrieve the number of numerical featrues in the prefix and suffix events respectively 
     num_cols_dict = load_dict(temp_path)
 
     temp_string = log_name + '_cat_cols_dict.pkl'
-    temp_path = os.path.join(log_name, temp_string)
+    temp_path = os.path.join('results_per_log', log_name, temp_string)
     cat_cols_dict = load_dict(temp_path)
 
     temp_string = log_name + '_train_means_dict.pkl'
-    temp_path = os.path.join(log_name, temp_string)
+    temp_path = os.path.join('results_per_log', log_name, temp_string)
     train_means_dict = load_dict(temp_path)
 
     temp_string = log_name + '_train_std_dict.pkl'
-    temp_path = os.path.join(log_name, temp_string)
+    temp_path = os.path.join('results_per_log', log_name, temp_string)
 
     train_std_dict = load_dict(temp_path)
 
@@ -156,21 +156,21 @@ def train_eval(log_name,
 
 
     # specifying path results and callbacks 
-    backup_path = os.path.join(log_name, "ED_LSTM_results")
+    backup_path = os.path.join('results_per_log', log_name, "ED_LSTM_results")
     os.makedirs(backup_path, exist_ok=True)
 
 
     # Loading train, validation and test sets 
     # Training set 
-    temp_path = os.path.join(log_name, 'train_tensordataset.pt')
+    temp_path = os.path.join('results_per_log', log_name, 'train_tensordataset.pt')
     train_dataset = torch.load(temp_path)
 
     # Validation set
-    temp_path = os.path.join(log_name, 'val_tensordataset.pt')
+    temp_path = os.path.join('results_per_log', log_name, 'val_tensordataset.pt')
     val_dataset = torch.load(temp_path)
 
     # Test set 
-    temp_path = os.path.join(log_name, 'test_tensordataset.pt')
+    temp_path = os.path.join('results_per_log', log_name, 'test_tensordataset.pt')
     test_dataset = torch.load(temp_path)
 
     # For the prefix event token features: slice out only 

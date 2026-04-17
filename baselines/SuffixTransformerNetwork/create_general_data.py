@@ -327,8 +327,9 @@ def plot_split(
     plt.tight_layout()
 
     if save_path is None:
-        os.makedirs(log_name, exist_ok=True)
-        save_path = os.path.join(log_name, f'{log_name}_{mode}_split.png')
+        out_dir = os.path.join('results_per_log', log_name)
+        os.makedirs(out_dir, exist_ok=True)
+        save_path = os.path.join(out_dir, f'{log_name}_{mode}_split.png')
     plt.savefig(save_path, dpi=150, bbox_inches='tight')
     plt.close(fig)
     print(f"Split plot saved to '{save_path}'")
@@ -502,7 +503,7 @@ def construct_datasets(
     train_data, val_data, test_data = result
 
     # 6. Unpack and save tensors
-    output_directory = log_name
+    output_directory = os.path.join('results_per_log', log_name)
     os.makedirs(output_directory, exist_ok=True)
 
     torch.save(train_data, os.path.join(output_directory, 'train_tensordataset.pt'))

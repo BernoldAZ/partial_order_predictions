@@ -162,7 +162,7 @@ def missing_val_cat_mapping(train_df,
         categorical_mapping_dict[cat_col] = cat_to_int
 
     # Writing the results to disk: 
-    output_directory = log_name
+    output_directory = os.path.join('results_per_log', log_name)
     os.makedirs(output_directory, exist_ok=True)
 
     train_path = os.path.join(output_directory, log_name+ '_train_mapped.csv')
