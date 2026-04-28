@@ -3,7 +3,7 @@ import os, sys, copy, random, time, re
 
 from definitions import ROOT_DIR
 
-NA_DIR = os.path.join(ROOT_DIR, "evaluation", "evaluation_of_activity_distances", "next_activity_prediction")
+NA_DIR = os.path.join(ROOT_DIR, "evaluation")
 RAW_DATASETS_DIR = os.path.join(NA_DIR, "raw_datasets")
 SPLIT_DATASETS_DIR = os.path.join(NA_DIR, "split_datasets")
 RESULTS_DIR = os.path.join(NA_DIR, "results")

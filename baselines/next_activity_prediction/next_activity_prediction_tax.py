@@ -87,7 +87,7 @@ EPOCHS = 200
 # Directories.
 from definitions import ROOT_DIR
 
-NA_DIR = os.path.join(ROOT_DIR, "evaluation", "evaluation_of_activity_distances", "next_activity_prediction")
+NA_DIR = os.path.join(ROOT_DIR, "evaluation")
 RAW_DATASETS_DIR = os.path.join(NA_DIR, "raw_datasets_that_are_not_evaluated")
 SPLIT_DATASETS_DIR = os.path.join(NA_DIR, "split_datasets")
 RESULTS_DIR = os.path.join(NA_DIR, "results_tax")
@@ -407,8 +407,7 @@ def run_tax_for_log(
 
     # ── Directories ──────────────────────────────────────────────────────────
     from definitions import ROOT_DIR
-    na_dir = os.path.join(ROOT_DIR, "evaluation", "evaluation_of_activity_distances",
-                          "next_activity_prediction")
+    na_dir = os.path.join(ROOT_DIR, "evaluation")
     _split_dir   = split_dir   or os.path.join(na_dir, "split_datasets")
     _results_dir = results_dir or os.path.join(na_dir, "results_tax")
     _models_dir  = models_dir  or os.path.join(na_dir, "models_tax")

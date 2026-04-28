@@ -360,7 +360,7 @@ def construct_datasets(
     test_len_share=0.25,
     val_len_share=0.20,
     window_size=None,
-    mode='workaround',
+    mode='preferred',
     plot=True,
 ):
     """Load, preprocess, and convert an event log into train/val/test tensors.
@@ -546,7 +546,7 @@ if __name__ == '__main__':
     WINDOW_SIZE       = None   # None → auto (98.5th percentile)
     TEST_LEN_SHARE    = 0.25
     VAL_LEN_SHARE     = 0.20
-    MODE              = 'workaround'
+    MODE              = 'preferred'
     OUTCOME           = None
     PLOT              = True    # set to False to skip the split visualisation
 

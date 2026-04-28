@@ -39,7 +39,7 @@ BATCH_SIZE = 32
 
 # -----------------------
 # Directories.
-NA_DIR = os.path.join(ROOT_DIR, "evaluation", "evaluation_of_activity_distances", "next_activity_prediction")
+NA_DIR = os.path.join(ROOT_DIR, "evaluation")
 RAW_DATASETS_DIR = os.path.join(NA_DIR, "raw_datasets_that_are_not_evaluated")
 SPLIT_DATASETS_DIR = os.path.join(NA_DIR, "split_datasets")
 RESULTS_DIR = os.path.join(NA_DIR, "results_pydream")

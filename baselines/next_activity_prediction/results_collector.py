@@ -4,8 +4,7 @@ import os
 import pandas as pd
 from definitions import ROOT_DIR
 
-NA_DIR = os.path.join(ROOT_DIR, "evaluation", "evaluation_of_activity_distances",
-                      "next_activity_prediction")
+NA_DIR = os.path.join(ROOT_DIR, "evaluation")
 
 _DEFAULT_DIRS = {
     "tax":      os.path.join(NA_DIR, "results_tax"),
