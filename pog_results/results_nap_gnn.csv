@@ -1,0 +1,2 @@
+log,model,accuracy,f1,training_time_seconds,testing_time_seconds
+SEPSIS,GNN_NAP,0.65066,0.632518,68.86,0.17

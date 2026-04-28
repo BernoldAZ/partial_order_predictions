@@ -54,7 +54,7 @@ RUN pip install torch-geometric
 EXPOSE 8887
 
 # Launch Jupyter
-CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8887", "--no-browser", "--allow-root"]
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8887", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
 
 # docker build -t ml-jupyter-gpu .
 # docker run -it --rm --gpus all -p 8887:8887 -v $(pwd):/workspace ml-jupyter-gpu

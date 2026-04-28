@@ -128,6 +128,11 @@ def _limited_duration(df, max_days, case_id, timestamp):
     return df[df[case_id].isin(keep)].reset_index(drop=True)
 
 
+def _pairs(df, case_id='case:concept:name'):
+    """Number of (prefix, next-activity) pairs: one per event except the first of each case."""
+    return len(df) - df[case_id].nunique()
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Core temporal split
 # ──────────────────────────────────────────────────────────────────────────────
@@ -655,10 +660,10 @@ def create_nap_splits(
     )
 
     print(
-        f"[{log_name}]  train={train_df[case_id].nunique()}  "
-        f"val={val_df[case_id].nunique()}  "
-        f"test={test_df[case_id].nunique()}  "
-        f"train_val={train_val_df[case_id].nunique()}"
+        f"[{log_name}]  train={train_df[case_id].nunique()} ({_pairs(train_df, case_id)} pairs)  "
+        f"val={val_df[case_id].nunique()} ({_pairs(val_df, case_id)} pairs)  "
+        f"test={test_df[case_id].nunique()} ({_pairs(test_df, case_id)} pairs)  "
+        f"train_val={train_val_df[case_id].nunique()} ({_pairs(train_val_df, case_id)} pairs)"
     )
 
     # ── 6. Export XES (optional) ──────────────────────────────────────────────
@@ -775,10 +780,10 @@ if __name__ == "__main__":
     
         print(
             f"  total={total_cases} cases  →  "
-            f"train={train_df[CASE_ID].nunique()}  "
-            f"val={val_df[CASE_ID].nunique()}  "
-            f"test={test_df[CASE_ID].nunique()}  "
-            f"train_val={train_val_df[CASE_ID].nunique()}"
+            f"train={train_df[CASE_ID].nunique()} ({_pairs(train_df, CASE_ID)} pairs)  "
+            f"val={val_df[CASE_ID].nunique()} ({_pairs(val_df, CASE_ID)} pairs)  "
+            f"test={test_df[CASE_ID].nunique()} ({_pairs(test_df, CASE_ID)} pairs)  "
+            f"train_val={train_val_df[CASE_ID].nunique()} ({_pairs(train_val_df, CASE_ID)} pairs)"
         )
     
         # 7. Convert DataFrames back to EventLogs

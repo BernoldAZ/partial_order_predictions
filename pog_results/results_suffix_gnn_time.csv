@@ -1,0 +1,2 @@
+log,model,activity_accuracy,mean_dls,mae_ttne_minutes,mae_rrt_minutes,training_time_seconds,testing_time_seconds
+SEPSIS,GNN_Suffix_Time,0.289701,0.4612,5097.136,72405.5628,58.33,1.39

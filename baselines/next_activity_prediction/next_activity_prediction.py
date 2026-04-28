@@ -87,7 +87,7 @@ TEST_SUFFIX_FLAG = False
 TEST_SUFFIX_CALC_FLAG = False
 
 # Directory structure
-NA_DIR = os.path.join(ROOT_DIR, "evaluation", "evaluation_of_activity_distances", "next_activity_prediction")
+NA_DIR = os.path.join(ROOT_DIR, "evaluation")
 RESULTS_DIR = os.path.join(NA_DIR, "results_everman")
 MODELS_DIR = os.path.join(NA_DIR, "models_everman")
 

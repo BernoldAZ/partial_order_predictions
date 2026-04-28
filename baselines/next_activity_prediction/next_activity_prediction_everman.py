@@ -37,7 +37,7 @@ TEST_SUFFIX_FLAG = False  # Set to True if you want to run suffix evaluation.
 TEST_SUFFIX_CALC_FLAG = False  # Set to True to calculate suffix metrics.
 
 # Directories (assumed to be organized as in your project structure)
-NA_DIR = os.path.join(ROOT_DIR, "evaluation", "evaluation_of_activity_distances", "next_activity_prediction")
+NA_DIR = os.path.join(ROOT_DIR, "evaluation")
 RAW_DATASETS_DIR = os.path.join(NA_DIR, "raw_datasets_that_are_not_evaluated")
 SPLIT_DATASETS_DIR = os.path.join(NA_DIR, "split_datasets")
 RESULTS_DIR = os.path.join(NA_DIR, "results_everman")
