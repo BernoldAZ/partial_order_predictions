@@ -360,10 +360,28 @@ def trace_to_suffix_graphs(trace, activity_to_idx, end_token_idx, max_suffix_len
         ttne_s = (t_next - t_prev).total_seconds() if t_next is not None else 0.0
         rrt_s  = (t_end  - t_prev).total_seconds()
 
+        # Per-step time deltas for scaffold decoding.
+        # y_times[0] = TTNE; y_times[k] = time(events[i+k]) - time(events[i+k-1]) for k>=1.
+        # END-token step gets 0.0; rest padded to max_suffix_len with 0.0.
+        suffix_times = []
+        t_from = events[i - 1].get(timestamp)
+        for ev in events[i:]:
+            t_to  = ev.get(timestamp)
+            delta = (t_to - t_from).total_seconds() if (t_from is not None and t_to is not None) else 0.0
+            suffix_times.append(delta)
+            t_from = t_to
+        suffix_times.append(0.0)                                    # END token step
+        if len(suffix_times) >= max_suffix_len:
+            suffix_times = suffix_times[:max_suffix_len]
+        else:
+            suffix_times = suffix_times + [0.0] * (max_suffix_len - len(suffix_times))
+        y_times = torch.tensor(suffix_times, dtype=torch.float).unsqueeze(0)  # (1, max_suffix_len)
+
         dataset.append(Data(
             x=x, edge_index=edge_index, edge_attr=edge_attr, y=y,
             ttne=torch.tensor([ttne_s], dtype=torch.float),
             rrt=torch.tensor([rrt_s],  dtype=torch.float),
+            y_times=y_times,
         ))
 
     return dataset
