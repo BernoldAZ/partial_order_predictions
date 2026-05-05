@@ -24,10 +24,34 @@ Metrics (same convention as SuffixTransformerNetwork baseline):
 import numpy as np
 import torch
 import torch.nn as nn
-#from torch_geometric.nn import SAGEConv
-from torch_geometric.nn import GATv2Conv, global_mean_pool
+#from torch_geometric.nn import SAGEConv, global_mean_pool
+from torch_geometric.nn import GATv2Conv
+from torch_geometric.utils import softmax, global_add_pool
 
+# Attention pooling class to improve upon simple mean pooling
+class AttentionPooling(nn.Module):
+    """
+    Graph-level attention pooling.
 
+    Learns a scalar importance score for each node and computes
+    a weighted sum of node embeddings per graph.
+    """
+
+    def __init__(self, hidden_channels: int):
+        super().__init__()
+        self.score_net = nn.Sequential(
+            nn.Linear(hidden_channels, hidden_channels),
+            nn.Tanh(),
+            nn.Linear(hidden_channels, 1),
+        )
+
+    def forward(self, x, batch):
+        # x: (num_nodes, hidden_channels)
+        # batch: graph id for each node
+        scores = self.score_net(x).squeeze(-1)       # (num_nodes,)
+        alpha = softmax(scores, batch)               # normalized per graph
+        return global_add_pool(x * alpha.unsqueeze(-1), batch)
+    
 # ─────────────────────────────────────────────
 # Model
 # ─────────────────────────────────────────────
@@ -79,6 +103,8 @@ class GNNSuffixModel(nn.Module):
             dropout=dropout,
         )
         self.dropout = nn.Dropout(dropout)
+        # Attention pooling
+        self.pool = AttentionPooling(hidden_channels)
 
         # Project graph embedding → LSTM initial state
         self.enc_to_h = nn.Linear(hidden_channels, lstm_hidden)
@@ -101,7 +127,9 @@ class GNNSuffixModel(nn.Module):
         x = self.conv2(x, edge_index, edge_attr).relu()
         #x = self.conv2(x, edge_index).relu()
         x = self.dropout(x)
-        return global_mean_pool(x, batch)
+        # Attention pooling
+        return self.pool(x, batch)
+        #return global_mean_pool(x, batch)
 
     # ── Training forward (teacher forcing) ────────────────────────────────
     # replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
