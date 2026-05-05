@@ -24,7 +24,8 @@ Metrics (same convention as SuffixTransformerNetwork baseline):
 import numpy as np
 import torch
 import torch.nn as nn
-from torch_geometric.nn import SAGEConv, global_mean_pool
+#from torch_geometric.nn import SAGEConv
+from torch_geometric.nn import GATv2Conv, global_mean_pool
 
 
 # ─────────────────────────────────────────────
@@ -58,8 +59,25 @@ class GNNSuffixModel(nn.Module):
         vocab_size = num_activities + 2          # 0=PAD, 1..N=acts, N+1=END
 
         # ── GNN encoder ───────────────────────────────────────────────────
-        self.conv1   = SAGEConv(in_channels, hidden_channels)
-        self.conv2   = SAGEConv(hidden_channels, hidden_channels)
+        # replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
+        #self.conv1   = SAGEConv(in_channels, hidden_channels)
+        self.conv1 = GATv2Conv(
+            in_channels=in_channels,
+            out_channels=hidden_channels,
+            heads=4,
+            concat=False,
+            edge_dim=1,
+            dropout=dropout,
+        )
+        #self.conv2   = SAGEConv(hidden_channels, hidden_channels)
+        self.conv2 = GATv2Conv(
+            in_channels=hidden_channels,
+            out_channels=hidden_channels,
+            heads=4,
+            concat=False,
+            edge_dim=1,
+            dropout=dropout,
+        )
         self.dropout = nn.Dropout(dropout)
 
         # Project graph embedding → LSTM initial state
@@ -72,18 +90,23 @@ class GNNSuffixModel(nn.Module):
         self.out_proj  = nn.Linear(lstm_hidden, vocab_size)
 
     # ── Shared encoder ────────────────────────────────────────────────────
-
-    def encode(self, x, edge_index, batch):
+    # replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
+    def encode(self, x, edge_index, edge_attr, batch):
+    #def encode(self, x, edge_index, batch):
         """Return graph-level embedding: (batch_size, hidden_channels)."""
-        x = self.conv1(x, edge_index).relu()
+        
+        x = self.conv1(x, edge_index, edge_attr).relu()
+        #x = self.conv1(x, edge_index).relu()
         x = self.dropout(x)
-        x = self.conv2(x, edge_index).relu()
+        x = self.conv2(x, edge_index, edge_attr).relu()
+        #x = self.conv2(x, edge_index).relu()
         x = self.dropout(x)
         return global_mean_pool(x, batch)
 
     # ── Training forward (teacher forcing) ────────────────────────────────
-
-    def forward(self, x, edge_index, batch, y_in):
+    # replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
+    def forward(self, x, edge_index, edge_attr, batch, y_in):
+    #def forward(self, x, edge_index, batch, y_in):
         """
         Teacher-forcing forward pass.
 
@@ -97,7 +120,8 @@ class GNNSuffixModel(nn.Module):
         -------
         logits : (B, max_suffix_len, vocab_size)
         """
-        graph_emb = self.encode(x, edge_index, batch)
+        #graph_emb = self.encode(x, edge_index, batch)
+        graph_emb = self.encode(x, edge_index, edge_attr, batch)
         h0 = self.enc_to_h(graph_emb).unsqueeze(0)   # (1, B, lstm_hidden)
         c0 = self.enc_to_c(graph_emb).unsqueeze(0)
 
@@ -108,7 +132,9 @@ class GNNSuffixModel(nn.Module):
     # ── Greedy inference ──────────────────────────────────────────────────
 
     @torch.no_grad()
-    def greedy_decode(self, x, edge_index, batch, end_token_idx: int, max_len: int):
+    # replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
+    def greedy_decode(self, x, edge_index, edge_attr, batch, end_token_idx: int, max_len: int):
+    #def greedy_decode(self, x, edge_index, batch, end_token_idx: int, max_len: int):
         """
         Autoregressive greedy decoding.
 
@@ -119,8 +145,8 @@ class GNNSuffixModel(nn.Module):
         self.eval()
         batch_size = int(batch.max().item()) + 1
         device     = x.device
-
-        graph_emb = self.encode(x, edge_index, batch)
+        graph_emb = self.encode(x, edge_index, edge_attr, batch)
+        #graph_emb = self.encode(x, edge_index, batch)
         h = self.enc_to_h(graph_emb).unsqueeze(0)
         c = self.enc_to_c(graph_emb).unsqueeze(0)
 
@@ -165,7 +191,9 @@ def train_epoch(model, loader, optimizer, criterion, device):
         y_in = torch.cat([bos, y[:, :-1]], dim=1) # (B, max_suffix_len)
 
         optimizer.zero_grad()
-        logits = model(data.x, data.edge_index, data.batch, y_in)
+        # replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
+        logits = model(data.x, data.edge_index, data.edge_attr, data.batch, y_in)
+        #logits = model(data.x, data.edge_index, data.batch, y_in)
         # logits: (B, L, vocab) → flatten; y: (B, L) → flatten
         loss   = criterion(logits.view(-1, logits.size(-1)), y.view(-1))
         loss.backward()
@@ -202,14 +230,16 @@ def evaluate(model, loader, criterion, device, end_token_idx: int, max_len: int)
         y     = data.y                             # (B, max_suffix_len)
         bos   = torch.zeros(y.size(0), 1, dtype=torch.long, device=device)
         y_in  = torch.cat([bos, y[:, :-1]], dim=1)
-
-        logits = model(data.x, data.edge_index, data.batch, y_in)
+        # replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
+        logits = model(data.x, data.edge_index, data.edge_attr, data.batch, y_in)
+        #logits = model(data.x, data.edge_index, data.batch, y_in)
         loss   = criterion(logits.view(-1, logits.size(-1)), y.view(-1))
         total_loss += loss.item()
 
         # Greedy predictions for DLS / accuracy
         preds = model.greedy_decode(
-            data.x, data.edge_index, data.batch, end_token_idx, max_len)
+            data.x, data.edge_index, data.edge_attr, data.batch, end_token_idx, max_len)
+        #preds = model.greedy_decode(data.x, data.edge_index, data.batch, end_token_idx, max_len)
 
         y_np    = y.cpu().numpy()
         pred_np = preds.cpu().numpy()
