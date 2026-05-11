@@ -52,6 +52,16 @@ class NAP:
             self.__oneHotEncoderSetup()
             self.Y_train = np.asarray(
                 self.onehot_encoder.transform(self.label_encoder.transform(self.Y_train).reshape(-1, 1)))
+
+            known_labels = set(self.label_encoder.classes_)
+            test_mask = np.array([label in known_labels for label in self.Y_test])
+            n_removed = (~test_mask).sum()
+            if n_removed > 0:
+                unseen = set(self.Y_test[~test_mask])
+                print(f"Warning: removing {n_removed} test samples with labels unseen in training: {unseen}")
+                self.X_test = self.X_test[test_mask]
+                self.Y_test = self.Y_test[test_mask]
+
             self.Y_test = np.asarray(
                 self.onehot_encoder.transform(self.label_encoder.transform(self.Y_test).reshape(-1, 1)))
 

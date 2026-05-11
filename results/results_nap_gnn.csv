@@ -1,0 +1,15 @@
+log,model,method,accuracy,f1,training_time_seconds,testing_time_seconds
+BPIC15_3,GNN,nap,0.213733,0.187148,416.43,1.32
+BPIC15_5,GNN,nap,0.158637,0.123074,165.02,0.87
+BPIC15_1,GNN,nap,0.120153,0.098994,313.91,0.91
+BPIC15_2,GNN,nap,0.1456,0.119609,252.17,0.62
+BPIC15_4,GNN,nap,0.156521,0.124926,84.06,0.7
+BPI Challenge 2017,GNN,nap,0.860869,0.84416,2261.7,15.27
+BPI_Challenge_2012,GNN,nap,0.826457,0.78659,484.29,3.06
+PrepaidTravelCost,GNN,nap,0.845616,0.817086,71.28,0.21
+Sepsis,GNN,nap,0.643328,0.621135,40.55,0.19
+RequestForPayment,GNN,nap,0.882526,0.833584,46.35,0.4
+Hospital_Billing,GNN,nap,0.801509,0.779308,572.97,3.42
+DomesticDeclarations,GNN,nap,0.892648,0.847223,58.05,0.63
+InternationalDeclarations,GNN,nap,0.889498,0.857261,185.78,0.92
+Road_Traffic_Fine_Management_Process,GNN,nap,0.789138,0.72001,602.51,5.08

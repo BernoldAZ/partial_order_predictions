@@ -1,6 +1,21 @@
 # Partial_Order_Predictions
 
+## Logs used for training and evaluation
 
+BPIC15_1
+BPIC15_2
+BPIC15_3
+BPIC15_4
+BPIC15_5
+RequestForPayment
+Sepsis
+Hospital_Billing
+BPI Challenge 2017
+DomesticDeclarations
+BPI_Challenge_2012
+Road_Traffic_Fine_Management_Process
+PrepaidTravelCost
+InternationalDeclarations
 
 ## Getting started
 

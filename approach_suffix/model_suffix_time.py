@@ -14,9 +14,32 @@ Activity metrics: per-position accuracy, Damerau-Levenshtein Similarity
 import numpy as np
 import torch
 import torch.nn as nn
-from torch_geometric.nn import SAGEConv, global_mean_pool
+#from torch_geometric.nn import SAGEConv, global_mean_pool
+from torch_geometric.nn import GATv2Conv, global_add_pool
+from torch_geometric.utils import softmax
 
+# Attention pooling class to improve upon simple mean pooling
+class AttentionPooling(nn.Module):
+    """
+    Graph-level attention pooling.
 
+    Learns a scalar importance score for each node and computes
+    a weighted sum of node embeddings per graph.
+    """
+
+    def __init__(self, hidden_channels: int):
+        super().__init__()
+        self.score_net = nn.Sequential(
+            nn.Linear(hidden_channels, hidden_channels),
+            nn.Tanh(),
+            nn.Linear(hidden_channels, 1),
+        )
+
+    def forward(self, x, batch):
+        scores = self.score_net(x).squeeze(-1)
+        alpha = softmax(scores, batch)
+        return global_add_pool(x * alpha.unsqueeze(-1), batch)
+    
 # ─────────────────────────────────────────────
 # Model
 # ─────────────────────────────────────────────
@@ -42,9 +65,36 @@ class GNNSuffixTimeModel(nn.Module):
         vocab_size = num_activities + 2          # 0=PAD, 1..N=acts, N+1=END
 
         # GNN encoder
-        self.conv1   = SAGEConv(in_channels, hidden_channels)
-        self.conv2   = SAGEConv(hidden_channels, hidden_channels)
+        # Linear over one-hot is equivalent to nn.Embedding (same learned lookup)
+        self.node_emb = nn.Linear(in_channels, emb_dim, bias=False)
+
+        # replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
+        self.conv1 = GATv2Conv(
+            in_channels=emb_dim,
+            out_channels=hidden_channels,
+            heads=4,
+            concat=False,
+            edge_dim=1,
+            dropout=dropout,
+        )
+        self.bn1      = nn.BatchNorm1d(hidden_channels)
+        self.res_proj = nn.Linear(emb_dim, hidden_channels, bias=False)
+
+        #self.conv1   = SAGEConv(in_channels, hidden_channels)
+        self.conv2 = GATv2Conv(
+            in_channels=hidden_channels,
+            out_channels=hidden_channels,
+            heads=4,
+            concat=False,
+            edge_dim=1,
+            dropout=dropout,
+        )
+        self.bn2 = nn.BatchNorm1d(hidden_channels)
+
+        #self.conv2   = SAGEConv(hidden_channels, hidden_channels)
         self.dropout = nn.Dropout(dropout)
+        # Attention pooling
+        self.pool    = AttentionPooling(hidden_channels)
 
         # LSTM decoder (activity suffix)
         self.enc_to_h  = nn.Linear(hidden_channels, lstm_hidden)
@@ -56,15 +106,27 @@ class GNNSuffixTimeModel(nn.Module):
         # Time regression heads
         self.ttne_head = nn.Linear(hidden_channels, 1)
         self.rrt_head  = nn.Linear(hidden_channels, 1)
+    
+    # replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
+    def encode(self, x, edge_index, edge_attr, batch):
+    #def encode(self, x, edge_index, batch):
+        x = self.node_emb(x)                                        # (N, emb_dim)
 
-    def encode(self, x, edge_index, batch):
-        x = self.conv1(x, edge_index).relu()
-        x = self.dropout(x)
-        x = self.conv2(x, edge_index).relu()
-        x = self.dropout(x)
-        return global_mean_pool(x, batch)
+        # Layer 1 with residual
+        x1 = self.bn1(self.conv1(x, edge_index, edge_attr)).relu()
+        x1 = x1 + self.res_proj(x)                                  # skip from embedding
+        x1 = self.dropout(x1)
 
-    def forward(self, x, edge_index, batch, y_in):
+        # Layer 2 with residual
+        x2 = self.bn2(self.conv2(x1, edge_index, edge_attr)).relu()
+        x2 = x2 + x1                                                 # skip from layer 1
+        x2 = self.dropout(x2)
+
+        return self.pool(x2, batch)
+
+    # replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
+    def forward(self, x, edge_index, edge_attr, batch, y_in):
+    #def forward(self, x, edge_index, batch, y_in):
         """
         Parameters
         ----------
@@ -76,7 +138,8 @@ class GNNSuffixTimeModel(nn.Module):
         ttne_pred : (B,)  normalised TTNE prediction
         rrt_pred  : (B,)  normalised RRT prediction
         """
-        graph_emb = self.encode(x, edge_index, batch)
+        graph_emb = self.encode(x, edge_index, edge_attr, batch)
+        #graph_emb = self.encode(x, edge_index, batch)
 
         ttne_pred = self.ttne_head(graph_emb).squeeze(-1)   # (B,)
         rrt_pred  = self.rrt_head(graph_emb).squeeze(-1)    # (B,)
@@ -88,15 +151,18 @@ class GNNSuffixTimeModel(nn.Module):
         logits  = self.out_proj(out)                         # (B, L, vocab)
 
         return logits, ttne_pred, rrt_pred
-
+    
+    # replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
     @torch.no_grad()
-    def greedy_decode(self, x, edge_index, batch, end_token_idx: int, max_len: int):
+    def greedy_decode(self, x, edge_index, edge_attr, batch, end_token_idx: int, max_len: int):
+    #def greedy_decode(self, x, edge_index, batch, end_token_idx: int, max_len: int):
         """Autoregressive greedy decoding; returns (batch_size, max_len) token tensor."""
         self.eval()
         batch_size = int(batch.max().item()) + 1
         device     = x.device
-
-        graph_emb = self.encode(x, edge_index, batch)
+        
+        graph_emb = self.encode(x, edge_index, edge_attr, batch)
+        #graph_emb = self.encode(x, edge_index, batch)
         h = self.enc_to_h(graph_emb).unsqueeze(0)
         c = self.enc_to_c(graph_emb).unsqueeze(0)
 
@@ -125,7 +191,7 @@ class GNNSuffixTimeModel(nn.Module):
 # ─────────────────────────────────────────────
 # Training
 # ─────────────────────────────────────────────
-
+# replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
 def train_epoch(model, loader, optimizer, criterion_ce, device,
                 mean_ttne: float, mean_rrt: float,
                 lambda_ttne: float = 1.0, lambda_rrt: float = 1.0):
@@ -154,7 +220,9 @@ def train_epoch(model, loader, optimizer, criterion_ce, device,
         rrt_norm  = data.rrt.squeeze(-1)  / mean_rrt
 
         optimizer.zero_grad()
-        logits, ttne_pred, rrt_pred = model(data.x, data.edge_index, data.batch, y_in)
+        #logits, ttne_pred, rrt_pred = model(data.x, data.edge_index, data.batch, y_in)
+        logits, ttne_pred, rrt_pred = model(
+            data.x, data.edge_index, data.edge_attr, data.batch, y_in)
 
         loss = (criterion_ce(logits.view(-1, logits.size(-1)), y.view(-1))
                 + lambda_ttne * mae_loss(ttne_pred, ttne_norm)
@@ -169,7 +237,7 @@ def train_epoch(model, loader, optimizer, criterion_ce, device,
 # ─────────────────────────────────────────────
 # Evaluation
 # ─────────────────────────────────────────────
-
+# replace SAGEConv with GATv2Conv because the former does not utilize the temporal edge attributes.
 @torch.no_grad()
 def evaluate(model, loader, criterion_ce, device,
              end_token_idx: int, max_len: int,
@@ -198,8 +266,10 @@ def evaluate(model, loader, criterion_ce, device,
 
         ttne_true = data.ttne.squeeze(-1)   # seconds
         rrt_true  = data.rrt.squeeze(-1)    # seconds
-
-        logits, ttne_pred, rrt_pred = model(data.x, data.edge_index, data.batch, y_in)
+        
+        logits, ttne_pred, rrt_pred = model(
+            data.x, data.edge_index, data.edge_attr, data.batch, y_in)
+        #logits, ttne_pred, rrt_pred = model(data.x, data.edge_index, data.batch, y_in)
         total_loss += criterion_ce(logits.view(-1, logits.size(-1)), y.view(-1)).item()
 
         # Denormalise predictions → seconds, accumulate absolute error
@@ -208,8 +278,10 @@ def evaluate(model, loader, criterion_ce, device,
         n_instances    += int(ttne_true.size(0))
 
         # Activity sequence metrics (greedy decode)
-        preds   = model.greedy_decode(data.x, data.edge_index, data.batch,
-                                      end_token_idx, max_len)
+        preds = model.greedy_decode(
+            data.x, data.edge_index, data.edge_attr, data.batch,
+            end_token_idx, max_len)
+        #preds   = model.greedy_decode(data.x, data.edge_index, data.batch, end_token_idx, max_len)
         y_np    = y.cpu().numpy()
         pred_np = preds.cpu().numpy()
 

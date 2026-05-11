@@ -160,3 +160,35 @@ def get_results_for_log(
     df = df[first_cols + rest_cols]
     df = df.sort_values(["model", "method"], ignore_index=True)
     return df
+
+
+def get_all_baseline_results(log_names, **kwargs):
+    """Collect baseline results for multiple logs.
+
+    Parameters
+    ----------
+    log_names : list of str
+        Log names to collect results for.
+    **kwargs
+        Forwarded to ``get_results_for_log`` (directory overrides).
+
+    Returns
+    -------
+    pd.DataFrame
+        Combined results indexed by (Log, Model, method).
+    """
+    parts = []
+    for log in log_names:
+        df = get_results_for_log(log, **kwargs)
+        if df.empty:
+            continue
+        if "log" not in df.columns:
+            df["log"] = log
+        parts.append(df)
+
+    if not parts:
+        return pd.DataFrame()
+
+    df = pd.concat(parts, ignore_index=True)
+    df = df.rename(columns={"log": "Log", "model": "Model"})
+    return df.set_index(["Log", "Model", "method"])

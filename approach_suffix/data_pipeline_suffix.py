@@ -18,13 +18,14 @@ added to the prefix before later ones, so each gets its own tuple.
 Activity indices in the suffix target are 1-based so that 0 can serve as a
 padding token.  END_TOKEN is assigned index `len(activity_to_idx) + 1`.
 
-Train/val/test split matches the SuTraN baseline (Preprocessing/from_log_to_tensors.py):
-  - Temporal out-of-time split: 60% train / 15% val / 25% test
-  - Train+val vs test: Weytjens 'preferred' mode (test_len_share=0.25)
+Train/val/test split matches generate_new_event_log_splits.py:
+  - Temporal out-of-time split: 64% train / 16% val / 20% test
+  - Train+val vs test: Weytjens 'preferred' mode (test_len_share=0.20)
   - Train vs val: simple chronological case assignment (val_len_share=0.20 of train+val)
-  - Cases longer than the 98.5th percentile of training case lengths are discarded
+  - Window-size filter applied to train+val and test BEFORE the val split
+  - Cases longer than the 98.5th percentile of full-log case lengths are discarded
   - Activity vocabulary is built from train+val union
-  - max_suffix_len = window_size (98.5th pct of training case lengths)
+  - max_suffix_len = window_size (98.5th pct of full-log case lengths)
 """
 
 import os
@@ -147,7 +148,7 @@ def build_splits(df,
                  case_id='case:concept:name',
                  timestamp='time:timestamp'):
     """
-    Two-stage split matching SuTraN baseline → 60% train / 15% val / 25% test.
+    Two-stage split → 64% train / 16% val / 20% test.
 
     Stage 1: Weytjens 'preferred' split at (1 - test_len) → train+val vs test.
     Stage 2: simple chronological split of train+val at val_len_share.
@@ -394,7 +395,7 @@ def trace_to_suffix_graphs(trace, activity_to_idx, end_token_idx, max_suffix_len
 def build_suffix_dataloaders(log_path,
                               truncation_level='none',
                               batch_size=32,
-                              test_len=0.25,
+                              test_len=0.20,
                               val_len_share=0.20,
                               window_size=None,
                               window_size_percentile=98.5,
@@ -411,7 +412,7 @@ def build_suffix_dataloaders(log_path,
     truncation_level : str
     batch_size : int
     test_len : float
-        Fraction of cases assigned to test (default 0.25, matching SuTraN).
+        Fraction of cases assigned to test (default 0.20).
     val_len_share : float
         Fraction of train+val cases assigned to val (default 0.20).
     window_size : int or None

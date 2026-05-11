@@ -145,7 +145,7 @@ def plot_split(
     log_name,
     case_id='case:concept:name',
     timestamp='time:timestamp',
-    test_len_share=0.25,
+    test_len_share=0.20,
     mode='preferred',
     start_date=None,
     start_before_date=None,
@@ -357,7 +357,7 @@ def construct_datasets(
     start_before_date=None,
     end_date=None,
     max_days=None,
-    test_len_share=0.25,
+    test_len_share=0.20,
     val_len_share=0.20,
     window_size=None,
     mode='preferred',
@@ -515,6 +515,8 @@ def construct_datasets(
     print(f"tss_index = {tss_index}  "
           f"(= {len(num_casefts)} num_casefts + {len(num_eventfts)} num_eventfts)")
     print("Use this value for the tss_index parameter in TRAIN_EVAL_*.py scripts.")
+    with open(os.path.join(output_directory, 'tss_index.txt'), 'w') as _f:
+        _f.write(str(tss_index))
 
 
 if __name__ == '__main__':
@@ -544,7 +546,7 @@ if __name__ == '__main__':
     END_DATE          = None   # e.g. "2019-02"
     MAX_DAYS          = None   # e.g. 143.33
     WINDOW_SIZE       = None   # None → auto (98.5th percentile)
-    TEST_LEN_SHARE    = 0.25
+    TEST_LEN_SHARE    = 0.20
     VAL_LEN_SHARE     = 0.20
     MODE              = 'preferred'
     OUTCOME           = None

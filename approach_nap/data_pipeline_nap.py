@@ -15,6 +15,7 @@ Train/val/test split matches the baseline script generate_new_event_log_splits.p
   - Activity vocabulary is built from the train+val union (same as baselines)
 """
 
+import hashlib
 import os
 from collections import defaultdict
 
@@ -191,14 +192,44 @@ def df_to_traces(df,
 # 5. Prefix DAG builder (shared helper)
 # ─────────────────────────────────────────────
 
-def _build_prefix_graph(prefix_events, activity_to_idx, timestamp):
+def _compute_time_stats(traces, timestamp):
     """
-    Build a PyG Data (x, edge_index, edge_attr) from an ordered list of
-    prefix events.  Events with the same timestamp form a concurrent layer;
-    edges run from every node in layer t to every node in layer t+1.
-    """
-    n_acts = len(activity_to_idx)
+    Compute normalization divisors for time features from a collection of traces.
 
+    Returns
+    -------
+    divisor  : mean time-since-previous-event (seconds) across all events
+    divisor2 : mean time-since-case-start (seconds) across all events
+    """
+    all_dt_prev  = []
+    all_dt_start = []
+    for trace in traces:
+        events = sorted(trace['events'], key=lambda e: e.get(timestamp))
+        if not events:
+            continue
+        case_start = events[0].get(timestamp)
+        last_ts    = case_start
+        for ev in events:
+            ts = ev.get(timestamp)
+            all_dt_prev.append((ts - last_ts).total_seconds())
+            all_dt_start.append((ts - case_start).total_seconds())
+            last_ts = ts
+    divisor  = max(float(np.mean(all_dt_prev)),  1.0) if all_dt_prev  else 1.0
+    divisor2 = max(float(np.mean(all_dt_start)), 1.0) if all_dt_start else 1.0
+    return divisor, divisor2
+
+
+def _build_prefix_graph(prefix_events, activity_to_idx, timestamp,
+                        divisor=1.0, divisor2=1.0):
+    """
+    Build a PyG Data (x, edge_index, edge_attr, node_pos) from an ordered list
+    of prefix events.  Events with the same timestamp form a concurrent layer;
+    edges run from every node in layer t to every node in layer t+1.
+
+    edge_attr holds the 4 Tax et al. time features for the destination block
+    of each edge (same values for all edges arriving at the same block):
+      [dt_prev_norm, dt_start_norm, time_of_day, day_of_week_norm]
+    """
     time_groups = defaultdict(list)
     for ev in prefix_events:
         ts = ev.get(timestamp)
@@ -207,45 +238,58 @@ def _build_prefix_graph(prefix_events, activity_to_idx, timestamp):
 
     sorted_times = sorted(time_groups.keys())
 
-    node_activities = []
-    node_timestamps = []
-    edge_list       = []
-    edge_attr_list  = []
+    node_activities  = []
+    node_timestamps  = []
+    node_block_idx   = []
+    edge_list        = []
+    edge_attr_list   = []
     previous_indices = []
 
-    for ts in sorted_times:
+    case_start_ts = sorted_times[0] if sorted_times else None
+
+    for block_idx, ts in enumerate(sorted_times):
+        prev_ts  = sorted_times[block_idx - 1] if block_idx > 0 else ts
+        dt_prev  = (ts - prev_ts).total_seconds() / divisor
+        dt_start = (ts - case_start_ts).total_seconds() / divisor2
+        midnight = ts.replace(hour=0, minute=0, second=0, microsecond=0)
+        tod      = (ts - midnight).total_seconds() / 86400
+        dow      = ts.weekday() / 7
+        edge_feat = [dt_prev, dt_start, tod, dow]
+
         current_indices = []
         for ev in time_groups[ts]:
             idx = len(node_activities)
             act = ev.get('concept:name')
             node_activities.append(act if act in activity_to_idx else None)
             node_timestamps.append(ts)
+            node_block_idx.append(block_idx)
             current_indices.append(idx)
 
         for prev in previous_indices:
             for curr in current_indices:
-                delta = (node_timestamps[curr] - node_timestamps[prev]).total_seconds()
                 edge_list.append((prev, curr))
-                edge_attr_list.append(delta)
+                edge_attr_list.append(edge_feat)
 
         previous_indices = current_indices
 
-    x_rows = []
-    for act in node_activities:
-        row = torch.zeros(n_acts)
-        if act is not None:
-            row[activity_to_idx[act]] = 1.0
-        x_rows.append(row)
-    x = torch.stack(x_rows)
+    unk_idx = len(activity_to_idx)   # index for activities not in vocab
+    x_ids = [activity_to_idx[act] if act is not None else unk_idx
+             for act in node_activities]
+    x = torch.tensor(x_ids, dtype=torch.long)
+
+    num_blocks = len(sorted_times)
+    norm = max(num_blocks - 1, 1)
+    node_pos = torch.tensor(
+        [b / norm for b in node_block_idx], dtype=torch.float).unsqueeze(1)
 
     if edge_list:
         edge_index = torch.tensor(edge_list, dtype=torch.long).t().contiguous()
-        edge_attr  = torch.tensor(edge_attr_list, dtype=torch.float).unsqueeze(1)
+        edge_attr  = torch.tensor(edge_attr_list, dtype=torch.float)  # (E, 4)
     else:
         edge_index = torch.empty((2, 0), dtype=torch.long)
-        edge_attr  = torch.empty((0, 1), dtype=torch.float)
+        edge_attr  = torch.empty((0, 4), dtype=torch.float)
 
-    return x, edge_index, edge_attr
+    return x, edge_index, edge_attr, node_pos
 
 
 # ─────────────────────────────────────────────
@@ -254,7 +298,8 @@ def _build_prefix_graph(prefix_events, activity_to_idx, timestamp):
 
 def trace_to_nap_graphs(trace, activity_to_idx,
                         timestamp='time:timestamp',
-                        truncation_level='none'):
+                        truncation_level='none',
+                        divisor=1.0, divisor2=1.0):
     """
     Generate one prefix graph per event (same granularity as the baselines).
 
@@ -294,17 +339,25 @@ def trace_to_nap_graphs(trace, activity_to_idx,
         if target_act not in activity_to_idx:
             continue
 
-        x, edge_index, edge_attr = _build_prefix_graph(
-            events[:i], activity_to_idx, timestamp)
+        x, edge_index, edge_attr, node_pos = _build_prefix_graph(
+            events[:i], activity_to_idx, timestamp, divisor, divisor2)
 
         y = torch.zeros(n_acts)
         y[activity_to_idx[target_act]] = 1.0
+
+        # time-to-next-event: delta from last prefix event to next event
+        last_ts = events[i - 1].get(timestamp)
+        next_ts = events[i].get(timestamp)
+        y_time  = torch.tensor(
+            [(next_ts - last_ts).total_seconds() / divisor], dtype=torch.float)
 
         dataset.append(Data(
             x=x,
             edge_index=edge_index,
             edge_attr=edge_attr,
+            node_pos=node_pos,
             y=y.unsqueeze(0),
+            y_time=y_time,
         ))
 
     return dataset
@@ -312,6 +365,17 @@ def trace_to_nap_graphs(trace, activity_to_idx,
 
 # ─────────────────────────────────────────────
 # 7. Full pipeline
+def _cache_path(log_path, truncation_level, test_len, val_len_share, mode,
+                case_id, act_label, timestamp):
+    mtime = os.path.getmtime(log_path)
+    key = (f"{os.path.abspath(log_path)}|{mtime}|{truncation_level}|"
+           f"{test_len}|{val_len_share}|{mode}|{case_id}|{act_label}|{timestamp}")
+    h = hashlib.md5(key.encode()).hexdigest()[:12]
+    cache_dir = os.path.join(os.path.dirname(os.path.abspath(log_path)), "nap_cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    return os.path.join(cache_dir, f"{h}.pt")
+
+
 # ─────────────────────────────────────────────
 
 def build_nap_dataloaders(log_path,
@@ -351,57 +415,90 @@ def build_nap_dataloaders(log_path,
     -------
     train_loader, val_loader, test_loader : DataLoader
     activity_to_idx : dict
+    divisor  : float  — mean time-since-previous-event (seconds) from train+val
+    divisor2 : float  — mean time-since-case-start (seconds) from train+val
     """
     if mode != 'preferred':
         raise NotImplementedError("Only 'preferred' mode is currently supported.")
 
-    # ── Load & sort ───────────────────────────────────────────────────────
-    print("Loading event log …")
-    df = load_log(log_path, case_id, timestamp)
-    df.drop_duplicates(inplace=True, ignore_index=True)
-    df = sort_log_by_start(df, case_id, timestamp)
+    # ── Cache check ───────────────────────────────────────────────────────
+    cache_file = _cache_path(log_path, truncation_level, test_len,
+                             val_len_share, mode, case_id, act_label, timestamp)
+    if os.path.exists(cache_file):
+        print(f"Loading cached data splits from {cache_file} …")
+        cache = torch.load(cache_file, weights_only=False)
+        train_graphs    = cache['train_graphs']
+        val_graphs      = cache['val_graphs']
+        test_graphs     = cache['test_graphs']
+        activity_to_idx = cache['activity_to_idx']
+        divisor         = cache['divisor']
+        divisor2        = cache['divisor2']
+        print(f"Graphs – train: {len(train_graphs)}  "
+              f"val: {len(val_graphs)}  test: {len(test_graphs)}")
+    else:
+        # ── Load & sort ───────────────────────────────────────────────────
+        print("Loading event log …")
+        df = load_log(log_path, case_id, timestamp)
+        df.drop_duplicates(inplace=True, ignore_index=True)
+        df = sort_log_by_start(df, case_id, timestamp)
 
-    # ── Temporal split ────────────────────────────────────────────────────
-    df_train, df_val, df_test = build_splits(
-        df, test_len, val_len_share, case_id, timestamp)
+        # ── Temporal split ────────────────────────────────────────────────
+        df_train, df_val, df_test = build_splits(
+            df, test_len, val_len_share, case_id, timestamp)
 
-    n_train = df_train[case_id].nunique()
-    n_val   = df_val[case_id].nunique()
-    n_test  = df_test[case_id].nunique()
-    print(f"Cases  – train: {n_train}  val: {n_val}  test: {n_test}")
+        n_train = df_train[case_id].nunique()
+        n_val   = df_val[case_id].nunique()
+        n_test  = df_test[case_id].nunique()
+        print(f"Cases  – train: {n_train}  val: {n_val}  test: {n_test}")
 
-    # ── Vocabulary (train + val union, matching baselines) ────────────────
-    activity_to_idx = build_activity_vocab(
-        pd.concat([df_train, df_val], ignore_index=True), act_label)
-    print(f"Vocabulary size (train+val): {len(activity_to_idx)}")
+        # ── Vocabulary (train + val union, matching baselines) ────────────
+        activity_to_idx = build_activity_vocab(
+            pd.concat([df_train, df_val], ignore_index=True), act_label)
+        print(f"Vocabulary size (train+val): {len(activity_to_idx)}")
 
-    # ── Convert splits to trace dicts ─────────────────────────────────────
-    traces_train = df_to_traces(df_train, case_id, timestamp)
-    traces_val   = df_to_traces(df_val,   case_id, timestamp)
-    traces_test  = df_to_traces(df_test,  case_id, timestamp)
+        # ── Convert splits to trace dicts ─────────────────────────────────
+        traces_train = df_to_traces(df_train, case_id, timestamp)
+        traces_val   = df_to_traces(df_val,   case_id, timestamp)
+        traces_test  = df_to_traces(df_test,  case_id, timestamp)
 
-    # ── Generate prefix graphs ────────────────────────────────────────────
-    def _process_split(traces, desc):
-        graphs = []
-        for trace in tqdm(traces, desc=desc):
-            graphs.extend(
-                trace_to_nap_graphs(trace, activity_to_idx, timestamp,
-                                    truncation_level)
-            )
-        return graphs
+        # ── Time normalization stats (train+val, matching Tax et al.) ─────
+        divisor, divisor2 = _compute_time_stats(
+            traces_train + traces_val, timestamp)
+        print(f"Time stats – mean dt_prev: {divisor:.1f}s  "
+              f"mean dt_start: {divisor2:.1f}s")
 
-    train_graphs = _process_split(traces_train, "Train graphs")
-    val_graphs   = _process_split(traces_val,   "Val graphs  ")
-    test_graphs  = _process_split(traces_test,  "Test graphs ")
+        # ── Generate prefix graphs ────────────────────────────────────────
+        def _process_split(traces, desc):
+            graphs = []
+            for trace in tqdm(traces, desc=desc):
+                graphs.extend(
+                    trace_to_nap_graphs(trace, activity_to_idx, timestamp,
+                                        truncation_level, divisor, divisor2)
+                )
+            return graphs
 
-    print(f"Graphs – train: {len(train_graphs)}  "
-          f"val: {len(val_graphs)}  test: {len(test_graphs)}")
+        train_graphs = _process_split(traces_train, "Train graphs")
+        val_graphs   = _process_split(traces_val,   "Val graphs  ")
+        test_graphs  = _process_split(traces_test,  "Test graphs ")
 
-    train_loader = DataLoader(train_graphs, batch_size=batch_size, shuffle=True)
+        print(f"Graphs – train: {len(train_graphs)}  "
+              f"val: {len(val_graphs)}  test: {len(test_graphs)}")
+
+        torch.save({
+            'train_graphs'   : train_graphs,
+            'val_graphs'     : val_graphs,
+            'test_graphs'    : test_graphs,
+            'activity_to_idx': activity_to_idx,
+            'divisor'        : divisor,
+            'divisor2'       : divisor2,
+        }, cache_file)
+        print(f"Cached data splits saved to {cache_file}")
+
+    train_loader = DataLoader(train_graphs, batch_size=batch_size, shuffle=True, drop_last=True)
     val_loader   = DataLoader(val_graphs,   batch_size=batch_size, shuffle=False)
     test_loader  = DataLoader(test_graphs,  batch_size=batch_size, shuffle=False)
 
-    return train_loader, val_loader, test_loader, activity_to_idx
+    return train_loader, val_loader, test_loader, activity_to_idx, divisor, divisor2
 
 
 # ─────────────────────────────────────────────

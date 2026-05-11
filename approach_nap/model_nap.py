@@ -2,8 +2,11 @@
 GNN model for Next Activity Prediction (NAP).
 
 Architecture:
-  - 2-layer GraphSAGE encoder over the prefix DAG
-  - Global mean pooling → graph-level embedding
+  - Learned activity embedding (emb_dim set dynamically per log)
+  - Block-index position encoding appended to embedding (same value for
+    all concurrent nodes, preserving their structural symmetry)
+  - 2-layer GraphSAGE encoder with BatchNorm and residual connections
+  - Global mean + max pooling concatenated → graph-level embedding
   - 2-layer MLP classification head (one logit per activity)
 
 Loss     : CrossEntropyLoss  (single-label; multi-hot target converted via argmax)
@@ -15,7 +18,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score, f1_score
-from torch_geometric.nn import SAGEConv, global_mean_pool
+from torch_geometric.nn import SAGEConv, global_mean_pool, global_max_pool
 
 
 # ─────────────────────────────────────────────
@@ -28,8 +31,10 @@ class GNNNextActivity(nn.Module):
 
     Parameters
     ----------
-    in_channels : int
-        Node feature dimension (vocabulary size for one-hot encoding).
+    num_activities : int
+        Vocabulary size (number of unique activities in training data).
+    emb_dim : int
+        Activity embedding dimension. Set dynamically per log.
     hidden_channels : int
         Hidden size of GNN and MLP layers.
     out_channels : int
@@ -37,37 +42,68 @@ class GNNNextActivity(nn.Module):
     dropout : float
     """
 
-    def __init__(self, in_channels: int, hidden_channels: int,
-                 out_channels: int, dropout: float = 0.3):
+    def __init__(self, num_activities: int, emb_dim: int,
+                 hidden_channels: int, out_channels: int, dropout: float = 0.3):
         super().__init__()
-        self.conv1   = SAGEConv(in_channels, hidden_channels)
-        self.conv2   = SAGEConv(hidden_channels, hidden_channels)
+
+        # +1 for UNK (activities seen in val/test but not in vocab)
+        self.act_emb = nn.Embedding(num_activities + 1, emb_dim)
+
+        # Position encoding: block index appended → input width = emb_dim + 1
+        gnn_in = emb_dim + 1
+
+        # Layer 1: project to hidden_channels
+        self.conv1    = SAGEConv(gnn_in, hidden_channels)
+        self.bn1      = nn.BatchNorm1d(hidden_channels)
+        self.res_proj = nn.Linear(gnn_in, hidden_channels, bias=False)
+
+        # Layer 2: hidden_channels → hidden_channels (residual without projection)
+        self.conv2 = SAGEConv(hidden_channels, hidden_channels)
+        self.bn2   = nn.BatchNorm1d(hidden_channels)
+
         self.dropout = nn.Dropout(dropout)
-        self.mlp     = nn.Sequential(
-            nn.Linear(hidden_channels, hidden_channels),
+
+        # Mean + max pooling → 2 * hidden_channels
+        self.mlp = nn.Sequential(
+            nn.Linear(2 * hidden_channels, hidden_channels),
             nn.ReLU(),
             nn.Dropout(dropout),
             nn.Linear(hidden_channels, out_channels),
         )
 
-    def forward(self, x, edge_index, batch):
+    def forward(self, x, edge_index, batch, node_pos):
         """
         Parameters
         ----------
-        x          : (num_nodes, in_channels)
+        x        : (num_nodes,)      — integer activity IDs
         edge_index : (2, num_edges)
-        batch      : (num_nodes,)
+        batch    : (num_nodes,)
+        node_pos : (num_nodes, 1)    — normalized block index ∈ [0, 1]
 
         Returns
         -------
         logits : (batch_size, out_channels)
         """
-        x = self.conv1(x, edge_index).relu()
-        x = self.dropout(x)
-        x = self.conv2(x, edge_index).relu()
-        x = self.dropout(x)
-        x = global_mean_pool(x, batch)
-        return self.mlp(x)
+        x = self.act_emb(x)                              # (N, emb_dim)
+        x = torch.cat([x, node_pos], dim=-1)             # (N, emb_dim + 1)
+
+        # Layer 1 with residual
+        x1 = self.bn1(self.conv1(x, edge_index)).relu()
+        x1 = x1 + self.res_proj(x)                      # skip from input
+        x1 = self.dropout(x1)
+
+        # Layer 2 with residual
+        x2 = self.bn2(self.conv2(x1, edge_index)).relu()
+        x2 = x2 + x1                                     # skip from layer 1
+        x2 = self.dropout(x2)
+
+        # Mean + max pooling
+        graph_emb = torch.cat([
+            global_mean_pool(x2, batch),
+            global_max_pool(x2, batch),
+        ], dim=-1)                                        # (B, 2 * hidden_channels)
+
+        return self.mlp(graph_emb)
 
 
 # ─────────────────────────────────────────────
@@ -81,7 +117,7 @@ def train_epoch(model, loader, optimizer, criterion, device):
     for data in loader:
         data = data.to(device)
         optimizer.zero_grad()
-        logits  = model(data.x, data.edge_index, data.batch)
+        logits  = model(data.x, data.edge_index, data.batch, data.node_pos)
         # data.y shape: (B, num_activities)  — multi-hot from pipeline
         # Convert to integer class label via argmax for CrossEntropyLoss
         targets = data.y.argmax(dim=-1)       # (B,)
@@ -115,7 +151,7 @@ def evaluate(model, loader, criterion, device):
 
     for data in loader:
         data    = data.to(device)
-        logits  = model(data.x, data.edge_index, data.batch)
+        logits  = model(data.x, data.edge_index, data.batch, data.node_pos)
         targets = data.y.argmax(dim=-1)
         loss    = criterion(logits, targets)
         total_loss += loss.item()

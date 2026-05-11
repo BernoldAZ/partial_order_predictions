@@ -378,4 +378,7 @@ def train_eval(log_name,
         pickle.dump(results_dict_suf, file)
     with open(path_name_average_results, 'wb') as file:
         pickle.dump(avg_results_dict, file)
+    for _f in os.listdir(backup_path):
+        if _f.startswith('model_epoch_') and _f.endswith('.pt'):
+            os.remove(os.path.join(backup_path, _f))
 

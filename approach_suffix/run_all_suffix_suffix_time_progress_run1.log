@@ -1,0 +1,53 @@
+[2026-05-10 22:25:32] RUNNING | log=BPIC15_1
+[2026-05-10 22:25:35] ERROR | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix/run_all_suffix.py", line 211, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=False))
+      File "/workspace/approach_suffix/run_all_suffix.py", line 176, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 22:25:35] RUNNING | log=BPIC15_2
+[2026-05-10 22:25:38] ERROR | log=BPIC15_2
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix/run_all_suffix.py", line 211, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=False))
+      File "/workspace/approach_suffix/run_all_suffix.py", line 176, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-05-10 22:25:38] RUNNING | log=BPIC15_3
+[2026-05-10 22:26:50] RUNNING | log=BPIC15_1
+[2026-05-10 22:27:12] ERROR | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix/run_all_suffix.py", line 211, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=False))
+      File "/workspace/approach_suffix/run_all_suffix.py", line 176, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-05-10 22:27:12] RUNNING | log=BPIC15_2
+[2026-05-10 22:27:24] RUNNING | log=BPIC15_1
+[2026-05-10 23:03:43] DONE | log=BPIC15_1
+[2026-05-10 23:03:43] RUNNING | log=BPIC15_2
+[2026-05-10 23:15:07] DONE | log=BPIC15_2
+[2026-05-10 23:15:07] RUNNING | log=BPIC15_3
+[2026-05-10 23:39:15] ERROR | log=BPIC15_3
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix/run_all_suffix.py", line 211, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=False))
+      File "/workspace/approach_suffix/run_all_suffix.py", line 176, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 23:39:15] RUNNING | log=BPIC15_4
+[2026-05-11 00:00:00] DONE | log=BPIC15_4
+[2026-05-11 00:00:00] RUNNING | log=BPIC15_5
+[2026-05-11 00:12:48] DONE | log=BPIC15_5
+[2026-05-11 00:12:48] RUNNING | log=RequestForPayment
+[2026-05-11 00:20:07] DONE | log=RequestForPayment
+[2026-05-11 00:20:07] RUNNING | log=Sepsis
+[2026-05-11 00:22:51] DONE | log=Sepsis
+[2026-05-11 00:22:51] RUNNING | log=Hospital_Billing
+[2026-05-11 07:50:03] DONE | log=Hospital_Billing
+[2026-05-11 07:50:03] RUNNING | log=DomesticDeclarations
+[2026-05-11 08:32:31] DONE | log=DomesticDeclarations
+[2026-05-11 08:32:31] RUNNING | log=PrepaidTravelCost
+[2026-05-11 09:02:44] DONE | log=PrepaidTravelCost
+[2026-05-11 09:02:44] RUNNING | log=InternationalDeclarations

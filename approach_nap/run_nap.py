@@ -51,7 +51,7 @@ def run(log_path: str, log_name: str, results_dir: str):
     print(f"{'='*60}")
 
     # ── Data ─────────────────────────────────────────────────────────────
-    train_loader, val_loader, test_loader, activity_to_idx = \
+    train_loader, val_loader, test_loader, activity_to_idx, *_ = \
         build_nap_dataloaders(log_path,
                               truncation_level=TRUNCATION,
                               batch_size=BATCH_SIZE)
@@ -59,8 +59,11 @@ def run(log_path: str, log_name: str, results_dir: str):
     num_activities = len(activity_to_idx)
 
     # ── Model ─────────────────────────────────────────────────────────────
+    emb_dim = min(128, max(8, 4 * int(num_activities ** 0.5)))
+    print(f"Activities: {num_activities}  →  emb_dim: {emb_dim}")
     model = GNNNextActivity(
-        in_channels     = num_activities,
+        num_activities  = num_activities,
+        emb_dim         = emb_dim,
         hidden_channels = HIDDEN_CHANNELS,
         out_channels    = num_activities,
         dropout         = DROPOUT,
@@ -68,13 +71,15 @@ def run(log_path: str, log_name: str, results_dir: str):
 
     optimizer = torch.optim.Adam(model.parameters(), lr=LR,
                                  weight_decay=WEIGHT_DECAY)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='max', factor=0.5, patience=5, min_lr=1e-6)
     criterion = nn.CrossEntropyLoss()
 
     print(f"\nModel parameters: "
           f"{sum(p.numel() for p in model.parameters() if p.requires_grad):,}")
 
     # ── Training with early stopping ──────────────────────────────────────
-    best_val_loss  = float('inf')
+    best_val_acc   = 0.0
     patience_count = 0
     best_state     = None
     train_start    = time.time()
@@ -84,14 +89,18 @@ def run(log_path: str, log_name: str, results_dir: str):
                                             criterion, device)
         val_loss, val_metrics = evaluate(model, val_loader, criterion, device)
 
+        scheduler.step(val_metrics['accuracy'])
+        current_lr = optimizer.param_groups[0]['lr']
+
         print(f"Epoch {epoch:3d}  "
               f"train_loss={train_loss:.4f}  "
               f"val_loss={val_loss:.4f}  "
               f"val_acc={val_metrics['accuracy']:.4f}  "
-              f"val_f1={val_metrics['f1']:.4f}")
+              f"val_f1={val_metrics['f1']:.4f}  "
+              f"lr={current_lr:.2e}")
 
-        if val_loss < best_val_loss:
-            best_val_loss  = val_loss
+        if val_metrics['accuracy'] > best_val_acc:
+            best_val_acc   = val_metrics['accuracy']
             patience_count = 0
             best_state     = {k: v.cpu().clone()
                               for k, v in model.state_dict().items()}

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import os, random, json, itertools
+import os, random, json, itertools, sys
+sys.setrecursionlimit(10000)
 import numpy as np
 import pandas as pd
 from pm4py.objects.log.importer.xes import importer as xes_importer
@@ -22,8 +23,8 @@ def batched_predict(nap, tss_objs, batch_size=512):
     """Batched replacement for NAP.predict() — one model.predict() call instead of N."""
     all_features = []
     for sample in tss_objs:
-        exported = sample.export()
-        all_features.append(list(itertools.chain(exported["tss"][0], exported["tss"][1], exported["tss"][2])))
+        data = sample if isinstance(sample, dict) else sample.export()
+        all_features.append(list(itertools.chain(data["tss"][0], data["tss"][1], data["tss"][2])))
     X = nap.stdScaler.transform(np.array(all_features))
     probs = nap.model.predict(X, batch_size=batch_size, verbose=0)
     pred_indices = np.argmax(probs, axis=1)
@@ -129,35 +130,37 @@ def run_pydream_for_log(
     val_log   = xes_importer.apply(val_path,   parameters={"timestamp_sort": True, "timestamp_key": "time:timestamp"})
     test_log  = xes_importer.apply(test_path,  parameters={"timestamp_sort": True, "timestamp_key": "time:timestamp"})
 
-    # ── Petri net ────────────────────────────────────────────────────────────
-    train_val_log = EventLog(list(train_log) + list(val_log))
-    train_val_log.extensions.update(train_log.extensions)
-    train_val_log.classifiers.update(train_log.classifiers)
-    train_val_log.attributes.update(train_log.attributes)
-
-    net, initial_marking, _ = pm4py.discover_petri_net_inductive(train_log)
-    print("Petri net discovered from training log.")
-
-    enhanced_pn = EnhancedPN(net, initial_marking)
-    enhanced_pn.enhance(LogWrapper(train_val_log))
-    print("Petri net enhanced with decay functions from train+val.")
-
-    # ── TSS generation ───────────────────────────────────────────────────────
+    # ── TSS paths (check cache before expensive steps) ───────────────────────
     tss_train_path = os.path.join(_tss_dir, f"tss_train_{log_name}.json")
     tss_val_path   = os.path.join(_tss_dir, f"tss_val_{log_name}.json")
     tss_test_path  = os.path.join(_tss_dir, f"tss_test_{log_name}.json")
 
-    tss_train_json, _          = enhanced_pn.decay_replay(log_wrapper=LogWrapper(train_log))
-    tss_val_json,   _          = enhanced_pn.decay_replay(log_wrapper=LogWrapper(val_log))
-    tss_test_json,  tss_test_objs = enhanced_pn.decay_replay(log_wrapper=LogWrapper(test_log))
+    if os.path.exists(tss_train_path) and os.path.exists(tss_val_path) and os.path.exists(tss_test_path):
+        print("TSS files found on disk, skipping Petri net discovery and replay.")
+    else:
+        train_log_c = pm4py.convert_to_event_log(pm4py.convert_to_dataframe(train_log))
+        val_log_c   = pm4py.convert_to_event_log(pm4py.convert_to_dataframe(val_log))
+        test_log_c  = pm4py.convert_to_event_log(pm4py.convert_to_dataframe(test_log))
+        train_val_log = EventLog(list(train_log_c) + list(val_log_c))
 
-    with open(tss_train_path, "w") as f:
-        json.dump(tss_train_json, f)
-    with open(tss_val_path, "w") as f:
-        json.dump(tss_val_json, f)
-    with open(tss_test_path, "w") as f:
-        json.dump(tss_test_json, f)
-    print("TSS generated and saved for train, val, test.")
+        net, initial_marking, _ = pm4py.discover_petri_net_inductive(train_log_c)
+        print("Petri net discovered from training log.")
+
+        enhanced_pn = EnhancedPN(net, initial_marking)
+        enhanced_pn.enhance(LogWrapper(train_val_log))
+        print("Petri net enhanced with decay functions from train+val.")
+
+        tss_train_json, _ = enhanced_pn.decay_replay(log_wrapper=LogWrapper(train_log_c))
+        tss_val_json,   _ = enhanced_pn.decay_replay(log_wrapper=LogWrapper(val_log_c))
+        tss_test_json,  _ = enhanced_pn.decay_replay(log_wrapper=LogWrapper(test_log_c))
+
+        with open(tss_train_path, "w") as f:
+            json.dump(tss_train_json, f)
+        with open(tss_val_path, "w") as f:
+            json.dump(tss_val_json, f)
+        with open(tss_test_path, "w") as f:
+            json.dump(tss_test_json, f)
+        print("TSS generated and saved for train, val, test.")
 
     # ── Train NAP ────────────────────────────────────────────────────────────
     model_dir = os.path.join(_models_dir, log_name)
@@ -169,13 +172,14 @@ def run_pydream_for_log(
     nap.loadModel(model_dir, log_name)
 
     # ── Evaluate ─────────────────────────────────────────────────────────────
-    labeled_pairs = [(obj, s["label"]) for obj, s in zip(tss_test_objs, tss_test_json)
-                     if s["label"] is not None]
+    with open(tss_test_path) as f:
+        tss_test_json = json.load(f)
+    labeled_pairs = [(s, s["label"]) for s in tss_test_json if s["label"] is not None]
     if not labeled_pairs:
         print(f"No labeled test samples for {log_name}, skipping.")
         return None
-    tss_test_labeled_objs, y_true = zip(*labeled_pairs)
-    _, y_pred = batched_predict(nap, list(tss_test_labeled_objs))
+    test_samples, y_true = zip(*labeled_pairs)
+    _, y_pred = batched_predict(nap, list(test_samples))
     y_true = list(y_true)
 
     acc       = accuracy_score(y_true, y_pred)
@@ -235,7 +239,9 @@ if __name__ == "__main__":
         train_val_log.attributes.update(train_log.attributes)
 
         # Discover Petri net from training log only (no test leakage).
-        net, initial_marking, final_marking = pm4py.discover_petri_net_inductive(train_log)
+        _train_df = pm4py.convert_to_dataframe(train_log)
+        _train_log_clean = pm4py.convert_to_event_log(_train_df)
+        net, initial_marking, final_marking = pm4py.discover_petri_net_inductive(_train_log_clean)
         print("Petri net discovered from training log.")
 
         # Enhance Petri net with decay functions from train+val only (no test leakage).

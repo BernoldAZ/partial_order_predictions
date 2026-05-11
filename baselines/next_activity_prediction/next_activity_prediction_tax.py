@@ -53,12 +53,8 @@ print("GPUs available:", tf.config.list_physical_devices('GPU'))
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
     try:
-        # Limit TensorFlow to use 4096 MB on the first GPU.
-        """
-        tf.config.set_logical_device_configuration(
-            gpus[0],
-            [tf.config.LogicalDeviceConfiguration(memory_limit=20096)])
-        """
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
         logical_gpus = tf.config.list_logical_devices('GPU')
         print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
     except RuntimeError as e:
@@ -511,13 +507,13 @@ def run_tax_for_log(
         print(f"  Building model ...")
         main_input = Input(shape=(_maxlen, total_features), name='main_input')
         l1   = LSTM(100, kernel_initializer='glorot_uniform', return_sequences=True,
-                    dropout=0.2, unroll=True)(main_input)
+                    dropout=0.2)(main_input)
         b1   = BatchNormalization()(l1)
         l2_1 = LSTM(100, kernel_initializer='glorot_uniform', return_sequences=False,
-                    dropout=0.2, unroll=True)(b1)
+                    dropout=0.2)(b1)
         b2_1 = BatchNormalization()(l2_1)
         l2_2 = LSTM(100, kernel_initializer='glorot_uniform', return_sequences=False,
-                    dropout=0.2, unroll=True)(b1)
+                    dropout=0.2)(b1)
         b2_2 = BatchNormalization()(l2_2)
         act_output  = Dense(len(_target_tokens), activation='softmax',
                             kernel_initializer='glorot_uniform', name='act_output')(b2_1)
@@ -542,11 +538,16 @@ def run_tax_for_log(
                               verbose=1, min_delta=0.0001),
         ]
         print(f"  Training ...")
+        with tf.device('/CPU:0'):
+            train_ds = tf.data.Dataset.from_tensor_slices(
+                (X_train, {'act_output': y_act_train, 'time_output': y_time_train})
+            ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+            val_ds = tf.data.Dataset.from_tensor_slices(
+                (X_val, {'act_output': y_act_val, 'time_output': y_time_val})
+            ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
         model.fit(
-            X_train, {'act_output': y_act_train, 'time_output': y_time_train},
-            validation_data=(X_val, {'act_output': y_act_val, 'time_output': y_time_val}),
-            verbose=1, callbacks=callbacks,
-            batch_size=batch_size, epochs=epochs, shuffle=False,
+            train_ds, validation_data=val_ds,
+            verbose=1, callbacks=callbacks, epochs=epochs,
         )
 
         # Evaluate
@@ -557,9 +558,13 @@ def run_tax_for_log(
             optimizer=opt,
             metrics={'act_output': 'acc', 'time_output': 'mae'},
         )
-        model.evaluate(X_test, {'act_output': y_act_test, 'time_output': y_time_test},
-                       verbose=1, batch_size=batch_size)
-        preds         = model.predict(X_test)
+        with tf.device('/CPU:0'):
+            test_ds = tf.data.Dataset.from_tensor_slices(
+                (X_test, {'act_output': y_act_test, 'time_output': y_time_test})
+            ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+            pred_ds = tf.data.Dataset.from_tensor_slices(X_test).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+        model.evaluate(test_ds, verbose=1)
+        preds         = model.predict(pred_ds)
         y_act_pred    = np.argmax(preds[0], axis=1)
         y_act_true    = np.argmax(y_act_test, axis=1)
 

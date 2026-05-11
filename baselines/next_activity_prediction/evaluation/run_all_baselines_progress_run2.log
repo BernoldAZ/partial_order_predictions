@@ -1,0 +1,280 @@
+[2026-05-08 07:31:10] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_1
+[2026-05-08 07:34:19] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_1
+[2026-05-08 07:34:19] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_2
+[2026-05-08 07:37:00] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_2
+[2026-05-08 07:37:00] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_3
+[2026-05-08 07:40:00] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_3
+[2026-05-08 07:40:00] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_4
+[2026-05-08 07:42:26] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_4
+[2026-05-08 07:42:26] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_5
+[2026-05-08 07:45:39] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_5
+[2026-05-08 07:45:39] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=RequestForPayment
+[2026-05-08 07:47:21] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=RequestForPayment
+[2026-05-08 07:47:21] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=Sepsis
+[2026-05-08 07:48:18] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=Sepsis
+[2026-05-08 07:48:18] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=Hospital_Billing
+[2026-05-08 08:08:24] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=Hospital_Billing
+[2026-05-08 08:08:24] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=DomesticDeclarations
+[2026-05-08 08:11:00] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=DomesticDeclarations
+[2026-05-08 08:11:00] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=Road_Traffic_Fine_Management_Process
+[2026-05-08 08:35:54] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=Road_Traffic_Fine_Management_Process
+[2026-05-08 08:35:54] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=PrepaidTravelCost
+[2026-05-08 08:36:57] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=PrepaidTravelCost
+[2026-05-08 08:36:57] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=InternationalDeclarations
+[2026-05-08 08:41:08] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=InternationalDeclarations
+[2026-05-08 08:41:08] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_1
+[2026-05-08 08:44:16] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_1
+[2026-05-08 08:44:16] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_2
+[2026-05-08 08:47:00] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_2
+[2026-05-08 08:47:00] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_3
+[2026-05-08 08:50:18] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_3
+[2026-05-08 08:50:18] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_4
+[2026-05-08 08:53:01] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_4
+[2026-05-08 08:53:01] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_5
+[2026-05-08 08:56:15] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_5
+[2026-05-08 08:56:15] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=RequestForPayment
+[2026-05-08 08:58:04] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=RequestForPayment
+[2026-05-08 08:58:04] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Sepsis
+[2026-05-08 08:59:01] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Sepsis
+[2026-05-08 08:59:01] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Hospital_Billing
+[2026-05-08 09:19:06] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Hospital_Billing
+[2026-05-08 09:19:06] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=DomesticDeclarations
+[2026-05-08 09:21:42] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=DomesticDeclarations
+[2026-05-08 09:21:42] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Road_Traffic_Fine_Management_Process
+[2026-05-08 09:40:41] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Road_Traffic_Fine_Management_Process
+[2026-05-08 10:05:24] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Road_Traffic_Fine_Management_Process
+[2026-05-08 10:05:24] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=PrepaidTravelCost
+[2026-05-08 10:06:31] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=PrepaidTravelCost
+[2026-05-08 10:06:31] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=InternationalDeclarations
+[2026-05-08 10:10:38] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=InternationalDeclarations
+[2026-05-08 10:10:38] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_1
+[2026-05-08 10:13:17] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_1
+[2026-05-08 10:13:17] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_2
+[2026-05-08 10:15:30] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_2
+[2026-05-08 10:15:30] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_3
+[2026-05-08 10:18:20] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_3
+[2026-05-08 10:18:20] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_4
+[2026-05-08 10:20:39] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_4
+[2026-05-08 10:20:39] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_5
+[2026-05-08 10:23:29] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_5
+[2026-05-08 10:23:29] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=RequestForPayment
+[2026-05-08 10:25:21] DONE | model=everman | method=Bose 2009 Substitution Scores | log=RequestForPayment
+[2026-05-08 10:25:21] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=Sepsis
+[2026-05-08 10:26:14] DONE | model=everman | method=Bose 2009 Substitution Scores | log=Sepsis
+[2026-05-08 10:26:14] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=Hospital_Billing
+[2026-05-08 10:45:56] DONE | model=everman | method=Bose 2009 Substitution Scores | log=Hospital_Billing
+[2026-05-08 10:45:56] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=DomesticDeclarations
+[2026-05-08 10:48:26] DONE | model=everman | method=Bose 2009 Substitution Scores | log=DomesticDeclarations
+[2026-05-08 10:48:26] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=Road_Traffic_Fine_Management_Process
+[2026-05-10 09:45:37] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_1
+[2026-05-10 09:45:37] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_2
+[2026-05-10 09:45:37] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_4
+[2026-05-10 09:45:37] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_3
+[2026-05-10 09:45:51] ERROR | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_3
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 243, in _run_task
+        run_combination(model, method, log_name, results_dir, use_cpu=False)
+      File "/app/run_all_baselines.py", line 229, in run_combination
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -6 (killed by signal 6 — likely segfault)
+[2026-05-10 09:45:51] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_3
+[2026-05-10 09:51:38] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_1
+[2026-05-10 09:51:38] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_2
+[2026-05-10 09:51:38] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_3
+[2026-05-10 09:51:38] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_4
+[2026-05-10 09:51:55] ERROR | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 243, in _run_task
+        run_combination(model, method, log_name, results_dir, use_cpu=False)
+      File "/app/run_all_baselines.py", line 229, in run_combination
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -6 (killed by signal 6 — likely segfault)
+[2026-05-10 09:51:55] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_1
+[2026-05-10 09:51:56] ERROR | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_3
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 243, in _run_task
+        run_combination(model, method, log_name, results_dir, use_cpu=False)
+      File "/app/run_all_baselines.py", line 229, in run_combination
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -6 (killed by signal 6 — likely segfault)
+[2026-05-10 09:51:56] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_3
+[2026-05-10 09:52:04] ERROR | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_2
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 243, in _run_task
+        run_combination(model, method, log_name, results_dir, use_cpu=False)
+      File "/app/run_all_baselines.py", line 229, in run_combination
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 09:52:04] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_2
+[2026-05-10 10:02:16] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_4
+[2026-05-10 10:02:16] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_4
+[2026-05-10 10:07:05] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_2
+[2026-05-10 10:07:05] RUNNING | model=everman | method=one_hot | log=BPIC15_2
+[2026-05-10 10:09:13] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_1
+[2026-05-10 10:09:13] RUNNING | model=everman | method=one_hot | log=BPIC15_1
+[2026-05-10 10:10:16] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_3
+[2026-05-10 10:10:16] RUNNING | model=everman | method=one_hot | log=BPIC15_3
+[2026-05-10 10:16:44] DONE | model=everman | method=one_hot | log=BPIC15_2
+[2026-05-10 10:16:44] RUNNING | model=pydream | method=NAP | log=BPIC15_2
+[2026-05-10 10:17:45] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_4
+[2026-05-10 10:17:45] RUNNING | model=everman | method=one_hot | log=BPIC15_4
+[2026-05-10 10:20:25] DONE | model=everman | method=one_hot | log=BPIC15_1
+[2026-05-10 10:20:25] RUNNING | model=pydream | method=NAP | log=BPIC15_1
+[2026-05-10 10:21:22] DONE | model=everman | method=one_hot | log=BPIC15_3
+[2026-05-10 10:21:22] RUNNING | model=pydream | method=NAP | log=BPIC15_3
+[2026-05-10 10:27:00] ERROR | model=pydream | method=NAP | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 243, in _run_task
+        run_combination(model, method, log_name, results_dir, use_cpu=False)
+      File "/app/run_all_baselines.py", line 229, in run_combination
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 10:27:00] RUNNING | model=tax | method=one_hot | log=BPIC15_1
+[2026-05-10 10:27:08] DONE | model=everman | method=one_hot | log=BPIC15_4
+[2026-05-10 10:27:08] RUNNING | model=pydream | method=NAP | log=BPIC15_4
+[2026-05-10 10:30:35] ERROR | model=pydream | method=NAP | log=BPIC15_3
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 243, in _run_task
+        run_combination(model, method, log_name, results_dir, use_cpu=False)
+      File "/app/run_all_baselines.py", line 229, in run_combination
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 10:30:35] RUNNING | model=tax | method=one_hot | log=BPIC15_3
+[2026-05-10 11:06:36] ERROR | model=pydream | method=NAP | log=BPIC15_4
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 243, in _run_task
+        run_combination(model, method, log_name, results_dir, use_cpu=False)
+      File "/app/run_all_baselines.py", line 229, in run_combination
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 11:06:36] RUNNING | model=tax | method=one_hot | log=BPIC15_4
+[2026-05-10 11:17:37] DONE | model=pydream | method=NAP | log=BPIC15_2
+[2026-05-10 11:17:37] RUNNING | model=tax | method=one_hot | log=BPIC15_2
+[2026-05-10 11:47:41] DONE | model=tax | method=one_hot | log=BPIC15_1
+[2026-05-10 11:47:41] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_5
+[2026-05-10 11:59:23] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_5
+[2026-05-10 11:59:23] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_5
+[2026-05-10 12:18:15] DONE | model=tax | method=one_hot | log=BPIC15_3
+[2026-05-10 12:18:15] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=RequestForPayment
+[2026-05-10 12:20:01] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_5
+[2026-05-10 12:20:01] RUNNING | model=everman | method=one_hot | log=BPIC15_5
+[2026-05-10 12:24:45] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=RequestForPayment
+[2026-05-10 12:24:45] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=RequestForPayment
+[2026-05-10 12:30:42] DONE | model=tax | method=one_hot | log=BPIC15_2
+[2026-05-10 12:30:42] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=Sepsis
+[2026-05-10 12:31:02] DONE | model=tax | method=one_hot | log=BPIC15_4
+[2026-05-10 12:31:02] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=DomesticDeclarations
+[2026-05-10 12:31:35] DONE | model=everman | method=one_hot | log=BPIC15_5
+[2026-05-10 12:31:35] RUNNING | model=pydream | method=NAP | log=BPIC15_5
+[2026-05-10 12:33:17] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=Sepsis
+[2026-05-10 12:33:17] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=Sepsis
+[2026-05-10 12:37:40] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=DomesticDeclarations
+[2026-05-10 12:37:40] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=DomesticDeclarations
+[2026-05-10 12:37:41] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=Sepsis
+[2026-05-10 12:37:41] RUNNING | model=everman | method=one_hot | log=Sepsis
+[2026-05-10 12:37:55] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=RequestForPayment
+[2026-05-10 12:37:55] RUNNING | model=everman | method=one_hot | log=RequestForPayment
+[2026-05-10 12:40:03] DONE | model=everman | method=one_hot | log=Sepsis
+[2026-05-10 12:40:03] RUNNING | model=pydream | method=NAP | log=Sepsis
+[2026-05-10 12:42:59] DONE | model=everman | method=one_hot | log=RequestForPayment
+[2026-05-10 12:42:59] RUNNING | model=pydream | method=NAP | log=RequestForPayment
+[2026-05-10 12:47:38] DONE | model=pydream | method=NAP | log=Sepsis
+[2026-05-10 12:47:38] RUNNING | model=tax | method=one_hot | log=Sepsis
+[2026-05-10 12:51:06] DONE | model=pydream | method=NAP | log=RequestForPayment
+[2026-05-10 12:51:06] RUNNING | model=tax | method=one_hot | log=RequestForPayment
+[2026-05-10 12:56:15] ERROR | model=pydream | method=NAP | log=BPIC15_5
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 243, in _run_task
+        run_combination(model, method, log_name, results_dir, use_cpu=False)
+      File "/app/run_all_baselines.py", line 229, in run_combination
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 12:56:15] RUNNING | model=tax | method=one_hot | log=BPIC15_5
+[2026-05-10 12:57:09] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=DomesticDeclarations
+[2026-05-10 12:57:09] RUNNING | model=everman | method=one_hot | log=DomesticDeclarations
+[2026-05-10 13:01:32] DONE | model=tax | method=one_hot | log=Sepsis
+[2026-05-10 13:01:32] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=PrepaidTravelCost
+[2026-05-10 13:02:48] DONE | model=everman | method=one_hot | log=DomesticDeclarations
+[2026-05-10 13:02:48] RUNNING | model=pydream | method=NAP | log=DomesticDeclarations
+[2026-05-10 13:03:41] DONE | model=everman | method=Bose 2009 Substitution Scores | log=PrepaidTravelCost
+[2026-05-10 13:03:41] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=PrepaidTravelCost
+[2026-05-10 13:05:42] DONE | model=pydream | method=NAP | log=DomesticDeclarations
+[2026-05-10 13:05:42] RUNNING | model=tax | method=one_hot | log=DomesticDeclarations
+[2026-05-10 13:05:44] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=PrepaidTravelCost
+[2026-05-10 13:05:44] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=PrepaidTravelCost
+[2026-05-10 13:05:57] ERROR | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=PrepaidTravelCost
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 243, in _run_task
+        run_combination(model, method, log_name, results_dir, use_cpu=False)
+      File "/app/run_all_baselines.py", line 229, in run_combination
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 13:05:57] RUNNING | model=everman | method=one_hot | log=PrepaidTravelCost
+[2026-05-10 13:08:05] DONE | model=everman | method=one_hot | log=PrepaidTravelCost
+[2026-05-10 13:08:05] RUNNING | model=pydream | method=NAP | log=PrepaidTravelCost
+[2026-05-10 13:10:38] DONE | model=pydream | method=NAP | log=PrepaidTravelCost
+[2026-05-10 13:10:38] RUNNING | model=tax | method=one_hot | log=PrepaidTravelCost
+[2026-05-10 13:12:21] DONE | model=tax | method=one_hot | log=RequestForPayment
+[2026-05-10 13:12:21] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=InternationalDeclarations
+[2026-05-10 13:20:46] DONE | model=everman | method=Bose 2009 Substitution Scores | log=InternationalDeclarations
+[2026-05-10 13:20:46] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=InternationalDeclarations
+[2026-05-10 13:29:13] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=InternationalDeclarations
+[2026-05-10 13:29:13] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=InternationalDeclarations
+[2026-05-10 13:29:29] ERROR | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=InternationalDeclarations
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 243, in _run_task
+        run_combination(model, method, log_name, results_dir, use_cpu=False)
+      File "/app/run_all_baselines.py", line 229, in run_combination
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 13:29:29] RUNNING | model=everman | method=one_hot | log=InternationalDeclarations
+[2026-05-10 13:30:14] DONE | model=tax | method=one_hot | log=PrepaidTravelCost
+[2026-05-10 13:30:14] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012_A
+[2026-05-10 13:35:48] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012_A
+[2026-05-10 13:35:48] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI_Challenge_2012_A
+[2026-05-10 13:37:56] DONE | model=everman | method=one_hot | log=InternationalDeclarations
+[2026-05-10 13:37:56] RUNNING | model=pydream | method=NAP | log=InternationalDeclarations
+[2026-05-10 13:42:21] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI_Challenge_2012_A
+[2026-05-10 13:42:21] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPI_Challenge_2012_A
+[2026-05-10 13:48:34] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPI_Challenge_2012_A
+[2026-05-10 13:48:34] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI_Challenge_2012_A
+[2026-05-10 13:54:36] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI_Challenge_2012_A
+[2026-05-10 13:54:36] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI_Challenge_2012_A
+[2026-05-10 13:54:54] ERROR | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI_Challenge_2012_A
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 243, in _run_task
+        run_combination(model, method, log_name, results_dir, use_cpu=False)
+      File "/app/run_all_baselines.py", line 229, in run_combination
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 13:54:54] RUNNING | model=everman | method=one_hot | log=BPI_Challenge_2012_A
+[2026-05-10 13:55:22] DONE | model=pydream | method=NAP | log=InternationalDeclarations
+[2026-05-10 13:55:22] RUNNING | model=tax | method=one_hot | log=InternationalDeclarations
+[2026-05-10 14:01:18] DONE | model=everman | method=one_hot | log=BPI_Challenge_2012_A
+[2026-05-10 14:01:18] RUNNING | model=pydream | method=NAP | log=BPI_Challenge_2012_A
+[2026-05-10 14:01:24] DONE | model=tax | method=one_hot | log=DomesticDeclarations
+[2026-05-10 14:01:24] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012_O
+[2026-05-10 14:05:14] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012_O
+[2026-05-10 14:05:14] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI_Challenge_2012_O
+[2026-05-10 14:08:18] DONE | model=pydream | method=NAP | log=BPI_Challenge_2012_A
+[2026-05-10 14:08:18] RUNNING | model=tax | method=one_hot | log=BPI_Challenge_2012_A
+[2026-05-10 14:08:51] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI_Challenge_2012_O
+[2026-05-10 14:08:51] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPI_Challenge_2012_O
+[2026-05-10 14:12:22] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPI_Challenge_2012_O
+[2026-05-10 14:12:22] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI_Challenge_2012_O
+[2026-05-10 14:15:50] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI_Challenge_2012_O
+[2026-05-10 14:15:50] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI_Challenge_2012_O
+[2026-05-10 14:16:03] ERROR | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI_Challenge_2012_O
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 243, in _run_task
+        run_combination(model, method, log_name, results_dir, use_cpu=False)
+      File "/app/run_all_baselines.py", line 229, in run_combination
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 14:16:03] RUNNING | model=everman | method=one_hot | log=BPI_Challenge_2012_O
+[2026-05-10 14:19:54] DONE | model=everman | method=one_hot | log=BPI_Challenge_2012_O
+[2026-05-10 14:19:54] RUNNING | model=pydream | method=NAP | log=BPI_Challenge_2012_O
+[2026-05-10 14:23:25] DONE | model=pydream | method=NAP | log=BPI_Challenge_2012_O
+[2026-05-10 14:23:25] RUNNING | model=tax | method=one_hot | log=BPI_Challenge_2012_O
+[2026-05-10 14:52:10] DONE | model=tax | method=one_hot | log=InternationalDeclarations
+[2026-05-10 14:52:10] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012_W

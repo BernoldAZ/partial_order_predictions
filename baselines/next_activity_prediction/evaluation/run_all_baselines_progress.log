@@ -1,0 +1,295 @@
+[2026-05-05 20:24:52] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_1
+[2026-05-05 20:27:57] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_1
+[2026-05-05 20:27:57] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_2
+[2026-05-05 20:30:29] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_2
+[2026-05-05 20:30:29] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_3
+[2026-05-05 20:33:21] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_3
+[2026-05-05 20:33:21] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_4
+[2026-05-05 20:35:39] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_4
+[2026-05-05 20:35:39] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_5
+[2026-05-05 20:38:41] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPIC15_5
+[2026-05-05 20:38:41] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=RequestForPayment
+[2026-05-05 20:40:12] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=RequestForPayment
+[2026-05-05 20:40:13] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=Sepsis
+[2026-05-05 20:40:57] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=Sepsis
+[2026-05-05 20:40:57] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=Hospital_Billing
+[2026-05-05 21:00:37] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=Hospital_Billing
+[2026-05-05 21:00:38] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI Challenge 2017
+[2026-05-05 21:48:33] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI Challenge 2017
+[2026-05-05 21:48:33] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=DomesticDeclarations
+[2026-05-05 21:50:49] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=DomesticDeclarations
+[2026-05-05 21:50:49] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012
+[2026-05-05 22:01:59] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012
+[2026-05-05 22:01:59] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=Road_Traffic_Fine_Management_Process
+[2026-05-05 22:26:33] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=Road_Traffic_Fine_Management_Process
+[2026-05-05 22:26:34] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=PrepaidTravelCost
+[2026-05-05 22:27:27] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=PrepaidTravelCost
+[2026-05-05 22:27:28] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=InternationalDeclarations
+[2026-05-05 22:31:21] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=InternationalDeclarations
+[2026-05-05 22:31:21] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_1
+[2026-05-05 22:35:55] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_1
+[2026-05-05 22:35:55] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_2
+[2026-05-05 22:40:25] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_2
+[2026-05-05 22:40:26] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_3
+[2026-05-05 22:46:51] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_3
+[2026-05-05 22:46:52] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_4
+[2026-05-05 22:50:52] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_4
+[2026-05-05 22:50:52] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_5
+[2026-05-05 22:53:52] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPIC15_5
+[2026-05-05 22:53:52] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=RequestForPayment
+[2026-05-05 22:55:19] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=RequestForPayment
+[2026-05-05 22:55:20] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Sepsis
+[2026-05-05 22:56:02] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Sepsis
+[2026-05-05 22:56:03] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Hospital_Billing
+[2026-05-05 23:15:37] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Hospital_Billing
+[2026-05-05 23:15:37] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI Challenge 2017
+[2026-05-06 00:14:51] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI Challenge 2017
+[2026-05-06 00:14:52] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=DomesticDeclarations
+[2026-05-06 00:17:01] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=DomesticDeclarations
+[2026-05-06 00:17:02] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI_Challenge_2012
+[2026-05-06 00:30:45] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI_Challenge_2012
+[2026-05-06 00:30:45] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Road_Traffic_Fine_Management_Process
+[2026-05-06 00:55:44] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=Road_Traffic_Fine_Management_Process
+[2026-05-06 00:55:45] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=PrepaidTravelCost
+[2026-05-06 00:56:38] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=PrepaidTravelCost
+[2026-05-06 00:56:38] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=InternationalDeclarations
+[2026-05-06 01:00:34] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=InternationalDeclarations
+[2026-05-06 01:00:34] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_1
+[2026-05-06 01:03:06] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_1
+[2026-05-06 01:03:07] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_2
+[2026-05-06 01:05:17] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_2
+[2026-05-06 01:05:18] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_3
+[2026-05-06 01:08:03] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_3
+[2026-05-06 01:08:03] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_4
+[2026-05-06 01:10:14] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_4
+[2026-05-06 01:10:15] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_5
+[2026-05-06 01:12:55] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPIC15_5
+[2026-05-06 01:12:55] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=RequestForPayment
+[2026-05-06 01:14:25] DONE | model=everman | method=Bose 2009 Substitution Scores | log=RequestForPayment
+[2026-05-06 01:14:25] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=Sepsis
+[2026-05-06 01:15:09] DONE | model=everman | method=Bose 2009 Substitution Scores | log=Sepsis
+[2026-05-06 01:15:09] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=Hospital_Billing
+[2026-05-06 01:35:02] DONE | model=everman | method=Bose 2009 Substitution Scores | log=Hospital_Billing
+[2026-05-06 01:35:03] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPI Challenge 2017
+[2026-05-06 02:23:27] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPI Challenge 2017
+[2026-05-06 02:23:27] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=DomesticDeclarations
+[2026-05-06 02:25:41] DONE | model=everman | method=Bose 2009 Substitution Scores | log=DomesticDeclarations
+[2026-05-06 02:25:41] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPI_Challenge_2012
+[2026-05-06 02:36:50] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPI_Challenge_2012
+[2026-05-06 02:36:50] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=Road_Traffic_Fine_Management_Process
+[2026-05-06 03:01:12] DONE | model=everman | method=Bose 2009 Substitution Scores | log=Road_Traffic_Fine_Management_Process
+[2026-05-06 03:01:12] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=PrepaidTravelCost
+[2026-05-06 03:02:05] DONE | model=everman | method=Bose 2009 Substitution Scores | log=PrepaidTravelCost
+[2026-05-06 03:02:05] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=InternationalDeclarations
+[2026-05-06 03:05:59] DONE | model=everman | method=Bose 2009 Substitution Scores | log=InternationalDeclarations
+[2026-05-06 03:06:00] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_1
+[2026-05-06 03:08:37] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_1
+[2026-05-06 03:08:38] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_2
+[2026-05-06 03:10:53] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_2
+[2026-05-06 03:10:53] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_3
+[2026-05-06 03:13:42] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_3
+[2026-05-06 03:13:42] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_4
+[2026-05-06 03:15:58] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_4
+[2026-05-06 03:15:58] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_5
+[2026-05-06 03:18:41] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPIC15_5
+[2026-05-06 03:18:41] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=RequestForPayment
+[2026-05-06 03:20:14] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=RequestForPayment
+[2026-05-06 03:20:14] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=Sepsis
+[2026-05-06 03:20:59] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=Sepsis
+[2026-05-06 03:20:59] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=Hospital_Billing
+[2026-05-06 03:40:36] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=Hospital_Billing
+[2026-05-06 03:40:37] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI Challenge 2017
+[2026-05-06 04:29:05] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI Challenge 2017
+[2026-05-06 04:29:06] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=DomesticDeclarations
+[2026-05-06 04:31:22] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=DomesticDeclarations
+[2026-05-06 04:31:22] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI_Challenge_2012
+[2026-05-06 04:42:39] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI_Challenge_2012
+[2026-05-06 04:42:40] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=Road_Traffic_Fine_Management_Process
+[2026-05-06 05:07:12] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=Road_Traffic_Fine_Management_Process
+[2026-05-06 05:07:12] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=PrepaidTravelCost
+[2026-05-06 05:08:05] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=PrepaidTravelCost
+[2026-05-06 05:08:06] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=InternationalDeclarations
+[2026-05-06 05:12:00] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=InternationalDeclarations
+[2026-05-06 08:21:41] RUNNING | model=everman | method=one_hot | log=BPIC15_1
+[2026-05-06 08:24:27] DONE | model=everman | method=one_hot | log=BPIC15_1
+[2026-05-06 08:24:27] RUNNING | model=everman | method=one_hot | log=BPIC15_2
+[2026-05-06 08:24:51] RUNNING | model=everman | method=one_hot | log=BPIC15_2
+[2026-05-06 08:27:11] DONE | model=everman | method=one_hot | log=BPIC15_2
+[2026-05-06 08:27:11] RUNNING | model=everman | method=one_hot | log=BPIC15_3
+[2026-05-06 08:30:11] DONE | model=everman | method=one_hot | log=BPIC15_3
+[2026-05-06 08:30:11] RUNNING | model=everman | method=one_hot | log=BPIC15_4
+[2026-05-06 08:32:34] DONE | model=everman | method=one_hot | log=BPIC15_4
+[2026-05-06 08:32:34] RUNNING | model=everman | method=one_hot | log=BPIC15_5
+[2026-05-06 08:35:26] DONE | model=everman | method=one_hot | log=BPIC15_5
+[2026-05-06 08:35:26] RUNNING | model=everman | method=one_hot | log=RequestForPayment
+[2026-05-06 08:37:19] DONE | model=everman | method=one_hot | log=RequestForPayment
+[2026-05-06 08:37:19] RUNNING | model=everman | method=one_hot | log=Sepsis
+[2026-05-06 08:38:18] DONE | model=everman | method=one_hot | log=Sepsis
+[2026-05-06 08:38:18] RUNNING | model=everman | method=one_hot | log=Hospital_Billing
+[2026-05-06 08:58:47] DONE | model=everman | method=one_hot | log=Hospital_Billing
+[2026-05-06 08:58:47] RUNNING | model=everman | method=one_hot | log=BPI Challenge 2017
+[2026-05-06 09:37:30] RUNNING | model=everman | method=one_hot | log=BPI Challenge 2017
+[2026-05-06 10:26:04] DONE | model=everman | method=one_hot | log=BPI Challenge 2017
+[2026-05-06 10:26:04] RUNNING | model=everman | method=one_hot | log=DomesticDeclarations
+[2026-05-06 10:28:47] DONE | model=everman | method=one_hot | log=DomesticDeclarations
+[2026-05-06 10:28:47] RUNNING | model=everman | method=one_hot | log=BPI_Challenge_2012
+[2026-05-06 10:40:33] DONE | model=everman | method=one_hot | log=BPI_Challenge_2012
+[2026-05-06 10:40:33] RUNNING | model=everman | method=one_hot | log=Road_Traffic_Fine_Management_Process
+[2026-05-06 11:05:58] DONE | model=everman | method=one_hot | log=Road_Traffic_Fine_Management_Process
+[2026-05-06 11:05:58] RUNNING | model=everman | method=one_hot | log=PrepaidTravelCost
+[2026-05-06 11:07:05] DONE | model=everman | method=one_hot | log=PrepaidTravelCost
+[2026-05-06 11:07:05] RUNNING | model=everman | method=one_hot | log=InternationalDeclarations
+[2026-05-06 11:11:25] DONE | model=everman | method=one_hot | log=InternationalDeclarations
+[2026-05-06 12:51:10] RUNNING | model=pydream | method=NAP | log=RequestForPayment
+[2026-05-06 12:56:57] DONE | model=pydream | method=NAP | log=RequestForPayment
+[2026-05-06 12:56:57] RUNNING | model=pydream | method=NAP | log=Sepsis
+[2026-05-06 13:00:03] DONE | model=pydream | method=NAP | log=Sepsis
+[2026-05-06 13:00:03] RUNNING | model=pydream | method=NAP | log=Hospital_Billing
+[2026-05-06 13:41:27] DONE | model=pydream | method=NAP | log=Hospital_Billing
+[2026-05-06 13:41:27] RUNNING | model=pydream | method=NAP | log=BPI Challenge 2017
+[2026-05-06 15:22:13] DONE | model=pydream | method=NAP | log=BPI Challenge 2017
+[2026-05-06 15:22:13] RUNNING | model=pydream | method=NAP | log=DomesticDeclarations
+[2026-05-06 15:26:47] DONE | model=pydream | method=NAP | log=DomesticDeclarations
+[2026-05-06 15:26:47] RUNNING | model=pydream | method=NAP | log=BPI_Challenge_2012
+[2026-05-06 15:56:53] DONE | model=pydream | method=NAP | log=BPI_Challenge_2012
+[2026-05-06 15:56:53] RUNNING | model=pydream | method=NAP | log=Road_Traffic_Fine_Management_Process
+[2026-05-06 17:03:57] DONE | model=pydream | method=NAP | log=Road_Traffic_Fine_Management_Process
+[2026-05-06 17:03:57] RUNNING | model=pydream | method=NAP | log=PrepaidTravelCost
+[2026-05-06 17:04:17] RUNNING | model=pydream | method=NAP | log=InternationalDeclarations
+[2026-05-06 17:17:36] DONE | model=pydream | method=NAP | log=InternationalDeclarations
+[2026-05-06 17:17:36] RUNNING | model=tax | method=one_hot | log=BPIC15_1
+[2026-05-06 18:35:36] DONE | model=tax | method=one_hot | log=BPIC15_1
+[2026-05-06 18:35:36] RUNNING | model=tax | method=one_hot | log=BPIC15_2
+[2026-05-06 19:54:16] DONE | model=tax | method=one_hot | log=BPIC15_2
+[2026-05-06 19:54:16] RUNNING | model=tax | method=one_hot | log=BPIC15_3
+[2026-05-06 21:24:09] DONE | model=tax | method=one_hot | log=BPIC15_3
+[2026-05-06 21:24:09] RUNNING | model=tax | method=one_hot | log=BPIC15_4
+[2026-05-06 22:35:43] DONE | model=tax | method=one_hot | log=BPIC15_4
+[2026-05-06 22:35:43] RUNNING | model=tax | method=one_hot | log=BPIC15_5
+[2026-05-07 00:08:34] DONE | model=tax | method=one_hot | log=BPIC15_5
+[2026-05-07 00:08:34] RUNNING | model=tax | method=one_hot | log=RequestForPayment
+[2026-05-07 00:20:32] DONE | model=tax | method=one_hot | log=RequestForPayment
+[2026-05-07 00:20:32] RUNNING | model=tax | method=one_hot | log=Sepsis
+[2026-05-07 00:35:36] DONE | model=tax | method=one_hot | log=Sepsis
+[2026-05-07 00:35:36] RUNNING | model=tax | method=one_hot | log=Hospital_Billing
+[2026-05-07 02:40:17] DONE | model=tax | method=one_hot | log=Hospital_Billing
+[2026-05-07 02:40:17] RUNNING | model=tax | method=one_hot | log=BPI Challenge 2017
+[2026-05-07 07:00:18] RUNNING | model=pydream | method=NAP | log=BPIC15_1
+[2026-05-07 07:01:16] RUNNING | model=tax | method=one_hot | log=BPI Challenge 2017
+[2026-05-08 06:41:06] RUNNING | model=pydream | method=NAP | log=BPIC15_1
+[2026-05-08 06:41:40] RUNNING | model=tax | method=one_hot | log=BPI Challenge 2017
+[2026-05-08 06:44:49] RUNNING | model=tax | method=one_hot | log=DomesticDeclarations
+[2026-05-08 06:48:55] RUNNING | model=tax | method=one_hot | log=DomesticDeclarations
+[2026-05-08 06:49:42] RUNNING | model=tax | method=one_hot | log=BPI_Challenge_2012
+[2026-05-08 06:50:49] RUNNING | model=tax | method=one_hot | log=BPI Challenge 2017
+[2026-05-08 06:54:13] RUNNING | model=tax | method=one_hot | log=BPI_Challenge_2012
+[2026-05-08 09:40:12] RUNNING | model=pydream | method=NAP | log=BPIC15_1
+[2026-05-08 09:48:24] DONE | model=pydream | method=NAP | log=BPIC15_1
+[2026-05-08 09:51:23] RUNNING | model=pydream | method=NAP | log=BPIC15_2
+[2026-05-08 09:51:23] DONE | model=pydream | method=NAP | log=BPIC15_2
+[2026-05-08 09:53:11] RUNNING | model=pydream | method=NAP | log=BPIC15_3
+[2026-05-08 09:53:11] DONE | model=pydream | method=NAP | log=BPIC15_3
+[2026-05-08 09:53:40] RUNNING | model=pydream | method=NAP | log=BPIC15_4
+[2026-05-08 09:53:40] DONE | model=pydream | method=NAP | log=BPIC15_4
+[2026-05-08 09:54:05] RUNNING | model=pydream | method=NAP | log=BPIC15_5
+[2026-05-08 09:54:05] DONE | model=pydream | method=NAP | log=BPIC15_5
+[2026-05-08 09:54:35] RUNNING | model=pydream | method=NAP | log=PrepaidTravelCost
+[2026-05-08 11:09:27] RUNNING | model=pydream | method=NAP | log=PrepaidTravelCost
+[2026-05-08 11:09:27] DONE | model=pydream | method=NAP | log=PrepaidTravelCost
+[2026-05-08 11:10:51] RUNNING | model=tax | method=one_hot | log=DomesticDeclarations
+[2026-05-08 11:12:47] RUNNING | model=tax | method=one_hot | log=DomesticDeclarations
+[2026-05-08 11:13:41] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012_A
+[2026-05-08 11:16:49] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012_A
+[2026-05-08 11:16:49] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012_O
+[2026-05-08 11:18:28] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012_O
+[2026-05-08 11:18:28] RUNNING | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012_W
+[2026-05-08 11:26:10] DONE | model=everman | method=Activity-Context Bag Of Words PPMI w_5 | log=BPI_Challenge_2012_W
+[2026-05-08 11:26:10] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI_Challenge_2012_A
+[2026-05-08 11:29:18] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI_Challenge_2012_A
+[2026-05-08 11:29:18] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI_Challenge_2012_O
+[2026-05-08 11:31:08] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI_Challenge_2012_O
+[2026-05-08 11:31:08] RUNNING | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI_Challenge_2012_W
+[2026-05-08 11:38:46] DONE | model=everman | method=Activity-Context N-Grams PPMI w_5 | log=BPI_Challenge_2012_W
+[2026-05-08 11:38:46] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPI_Challenge_2012_A
+[2026-05-08 11:41:51] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPI_Challenge_2012_A
+[2026-05-08 11:41:51] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPI_Challenge_2012_O
+[2026-05-08 11:43:39] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPI_Challenge_2012_O
+[2026-05-08 11:43:39] RUNNING | model=everman | method=Bose 2009 Substitution Scores | log=BPI_Challenge_2012_W
+[2026-05-08 11:51:20] DONE | model=everman | method=Bose 2009 Substitution Scores | log=BPI_Challenge_2012_W
+[2026-05-08 11:51:20] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI_Challenge_2012_A
+[2026-05-08 11:54:32] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI_Challenge_2012_A
+[2026-05-08 11:54:32] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI_Challenge_2012_O
+[2026-05-08 11:56:21] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI_Challenge_2012_O
+[2026-05-08 11:56:21] RUNNING | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI_Challenge_2012_W
+[2026-05-08 12:03:57] DONE | model=everman | method=De Koninck 2018 act2vec CBOW w_3 | log=BPI_Challenge_2012_W
+[2026-05-08 12:03:57] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_2
+[2026-05-08 12:09:14] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_2
+[2026-05-08 12:09:14] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_3
+[2026-05-08 12:15:25] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_3
+[2026-05-08 12:15:25] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_4
+[2026-05-08 12:21:04] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_4
+[2026-05-08 12:21:04] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_5
+[2026-05-08 12:28:19] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPIC15_5
+[2026-05-08 12:28:19] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=RequestForPayment
+[2026-05-08 12:34:51] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=RequestForPayment
+[2026-05-08 12:34:51] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=Sepsis
+[2026-05-08 12:36:58] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=Sepsis
+[2026-05-08 12:36:58] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=Hospital_Billing
+[2026-05-08 13:15:07] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=Hospital_Billing
+[2026-05-08 13:15:07] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=DomesticDeclarations
+[2026-05-08 13:27:17] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=DomesticDeclarations
+[2026-05-08 13:27:17] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=PrepaidTravelCost
+[2026-05-08 13:29:27] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=PrepaidTravelCost
+[2026-05-08 13:29:27] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=InternationalDeclarations
+[2026-05-08 13:37:09] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=InternationalDeclarations
+[2026-05-08 13:37:09] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=Road_Traffic_Fine_Management_Process
+[2026-05-08 14:48:13] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=Road_Traffic_Fine_Management_Process
+[2026-05-08 14:48:13] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI_Challenge_2012_A
+[2026-05-08 15:07:35] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI_Challenge_2012_A
+[2026-05-08 15:07:35] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI_Challenge_2012_O
+[2026-05-08 15:17:26] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI_Challenge_2012_O
+[2026-05-08 15:17:26] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI_Challenge_2012_W
+[2026-05-08 15:37:18] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI_Challenge_2012_W
+[2026-05-08 15:37:18] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI Challenge 2017
+[2026-05-08 17:04:06] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI Challenge 2017
+[2026-05-08 18:56:53] RUNNING | model=everman | method=one_hot | log=BPI_Challenge_2012_A
+[2026-05-08 19:00:29] DONE | model=everman | method=one_hot | log=BPI_Challenge_2012_A
+[2026-05-08 19:00:29] RUNNING | model=everman | method=one_hot | log=BPI_Challenge_2012_O
+[2026-05-08 19:02:35] DONE | model=everman | method=one_hot | log=BPI_Challenge_2012_O
+[2026-05-08 19:02:35] RUNNING | model=everman | method=one_hot | log=BPI_Challenge_2012_W
+[2026-05-08 19:18:28] DONE | model=everman | method=one_hot | log=BPI_Challenge_2012_W
+[2026-05-08 19:18:28] RUNNING | model=pydream | method=NAP | log=BPI_Challenge_2012_A
+[2026-05-08 19:20:39] DONE | model=pydream | method=NAP | log=BPI_Challenge_2012_A
+[2026-05-08 19:20:39] RUNNING | model=pydream | method=NAP | log=BPI_Challenge_2012_O
+[2026-05-08 19:22:00] DONE | model=pydream | method=NAP | log=BPI_Challenge_2012_O
+[2026-05-08 19:22:00] RUNNING | model=pydream | method=NAP | log=BPI_Challenge_2012_W
+[2026-05-08 19:31:18] DONE | model=pydream | method=NAP | log=BPI_Challenge_2012_W
+[2026-05-08 19:31:18] RUNNING | model=tax | method=one_hot | log=BPI_Challenge_2012_A
+[2026-05-08 19:52:03] DONE | model=tax | method=one_hot | log=BPI_Challenge_2012_A
+[2026-05-08 19:52:03] RUNNING | model=tax | method=one_hot | log=BPI_Challenge_2012_O
+[2026-05-08 19:55:26] RUNNING | model=tax | method=one_hot | log=BPI_Challenge_2012_O
+[2026-05-08 20:08:59] DONE | model=tax | method=one_hot | log=BPI_Challenge_2012_O
+[2026-05-08 20:08:59] RUNNING | model=tax | method=one_hot | log=BPI_Challenge_2012_W
+[2026-05-08 22:33:31] RUNNING | model=tax | method=one_hot | log=BPI_Challenge_2012_W
+[2026-05-09 01:03:24] DONE | model=tax | method=one_hot | log=BPI_Challenge_2012_W
+[2026-05-10 09:12:22] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI Challenge 2017
+[2026-05-10 09:15:20] ERROR | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI Challenge 2017
+    Traceback (most recent call last):
+      File "/app/run_all_baselines.py", line 232, in run_all_baselines
+        run_combination(model, method, log_name, results_dirs[model])
+      File "/app/run_all_baselines.py", line 207, in run_combination
+        raise RuntimeError(detail)
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 09:15:20] RUNNING | model=tax | method=one_hot | log=BPI Challenge 2017
+[2026-05-10 09:18:17] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI Challenge 2017
+[2026-05-10 09:21:32] ERROR | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI Challenge 2017
+    Traceback (most recent call last):
+      File "/workspace/baselines/next_activity_prediction/run_all_baselines.py", line 232, in run_all_baselines
+        run_combination(model, method, log_name, results_dirs[model])
+      File "/workspace/baselines/next_activity_prediction/run_all_baselines.py", line 207, in run_combination
+        raise RuntimeError(detail)
+    RuntimeError: Subprocess exited with code 1
+[2026-05-10 18:26:57] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI Challenge 2017
+[2026-05-10 18:35:56] RUNNING | model=tax | method=one_hot | log=BPI Challenge 2017
+[2026-05-10 18:41:24] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI Challenge 2017
+[2026-05-11 00:12:51] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI Challenge 2017

@@ -36,9 +36,9 @@ mode='workaround'  (default, matches create_generic_data.py default)
 
 mode='preferred'
     Train : cases whose last event is strictly before sep_time (no overlap).
-    Test  : cases whose first event is at or after sep_time (no overlap).
-            Overlapping cases are excluded from both sets, consistent with
-            keeping pure splits that need no downstream prefix filtering.
+    Test  : cases whose last event is at or after sep_time (pure test cases
+            AND overlapping cases). Mirrors trainTestSplit() in
+            SuffixTransformerNetwork/Preprocessing/create_benchmarks.py.
 
 Validation split
 ----------------
@@ -51,6 +51,7 @@ test=20 %.
 
 import os
 
+import numpy as np
 import pandas as pd
 from pm4py.objects.conversion.log import converter
 from pm4py.objects.log.importer.xes import importer as xes_importer
@@ -133,6 +134,12 @@ def _pairs(df, case_id='case:concept:name'):
     return len(df) - df[case_id].nunique()
 
 
+def _filter_by_window_size(df, window_size, case_id):
+    """Drop cases with more than *window_size* events (mirrors suffix pipeline)."""
+    lengths = df.groupby(case_id)[case_id].transform('count')
+    return df[lengths <= window_size].reset_index(drop=True)
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Core temporal split
 # ──────────────────────────────────────────────────────────────────────────────
@@ -152,8 +159,8 @@ def _temporal_case_split(df, len_share, mode, case_id, timestamp):
 
     For *mode='preferred'*:
         main      : cases ending strictly before sep_time.
-        secondary : cases starting at or after sep_time.
-        Overlapping cases are excluded from both sets.
+        secondary : cases ending at/after sep_time (pure test + overlap cases).
+        Overlapping cases are included in secondary (test).
 
     Cases with fewer than 2 events after truncation are dropped (a single
     event yields no prediction target for NAP).
@@ -196,9 +203,9 @@ def _temporal_case_split(df, len_share, mode, case_id, timestamp):
     elif mode == 'preferred':
         # Main: cases ending strictly before sep_time (pure, no overlap)
         pure_main_ids = set(case_ends[case_ends < sep_time].index)
-        # Secondary: cases starting at/after sep_time (pure, no overlap)
-        secondary_ids = set(case_starts[case_starts >= sep_time].index)
-        # Overlapping cases (start before, end at/after sep_time): excluded
+        # Secondary: cases ending at/after sep_time (pure test + overlap cases)
+        # Mirrors suffix trainTestSplit preferred mode in create_benchmarks.py
+        secondary_ids = set(case_ends[case_ends >= sep_time].index)
 
         main_df      = df[df[case_id].isin(pure_main_ids)].copy()
         secondary_df = df[df[case_id].isin(secondary_ids)].copy()
@@ -245,10 +252,11 @@ def _val_case_split(df, val_len_share, case_id, timestamp):
     case_starts   = df.groupby(case_id)[timestamp].min().sort_values()
     n_cases       = len(case_starts)
     first_val_idx = int(n_cases * (1 - val_len_share))
-    val_sep_time  = case_starts.iloc[first_val_idx]
 
-    val_ids   = set(case_starts[case_starts >= val_sep_time].index)
-    train_ids = set(case_starts[case_starts <  val_sep_time].index)
+    # Index-based (not time-based) to match suffix split_train_val — avoids
+    # inflating val when multiple cases share the boundary timestamp.
+    val_ids   = set(case_starts.iloc[first_val_idx:].index)
+    train_ids = set(case_starts.iloc[:first_val_idx].index)
 
     val_df   = df[df[case_id].isin(val_ids)].copy().reset_index(drop=True)
     train_df = df[df[case_id].isin(train_ids)].copy().reset_index(drop=True)
@@ -444,7 +452,7 @@ def plot_split(
         before_color = RED
         after_color  = GREEN
         before_label = 'Overlap → discarded from train'
-        after_label  = 'Overlap → excluded from test'
+        after_label  = 'Overlap → included in test'
 
     # 8. Draw
     fig_height = max(6, len(sampled) // 6)
@@ -538,6 +546,7 @@ def create_nap_splits(
     start_before_date=None,
     end_date=None,
     max_days=None,
+    window_size=None,
     plot=True,
     output_dir=None,
 ):
@@ -649,14 +658,24 @@ def create_nap_splits(
             save_path=plot_save_path,
         )
 
-    # ── 5. Split ─────────────────────────────────────────────────────────────
-    train_df, val_df, test_df, train_val_df = split_log_temporal(
-        df,
-        test_len_share=test_len_share,
-        val_len_share=val_len_share,
-        mode=mode,
-        case_id=case_id,
-        timestamp=timestamp,
+    # ── 5. Split train+val vs test ────────────────────────────────────────────
+    train_val_df, test_df = _temporal_case_split(
+        df, len_share=test_len_share, mode=mode,
+        case_id=case_id, timestamp=timestamp,
+    )
+
+    # ── 5b. Window-size filter BEFORE val split (mirrors suffix pipeline order)
+    if window_size is None:
+        case_lengths = df.groupby(case_id).size()
+        window_size = int(np.percentile(case_lengths, 98.5))
+        print(f"[{log_name}] Auto-derived window_size (98.5th percentile): {window_size}")
+    train_val_df = _filter_by_window_size(train_val_df, window_size, case_id)
+    test_df      = _filter_by_window_size(test_df,      window_size, case_id)
+
+    # ── 5c. Val split from filtered train_val ────────────────────────────────
+    train_df, val_df = _val_case_split(
+        train_val_df, val_len_share=val_len_share,
+        case_id=case_id, timestamp=timestamp,
     )
 
     print(
@@ -716,7 +735,8 @@ if __name__ == "__main__":
     START_BEFORE_DATE = None   # drop cases starting after  this month (workaround bias fix)
     END_DATE          = None   # drop cases ending   after  this month
     MAX_DAYS          = None   # drop cases longer than this many days (float)
-    
+    WINDOW_SIZE       = None   # None → auto (98.5th percentile of case lengths)
+
     PLOT = True   # set to False to skip the split visualisation
     
     # ──────────────────────────────────────────────────────────────────────────────
@@ -768,16 +788,27 @@ if __name__ == "__main__":
                 mode=MODE,
             )
     
-        # 6. Temporal split
-        train_df, val_df, test_df, train_val_df = split_log_temporal(
-            df,
-            test_len_share=TEST_LEN_SHARE,
-            val_len_share=VAL_LEN_SHARE,
-            mode=MODE,
-            case_id=CASE_ID,
-            timestamp=TIMESTAMP,
+        # 6. Split train+val vs test
+        train_val_df, test_df = _temporal_case_split(
+            df, len_share=TEST_LEN_SHARE, mode=MODE,
+            case_id=CASE_ID, timestamp=TIMESTAMP,
         )
-    
+
+        # 6b. Window-size filter BEFORE val split (mirrors suffix pipeline order)
+        ws = WINDOW_SIZE
+        if ws is None:
+            case_lengths = df.groupby(CASE_ID).size()
+            ws = int(np.percentile(case_lengths, 98.5))
+            print(f"  Auto-derived window_size (98.5th percentile): {ws}")
+        train_val_df = _filter_by_window_size(train_val_df, ws, CASE_ID)
+        test_df      = _filter_by_window_size(test_df,      ws, CASE_ID)
+
+        # 6c. Val split from filtered train_val
+        train_df, val_df = _val_case_split(
+            train_val_df, val_len_share=VAL_LEN_SHARE,
+            case_id=CASE_ID, timestamp=TIMESTAMP,
+        )
+
         print(
             f"  total={total_cases} cases  →  "
             f"train={train_df[CASE_ID].nunique()} ({_pairs(train_df, CASE_ID)} pairs)  "

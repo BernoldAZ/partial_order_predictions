@@ -1,0 +1,3 @@
+log,model,activity_accuracy,DL similarity ↑,MAE TTNE (min) ↓,MAE RRT (min) ↓,training_time_seconds,testing_time_seconds
+Sepsis,GNN_Suffix_Time,0.284102,0.462715,5590.1456,80767.1166,378.65,10.46
+Sepsis,GNN_Suffix_Time_Edge,0.260143,0.390673,5631.6802,80262.8881,281.85,14.21
