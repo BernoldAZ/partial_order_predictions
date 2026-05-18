@@ -1,2 +1,0 @@
-log,model,activity_accuracy,DL similarity ↑,MAE TTNE (min) ↓,MAE RRT (min) ↓,training_time_seconds,testing_time_seconds
-Sepsis,Scaffold_Suffix,0.177839,0.296492,5135.4799,75633.602,1727.7,179.44

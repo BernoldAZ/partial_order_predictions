@@ -97,32 +97,32 @@ def inference_loop(model,
         suffix_acts_decoded_global = torch.empty((0, window_size), dtype=torch.int64)
         suffix_rrt_preds_global = torch.empty((0, window_size), dtype=torch.float32)
 
-        # Evaluation RRT metrics: only the first rrt prediction is to be used upon 
+        # Evaluation RRT metrics: only the first rrt prediction is to be used upon
         # evaluation
-        MAE_rrt_stand_global = torch.tensor(data=[], dtype=torch.float32).to(device)
-        MAE_rrt_seconds_global = torch.tensor(data=[], dtype=torch.float32).to(device)
+        MAE_rrt_stand_global = torch.tensor(data=[], dtype=torch.float32)
+        MAE_rrt_seconds_global = torch.tensor(data=[], dtype=torch.float32)
 
-        MAE_ttne_seconds_global = torch.tensor(data=[], dtype=torch.float32).to(device)
+        MAE_ttne_seconds_global = torch.tensor(data=[], dtype=torch.float32)
 
 
-        # Informational metrics regarding the differenes between length 
-        # predicted activity suffix vs length ground truth suffix 
-        length_diff_global = torch.tensor(data=[], dtype=torch.int64).to(device)
-        length_diff_too_early_global = torch.tensor(data=[], dtype=torch.int64).to(device)
-        length_diff_too_late_global = torch.tensor(data=[], dtype=torch.int64).to(device)
-        amount_right_global = torch.tensor(data=0, dtype=torch.int64).to(device) # scalar tensor
+        # Informational metrics regarding the differenes between length
+        # predicted activity suffix vs length ground truth suffix
+        length_diff_global = torch.tensor(data=[], dtype=torch.int64)
+        length_diff_too_early_global = torch.tensor(data=[], dtype=torch.int64)
+        length_diff_too_late_global = torch.tensor(data=[], dtype=torch.int64)
+        amount_right_global = torch.tensor(data=0, dtype=torch.int64) # scalar tensor
 
-        # Initializing a global tensor to store the prefix lengths of all inference instances 
-        pref_len_global = torch.tensor(data=[], dtype=torch.int64).to(device)
+        # Initializing a global tensor to store the prefix lengths of all inference instances
+        pref_len_global = torch.tensor(data=[], dtype=torch.int64)
 
-        # Initializing a global tensor to store the suffix lengths of all inference instances 
-        suf_len_global = torch.tensor(data=[], dtype=torch.int64).to(device)
+        # Initializing a global tensor to store the suffix lengths of all inference instances
+        suf_len_global = torch.tensor(data=[], dtype=torch.int64)
 
         # normalized Damerau Levenshtein similarity metric
-        dam_lev_global = torch.tensor(data=[], dtype=torch.int64).to(device)
+        dam_lev_global = torch.tensor(data=[], dtype=torch.int64)
 
-        # Composite loss metric used during training, used for LR scheduler benchmark 
-        val_loss = torch.tensor(data=[], dtype=torch.float32).to(device)
+        # Composite loss metric used during training, used for LR scheduler benchmark
+        val_loss = torch.tensor(data=[], dtype=torch.float32)
         
         if masking:
             vloss_metric = MaskedMultiOutputMetric(num_classes)
@@ -133,30 +133,30 @@ def inference_loop(model,
                 vinputs = vdata[:-3]
                 vlabels = vdata[-3:]
 
-                # Prefix padding mask (right padded): 
+                # Prefix padding mask (right padded):
                 pad_mask = vdata[num_categoricals_pref+1]
-                pad_mask = pad_mask.to(device) # (batch_size, window_size)
+                pad_mask = pad_mask.to(device, non_blocking=True) # (batch_size, window_size)
 
                 # Sending inputs and labels to GPU
-                vinputs = [vinput_tensor.clone().to(device) for vinput_tensor in vinputs]
-                vlabels = [vlabel_tensor.clone().to(device) for vlabel_tensor in vlabels]
+                vinputs = [vinput_tensor.to(device, non_blocking=True) for vinput_tensor in vinputs]
+                vlabels = [vlabel_tensor.to(device, non_blocking=True) for vlabel_tensor in vlabels]
 
                 act_labels = vlabels[-1]
 
-                # Deriving suffix length of each instance 
+                # Deriving suffix length of each instance
                 suf_len = torch.argmax((act_labels == (num_classes-1)).to(torch.int64), dim=-1) + 1 # (batch_size,)
-                suf_len_global = torch.cat(tensors=(suf_len_global, suf_len), dim=-1)
+                suf_len_global = torch.cat(tensors=(suf_len_global, suf_len.cpu()), dim=-1)
 
-                # Deriving the prefix length of each instance 
+                # Deriving the prefix length of each instance
                 padding_idx = torch.argmax(pad_mask.to(torch.int64), dim=-1) # (batch_size,)
-                pref_len_global = torch.cat(tensors=(pref_len_global, padding_idx), dim=-1)
+                pref_len_global = torch.cat(tensors=(pref_len_global, padding_idx.cpu()), dim=-1)
 
                 # Model predictions for activity and rrt suffix 
                 voutputs = model(vinputs) 
 
                 # Compute val loss
                 vloss_batch = vloss_metric(voutputs, vlabels) # (batch_size*window_size,)
-                val_loss = torch.cat(tensors=(val_loss, vloss_batch), dim=-1) # (batch_size,)
+                val_loss = torch.cat(tensors=(val_loss, vloss_batch.cpu()), dim=-1) # (batch_size,)
 
 
                 # Initialize inference environment
@@ -175,28 +175,27 @@ def inference_loop(model,
                 suffix_rrt_preds = infer_env.rrt_preds.clone() # (batch_size, window_size)
                 suffix_rrt_preds_global = torch.cat((suffix_rrt_preds_global, suffix_rrt_preds.cpu()), dim=0) 
 
-                # # Computing all inference metrics 
+                # # Computing all inference metrics
                 MAE_ttne_seconds = infer_env.compute_ttne_results() # shape (torch.sum(self.actual_length+1), )
-                MAE_ttne_seconds_global = torch.cat(tensors=(MAE_ttne_seconds_global, MAE_ttne_seconds), dim=-1)
-
+                MAE_ttne_seconds_global = torch.cat(tensors=(MAE_ttne_seconds_global, MAE_ttne_seconds.cpu()), dim=-1)
 
                 # (normalized) Damerau-Levenshtein distance activity suffix prediction
                 dam_lev = infer_env.damerau_levenshtein_distance_tensors() # (batch_size, )
-                dam_lev_global = torch.cat(tensors=(dam_lev_global, dam_lev), dim=-1)
+                dam_lev_global = torch.cat(tensors=(dam_lev_global, dam_lev.cpu()), dim=-1)
 
                 # MAE remainining runtime predictions (rrt)
-                # Evaluation RRT metrics: only the first rrt prediction is to be used upon 
+                # Evaluation RRT metrics: only the first rrt prediction is to be used upon
                 # evaluation
                 MAE_rrt_stand, MAE_rrt_seconds = infer_env.compute_rrt_results()
-                MAE_rrt_stand_global = torch.cat(tensors=(MAE_rrt_stand_global, MAE_rrt_stand), dim=-1) # (batch_size,)
-                MAE_rrt_seconds_global = torch.cat(tensors=(MAE_rrt_seconds_global, MAE_rrt_seconds), dim=-1) # (batch_size,)
-                
-                # Length differences between predicted and ground-truth suffixes. 
+                MAE_rrt_stand_global = torch.cat(tensors=(MAE_rrt_stand_global, MAE_rrt_stand.cpu()), dim=-1) # (batch_size,)
+                MAE_rrt_seconds_global = torch.cat(tensors=(MAE_rrt_seconds_global, MAE_rrt_seconds.cpu()), dim=-1) # (batch_size,)
+
+                # Length differences between predicted and ground-truth suffixes.
                 length_diff, length_diff_too_early, length_diff_too_late, amount_right = infer_env.compute_suf_length_diffs()
-                length_diff_global = torch.cat(tensors=(length_diff_global, length_diff), dim = -1)
-                length_diff_too_early_global = torch.cat(tensors=(length_diff_too_early_global, length_diff_too_early), dim=-1)
-                length_diff_too_late_global = torch.cat(tensors=(length_diff_too_late_global, length_diff_too_late), dim=-1)
-                amount_right_global += amount_right
+                length_diff_global = torch.cat(tensors=(length_diff_global, length_diff.cpu()), dim=-1)
+                length_diff_too_early_global = torch.cat(tensors=(length_diff_too_early_global, length_diff_too_early.cpu()), dim=-1)
+                length_diff_too_late_global = torch.cat(tensors=(length_diff_too_late_global, length_diff_too_late.cpu()), dim=-1)
+                amount_right_global += amount_right.cpu()
 
         # Correction pref len 
         # replacing 0s with max_pref_len 
@@ -218,10 +217,10 @@ def inference_loop(model,
             
             # Prefix length and suffix length 
             pref_len_path = os.path.join(subfolder_path, 'pref_len.pt')
-            torch.save(pref_len_global.cpu(), pref_len_path)
+            torch.save(pref_len_global, pref_len_path)
 
             suf_len_path = os.path.join(subfolder_path, 'suf_len.pt')
-            torch.save(suf_len_global.cpu(), suf_len_path)
+            torch.save(suf_len_global, suf_len_path)
 
             # Labels 
             # Note, this is a tuple of tensors instead of just a tensor

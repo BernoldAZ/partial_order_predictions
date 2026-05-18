@@ -11,22 +11,29 @@ Safe to re-run after an interruption.
 Supported models and their output CSVs
 ---------------------------------------
   nap          → results/run_N/results_nap_gnn.csv
-  nap_time     → results_time/run_N/results_nap_gnn_time.csv
+  nap_time_mlp → results_time_mlp/run_N/results_nap_time_mlp.csv
   nap_multiple → results_multiple/run_N/results_nap_multiple_gnn.csv
+  nap_layer    → results_layer/run_N/results_nap_layer_gnn.csv
 
 Usage
 -----
-    python run_all_nap.py                                   # nap, run 1
-    python run_all_nap.py --model nap_time                  # nap_time, run 1
-    python run_all_nap.py --model nap_multiple --run-id 2
+    python run_all_nap.py                                       # nap, run 1, 1 worker
+    python run_all_nap.py --workers 4                           # nap, run 1, 4 logs in parallel
+    python run_all_nap.py --model nap_layer                  # nap_layer, run 1
+    python run_all_nap.py --model nap_multiple --run-id 2 --workers 4
     python run_all_nap.py --logs-dir /path/to/logs
+
+Usage with docker:
+    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_nap/run_all_nap.py --workers 16 --model nap_layer
 """
 
 import argparse
+import concurrent.futures
 import csv
 import os
 import subprocess
 import sys
+import threading
 import traceback
 from datetime import datetime
 
@@ -65,15 +72,20 @@ MODEL_CONFIGS = {
         'results_sub': 'results',
         'csv_file':    'results_nap_gnn.csv',
     },
-    'nap_time': {
-        'module':      'approach_nap.run_nap_time',
-        'results_sub': 'results_time',
-        'csv_file':    'results_nap_gnn_time.csv',
+    'nap_time_mlp': {
+        'module':      'approach_nap.run_nap_time_mlp',
+        'results_sub': 'results_time_mlp',
+        'csv_file':    'results_nap_time_mlp.csv',
     },
     'nap_multiple': {
         'module':      'approach_nap.run_nap_multiple',
         'results_sub': 'results_multiple',
         'csv_file':    'results_nap_multiple_gnn.csv',
+    },
+    'nap_layer': {
+        'module':      'approach_nap.run_nap_layer',
+        'results_sub': 'results_layer',
+        'csv_file':    'results_nap_layer_gnn.csv',
     },
 }
 
@@ -100,6 +112,9 @@ def _progress_file(model, run_id):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+_log_lock = threading.Lock()
+
 
 def result_exists(log_name, model, run_id):
     csv_path = os.path.join(_results_dir(model, run_id),
@@ -128,31 +143,53 @@ sys.path.insert(0, {_PROJECT_ROOT!r})
 os.chdir({_PROJECT_ROOT!r})
 """
 
+_OOM_EXIT_CODE = 42
 
-def _build_code(log_path, log_name, results_dir, model):
-    module = MODEL_CONFIGS[model]['module']
+
+class _OOMError(Exception):
+    pass
+
+
+def _build_code(log_path, log_name, results_dir, model, use_cpu=False):
+    module  = MODEL_CONFIGS[model]['module']
+    cpu_env = "import os; os.environ['CUDA_VISIBLE_DEVICES'] = ''\n" if use_cpu else ""
+    oom_guard = (
+        f"except Exception as _e:\n"
+        f"    _oom = 'out of memory' in str(_e).lower()\n"
+        f"    try:\n"
+        f"        import torch; _oom = _oom or isinstance(_e, torch.cuda.OutOfMemoryError)\n"
+        f"    except Exception: pass\n"
+        f"    if _oom:\n"
+        f"        import sys as _sys; _sys.exit({_OOM_EXIT_CODE})\n"
+        f"    raise\n"
+    ) if not use_cpu else "except Exception: raise\n"
+    cleanup = (
+        f"finally:\n"
+        f"    try:\n"
+        f"        import torch, gc; torch.cuda.empty_cache(); gc.collect()\n"
+        f"    except Exception: pass\n"
+    )
     return (
         _PREAMBLE
+        + cpu_env
         + f"from {module} import run\n"
         + f"try:\n"
         + f"    run(log_path={log_path!r}, log_name={log_name!r}, results_dir={results_dir!r})\n"
-        + f"finally:\n"
-        + f"    try:\n"
-        + f"        import torch, gc; torch.cuda.empty_cache(); gc.collect()\n"
-        + f"    except Exception:\n"
-        + f"        pass\n"
+        + oom_guard
+        + cleanup
     )
 
 
 def _run_subprocess(code):
     result = subprocess.run([sys.executable, "-c", code], cwd=_PROJECT_ROOT)
+    if result.returncode == _OOM_EXIT_CODE:
+        raise _OOMError()
     if result.returncode != 0:
         sig = -result.returncode if result.returncode < 0 else None
-        detail = (
+        raise RuntimeError(
             f"Subprocess exited with code {result.returncode}"
             + (f" (killed by signal {sig})" if sig else "")
         )
-        raise RuntimeError(detail)
 
 
 # ---------------------------------------------------------------------------
@@ -165,55 +202,78 @@ def _ts():
 
 def _log_progress(progress_file, status, log_name, detail=None):
     header = f"[{_ts()}] {status} | log={log_name}"
-    print(header, flush=True)
-    with open(progress_file, "a", encoding="utf-8") as f:
-        f.write(header + "\n")
+    with _log_lock:
+        print(header, flush=True)
+        with open(progress_file, "a", encoding="utf-8") as f:
+            f.write(header + "\n")
+            if detail:
+                for line in detail.splitlines():
+                    f.write(f"    {line}\n")
         if detail:
-            for line in detail.splitlines():
-                f.write(f"    {line}\n")
-    if detail:
-        print(detail, flush=True)
+            print(detail, flush=True)
+
+
+# ---------------------------------------------------------------------------
+# Per-job runner
+# ---------------------------------------------------------------------------
+
+def _run_one(log_file, log_name, results_dir, model, progress_file):
+    _log_progress(progress_file, "RUNNING", log_name)
+    try:
+        try:
+            _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=False))
+        except _OOMError:
+            _log_progress(progress_file, "OOM→CPU", log_name)
+            _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=True))
+        _log_progress(progress_file, "DONE", log_name)
+    except Exception:
+        _log_progress(progress_file, "ERROR", log_name, detail=traceback.format_exc())
 
 
 # ---------------------------------------------------------------------------
 # Main runner
 # ---------------------------------------------------------------------------
 
-def run_all(model='nap', run_id=1, progress_file=None, logs_dir=None):
+def run_all(model='nap', run_id=1, progress_file=None, logs_dir=None, workers=1):
     if model not in MODEL_CONFIGS:
         raise ValueError(f"Unknown model {model!r}. Choose from: "
                          f"{list(MODEL_CONFIGS)}")
 
     logs_dir      = logs_dir      or _DEFAULT_LOGS_DIR
     progress_file = progress_file or _progress_file(model, run_id)
+    results_dir   = _results_dir(model, run_id)
 
     print(f"Model              : {model}")
     print(f"Run ID             : {run_id}")
+    print(f"Workers (logs)     : {workers}")
     print(f"Total logs         : {len(EVENT_LOGS)}")
     print(f"Logs directory     : {logs_dir}")
-    print(f"Results directory  : {_results_dir(model, run_id)}")
+    print(f"Results directory  : {results_dir}")
     print(f"Progress file      : {progress_file}\n", flush=True)
 
+    jobs = []
     for log_name in EVENT_LOGS:
         if result_exists(log_name, model, run_id):
             print(f"[SKIP] log={log_name}", flush=True)
             continue
-
         log_file = _find_log_file(log_name, logs_dir)
         if log_file is None:
             print(f"[MISSING] log={log_name} — not found in {logs_dir} "
                   f"(.xes.gz or .xes)", flush=True)
             continue
+        jobs.append((log_file, log_name))
 
-        _log_progress(progress_file, "RUNNING", log_name)
-        try:
-            _run_subprocess(
-                _build_code(log_file, log_name, _results_dir(model, run_id), model)
-            )
-            _log_progress(progress_file, "DONE", log_name)
-        except Exception:
-            _log_progress(progress_file, "ERROR", log_name,
-                          detail=traceback.format_exc())
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {
+            pool.submit(_run_one, log_file, log_name, results_dir, model, progress_file): log_name
+            for log_file, log_name in jobs
+        }
+        for fut in concurrent.futures.as_completed(futures):
+            try:
+                fut.result()
+            except Exception:
+                log_name = futures[fut]
+                print(f"[LOG-FATAL] log={log_name}\n{traceback.format_exc()}", flush=True)
 
 
 # ---------------------------------------------------------------------------
@@ -228,7 +288,7 @@ if __name__ == "__main__":
         "--model",
         default="nap",
         choices=list(MODEL_CONFIGS),
-        help="Which model to run: nap, nap_time, nap_multiple (default: nap)",
+        help="Which model to run: nap, nap_time_mlp, nap_multiple, nap_layer (default: nap)",
     )
     parser.add_argument(
         "--run-id",
@@ -236,6 +296,13 @@ if __name__ == "__main__":
         default=1,
         help="Which repetition to run (1-5). Results stored in "
              "<results_subdir>/run_N/. (default: 1)",
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Number of event logs to train in parallel. Each worker runs its "
+             "log in a subprocess. Increase only if GPU memory allows. (default: 1)",
     )
     parser.add_argument(
         "--logs-dir",
@@ -255,4 +322,5 @@ if __name__ == "__main__":
         run_id=args.run_id,
         progress_file=args.progress_file,
         logs_dir=args.logs_dir,
+        workers=args.workers,
     )

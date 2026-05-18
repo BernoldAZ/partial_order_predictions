@@ -715,6 +715,100 @@ def create_nap_splits(
     }
 
 
+def create_all_nap_splits(
+    folder,
+    output_csv,
+    case_id='case:concept:name',
+    timestamp='time:timestamp',
+    test_len_share=0.20,
+    val_len_share=0.20,
+    mode='workaround',
+    start_date=None,
+    start_before_date=None,
+    end_date=None,
+    max_days=None,
+    window_size=None,
+    plot=True,
+    output_dir=None,
+    max_workers=None,
+):
+    """Run ``create_nap_splits`` for every event log in *folder* in parallel
+    and save per-split case/pair counts to a CSV file.
+
+    Parameters
+    ----------
+    folder : str
+        Directory containing ``.xes``, ``.xes.gz``, or ``.csv`` files.
+    output_csv : str
+        Path for the output CSV (created/overwritten).
+    max_workers : int or None
+        Number of parallel workers (``ThreadPoolExecutor``).
+        ``None`` lets Python choose based on the number of CPUs.
+    All other parameters are forwarded to ``create_nap_splits``.
+
+    Returns
+    -------
+    pd.DataFrame
+        The same table written to *output_csv*.
+    """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    files = [
+        (
+            os.path.join(folder, f),
+            f[:-len('.xes.gz')] if f.endswith('.xes.gz') else os.path.splitext(f)[0],
+        )
+        for f in sorted(os.listdir(folder))
+        if os.path.isfile(os.path.join(folder, f))
+    ]
+
+    def _process_one(file_path, file_name):
+        splits = create_nap_splits(
+            log_path=file_path,
+            log_name=file_name,
+            case_id=case_id,
+            timestamp=timestamp,
+            test_len_share=test_len_share,
+            val_len_share=val_len_share,
+            mode=mode,
+            start_date=start_date,
+            start_before_date=start_before_date,
+            end_date=end_date,
+            max_days=max_days,
+            window_size=window_size,
+            plot=plot,
+            output_dir=output_dir,
+        )
+        return {
+            'log_name':        file_name,
+            'train_cases':     splits['train'][case_id].nunique(),
+            'train_pairs':     _pairs(splits['train'], case_id),
+            'val_cases':       splits['val'][case_id].nunique(),
+            'val_pairs':       _pairs(splits['val'], case_id),
+            'test_cases':      splits['test'][case_id].nunique(),
+            'test_pairs':      _pairs(splits['test'], case_id),
+            'train_val_cases': splits['train_val'][case_id].nunique(),
+            'train_val_pairs': _pairs(splits['train_val'], case_id),
+        }
+
+    rows = [None] * len(files)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_idx = {
+            executor.submit(_process_one, fp, fn): i
+            for i, (fp, fn) in enumerate(files)
+        }
+        for future in as_completed(future_to_idx):
+            i = future_to_idx[future]
+            rows[i] = future.result()
+            print(f"Finished '{files[i][1]}'")
+
+    summary_df = pd.DataFrame(rows)
+    os.makedirs(os.path.dirname(os.path.abspath(output_csv)), exist_ok=True)
+    summary_df.to_csv(output_csv, index=False)
+    print(f"\nSummary saved to '{output_csv}'")
+    return summary_df
+
+
 if __name__ == "__main__":
 
     # ──────────────────────────────────────────────────────────────────────────────

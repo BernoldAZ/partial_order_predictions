@@ -34,8 +34,9 @@ HIDDEN_CHANNELS = 128
 DROPOUT         = 0.3
 LR              = 1e-3
 WEIGHT_DECAY    = 1e-4
-MAX_EPOCHS      = 100
-PATIENCE        = 10          # early-stopping patience (val loss)
+MAX_EPOCHS      = 200
+PATIENCE        = 24          # early-stopping patience
+LR_PATIENCE     = 10           # ReduceLROnPlateau patience
 BATCH_SIZE      = 32
 TRUNCATION      = 'none'      # timestamp truncation level
 
@@ -72,16 +73,18 @@ def run(log_path: str, log_name: str, results_dir: str):
     optimizer = torch.optim.Adam(model.parameters(), lr=LR,
                                  weight_decay=WEIGHT_DECAY)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='max', factor=0.5, patience=5, min_lr=1e-6)
+        optimizer, mode='max', factor=0.5, patience=LR_PATIENCE, min_lr=1e-6)
     criterion = nn.CrossEntropyLoss()
 
     print(f"\nModel parameters: "
           f"{sum(p.numel() for p in model.parameters() if p.requires_grad):,}")
 
     # ── Training with early stopping ──────────────────────────────────────
+    os.makedirs(results_dir, exist_ok=True)
+    best_model_path = os.path.join(results_dir, f'{log_name}_model.pt')
+
     best_val_acc   = 0.0
     patience_count = 0
-    best_state     = None
     train_start    = time.time()
 
     for epoch in range(1, MAX_EPOCHS + 1):
@@ -102,8 +105,7 @@ def run(log_path: str, log_name: str, results_dir: str):
         if val_metrics['accuracy'] > best_val_acc:
             best_val_acc   = val_metrics['accuracy']
             patience_count = 0
-            best_state     = {k: v.cpu().clone()
-                              for k, v in model.state_dict().items()}
+            torch.save(model.state_dict(), best_model_path)
         else:
             patience_count += 1
             if patience_count >= PATIENCE:
@@ -113,7 +115,7 @@ def run(log_path: str, log_name: str, results_dir: str):
     training_time = time.time() - train_start
 
     # ── Test evaluation ───────────────────────────────────────────────────
-    model.load_state_dict(best_state)
+    model.load_state_dict(torch.load(best_model_path, weights_only=True))
     model.to(device)
 
     test_start                = time.time()
@@ -127,7 +129,6 @@ def run(log_path: str, log_name: str, results_dir: str):
     print(f"Testing time  : {testing_time:.1f}s")
 
     # ── Save results ──────────────────────────────────────────────────────
-    os.makedirs(results_dir, exist_ok=True)
     csv_path   = os.path.join(results_dir, 'results_nap_gnn.csv')
     fieldnames = ['log', 'model', 'method', 'accuracy', 'f1',
                   'training_time_seconds', 'testing_time_seconds']
@@ -142,25 +143,33 @@ def run(log_path: str, log_name: str, results_dir: str):
         'testing_time_seconds':   round(testing_time, 2),
     }
 
-    rows = []
-    if os.path.isfile(csv_path):
-        with open(csv_path, newline='') as f:
-            rows = list(csv.DictReader(f))
-
-    updated = False
-    for row in rows:
-        if row['log'] == log_name and row['model'] == 'GNN' and row.get('method') == 'nap':
-            row.update(new_row)
-            updated = True
+    lock_path = csv_path + '.lock'
+    while True:
+        try:
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
             break
-
-    if not updated:
-        rows.append(new_row)
-
-    with open(csv_path, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
+        except FileExistsError:
+            time.sleep(0.05)
+    try:
+        rows = []
+        if os.path.isfile(csv_path):
+            with open(csv_path, newline='') as f:
+                rows = list(csv.DictReader(f))
+        updated = False
+        for row in rows:
+            if row['log'] == log_name and row['model'] == 'GNN' and row.get('method') == 'nap':
+                row.update(new_row)
+                updated = True
+                break
+        if not updated:
+            rows.append(new_row)
+        with open(csv_path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+    finally:
+        os.remove(lock_path)
 
     print(f"Results saved → {csv_path}")
     return test_metrics

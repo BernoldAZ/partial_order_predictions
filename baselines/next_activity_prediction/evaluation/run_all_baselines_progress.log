@@ -293,3 +293,5 @@
 [2026-05-10 18:35:56] RUNNING | model=tax | method=one_hot | log=BPI Challenge 2017
 [2026-05-10 18:41:24] RUNNING | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI Challenge 2017
 [2026-05-11 00:12:51] DONE | model=everman | method=Gamallo Fernandez 2023 Context Based w_3 | log=BPI Challenge 2017
+[2026-05-14 08:25:33] RUNNING | model=tax | method=one_hot | log=BPI Challenge 2017
+[2026-05-15 02:51:59] DONE | model=tax | method=one_hot | log=BPI Challenge 2017

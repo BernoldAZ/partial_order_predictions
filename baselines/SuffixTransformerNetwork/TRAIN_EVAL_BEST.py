@@ -25,6 +25,7 @@ import numpy as np
 import torch
 import os
 import pickle
+import time
 
 
 def train_eval(log_name):
@@ -120,11 +121,13 @@ def train_eval(log_name):
     )
 
     print("Fitting BEST model on training data ...")
+    _train_start = time.time()
     best_model.fit(
         train_dataset=train_dataset,
         num_categoricals_pref=num_categoricals_pref
     )
     print("BEST model fitted successfully.")
+    training_time = time.time() - _train_start
 
     # Optionally persist the fitted model to disk for later reuse
     model_save_path = os.path.join(backup_path, 'best_model.pkl')
@@ -140,6 +143,7 @@ def train_eval(log_name):
     results_path = os.path.join(backup_path, "TEST_SET_RESULTS")
     os.makedirs(results_path, exist_ok=True)
 
+    _test_start = time.time()
     inf_results = inference_loop(
         best_model=best_model,
         inference_dataset=test_dataset,
@@ -149,6 +153,7 @@ def train_eval(log_name):
         results_path=results_path,
         dl_batch_size=512
     )
+    testing_time = time.time() - _test_start
 
     # -----------------------------------------------------------------------
     # Unpack and print results
@@ -195,6 +200,8 @@ def train_eval(log_name):
         "DL sim"          : avg_dam_lev,
         "MAE TTNE minutes": avg_MAE_ttne_minutes,
         "MAE RRT minutes" : avg_MAE_minutes_RRT,
+        "training_time"   : training_time,
+        "testing_time"    : testing_time,
     }
     path_name_average_results = os.path.join(results_path, 'averaged_results.pkl')
     with open(path_name_average_results, 'wb') as f:

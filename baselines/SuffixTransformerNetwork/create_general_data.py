@@ -1,7 +1,9 @@
+import csv
 import pandas as pd
 import numpy as np
 import os
 import torch
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from Preprocessing.from_log_to_tensors import log_to_tensors
 
 
@@ -479,7 +481,7 @@ def construct_datasets(
         print(f"Auto-derived max_days (maximum case duration): {max_days:.2f}")
 
     # 5b. Run the full preprocessing pipeline
-    result = log_to_tensors(
+    train_data, val_data, test_data, counts = log_to_tensors(
         log,
         log_name=log_name,
         start_date=start_date,
@@ -500,8 +502,6 @@ def construct_datasets(
         outcome=outcome,
     )
 
-    train_data, val_data, test_data = result
-
     # 6. Unpack and save tensors
     output_directory = os.path.join('results_per_log', log_name)
     os.makedirs(output_directory, exist_ok=True)
@@ -517,6 +517,112 @@ def construct_datasets(
     print("Use this value for the tss_index parameter in TRAIN_EVAL_*.py scripts.")
     with open(os.path.join(output_directory, 'tss_index.txt'), 'w') as _f:
         _f.write(str(tss_index))
+
+    return counts
+
+
+# ─────────────────────────────────────────────
+# Batch runner (all logs in a folder)
+# ─────────────────────────────────────────────
+
+def _run_one_log(args):
+    """Top-level worker for ProcessPoolExecutor: run one log, return counts."""
+    log_path, log_name, kw = args
+    try:
+        counts = construct_datasets(log_path, log_name, **kw)
+        return {'log': log_name, **counts, 'error': ''}
+    except Exception as exc:
+        return {'log': log_name, 'n_train': '', 'train_pairs': '',
+                'n_val': '', 'val_pairs': '', 'n_test': '', 'test_pairs': '',
+                'error': str(exc)}
+
+
+def run_all_logs(folder, output_file,
+                 case_id='case:concept:name',
+                 act_label='concept:name',
+                 timestamp='time:timestamp',
+                 timestamp_format=None,
+                 bool_cols=None,
+                 str_cols=None,
+                 cat_casefts=None,
+                 num_casefts=None,
+                 cat_eventfts=None,
+                 num_eventfts=None,
+                 outcome=None,
+                 start_date=None,
+                 start_before_date=None,
+                 end_date=None,
+                 max_days=None,
+                 test_len_share=0.20,
+                 val_len_share=0.20,
+                 window_size=None,
+                 mode='preferred',
+                 plot=False,
+                 n_workers=None):
+    """Run construct_datasets for every log in *folder* and write a summary CSV.
+
+    Parameters
+    ----------
+    folder : str
+        Directory containing .xes, .xes.gz, or .csv event-log files.
+    output_file : str
+        Path for the output CSV (created or overwritten).
+    n_workers : int or None
+        Number of parallel worker processes. None = os.cpu_count().
+    """
+    _SUPPORTED_EXT = {'.xes', '.gz', '.csv'}
+
+    def _stem(fname):
+        for ext in ('.xes.gz', '.xes', '.csv'):
+            if fname.endswith(ext):
+                return fname[:-len(ext)]
+        return os.path.splitext(fname)[0]
+
+    files = sorted(
+        (os.path.join(folder, f), _stem(f))
+        for f in os.listdir(folder)
+        if os.path.isfile(os.path.join(folder, f))
+        and os.path.splitext(f)[1].lower() in _SUPPORTED_EXT
+    )
+    if not files:
+        print(f"No log files found in '{folder}'.")
+        return
+
+    kw = dict(case_id=case_id, act_label=act_label, timestamp=timestamp,
+              timestamp_format=timestamp_format, bool_cols=bool_cols,
+              str_cols=str_cols, cat_casefts=cat_casefts, num_casefts=num_casefts,
+              cat_eventfts=cat_eventfts, num_eventfts=num_eventfts, outcome=outcome,
+              start_date=start_date, start_before_date=start_before_date,
+              end_date=end_date, max_days=max_days, test_len_share=test_len_share,
+              val_len_share=val_len_share, window_size=window_size, mode=mode,
+              plot=plot)
+
+    workers = min(n_workers or os.cpu_count(), len(files))
+    args_list = [(path, name, kw) for path, name in files]
+
+    fieldnames = ['log', 'n_train', 'train_pairs', 'n_val', 'val_pairs',
+                  'n_test', 'test_pairs', 'error']
+
+    print(f"Processing {len(files)} logs with {workers} workers ...")
+    with open(output_file, 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+
+        with ProcessPoolExecutor(max_workers=workers) as executor:
+            futures = {executor.submit(_run_one_log, args): args[1] for args in args_list}
+            for future in as_completed(futures):
+                r = future.result()
+                if r['error']:
+                    print(f"  ERROR  {r['log']}: {r['error']}")
+                else:
+                    print(f"  {r['log']}  "
+                          f"train={r['n_train']} ({r['train_pairs']} pairs)  "
+                          f"val={r['n_val']} ({r['val_pairs']} pairs)  "
+                          f"test={r['n_test']} ({r['test_pairs']} pairs)")
+                writer.writerow(r)
+                f.flush()
+
+    print(f"\nSummary written to '{output_file}'.")
 
 
 if __name__ == '__main__':

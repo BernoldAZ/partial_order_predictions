@@ -1,2 +1,0 @@
-log,model,activity_accuracy,DL similarity ↑,MAE TTNE (min) ↓,MAE RRT (min) ↓,training_time_seconds,testing_time_seconds
-Sepsis,GraphGen,0.346419,0.129466,5137.8113,76715.4687,12.2,6.91

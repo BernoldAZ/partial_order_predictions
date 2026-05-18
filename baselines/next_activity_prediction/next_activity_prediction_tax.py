@@ -332,6 +332,51 @@ def vectorize_fold(lines, ts, ts2, ts3, ts4, divisor, divisor2, encoding_dim, ex
     return X, y_act, y_time
 
 
+def _make_dataset(lines, ts, ts2, ts3, ts4, divisor, divisor2, encoding_dim, maxlen,
+                  target_tokens, target_token_indices, batch_size,
+                  use_one_hot=False, activity_embeddings=None, one_hot_indices=None):
+    """Stream prefix sequences lazily; never pre-allocates the full array."""
+    extra = 5
+    vocab_size = len(target_tokens)
+    total_features = encoding_dim + extra
+
+    def gen():
+        for tokens, t_seq, t2_seq, t3_seq, t4_seq in zip(lines, ts, ts2, ts3, ts4):
+            for i in range(1, len(tokens)):
+                x = np.zeros((maxlen, total_features), dtype=np.float32)
+                y_act = np.zeros(vocab_size, dtype=np.float32)
+                sentence = tokens[:i]
+                leftpad = maxlen - len(sentence)
+                for t, token in enumerate(sentence):
+                    if use_one_hot:
+                        if token in one_hot_indices:
+                            x[t + leftpad, one_hot_indices[token]] = 1.0
+                    else:
+                        if token in activity_embeddings:
+                            x[t + leftpad, :encoding_dim] = activity_embeddings[token]
+                    x[t + leftpad, encoding_dim]     = t + 1
+                    x[t + leftpad, encoding_dim + 1] = t_seq[t]  / divisor
+                    x[t + leftpad, encoding_dim + 2] = t2_seq[t] / divisor2
+                    x[t + leftpad, encoding_dim + 3] = t3_seq[t] / 86400
+                    x[t + leftpad, encoding_dim + 4] = t4_seq[t] / 7
+                target = tokens[i]
+                if target in target_token_indices:
+                    y_act[target_token_indices[target]] = 1.0
+                y_time = np.float32(t_seq[i - 1] / divisor)
+                yield x, y_act, y_time
+
+    sig = (
+        tf.TensorSpec(shape=(maxlen, total_features), dtype=tf.float32),
+        tf.TensorSpec(shape=(vocab_size,),            dtype=tf.float32),
+        tf.TensorSpec(shape=(),                       dtype=tf.float32),
+    )
+    return (
+        tf.data.Dataset.from_generator(gen, output_signature=sig)
+        .batch(batch_size)
+        .prefetch(tf.data.AUTOTUNE)
+    )
+
+
 # -----------------------
 # Single-log endpoint.
 def run_tax_for_log(
@@ -470,38 +515,17 @@ def run_tax_for_log(
         print(f"  Encoding dim: {_encoding_dim}")
         total_features = _encoding_dim + 5
 
-        # Vectorise
-        _vec_kwargs = dict(
-            maxlen=_maxlen,
-            target_tokens=_target_tokens,
-            target_token_indices=_target_token_indices,
+        # Build datasets lazily — no full array pre-allocation
+        _ds_kwargs = dict(
+            divisor=_divisor, divisor2=_divisor2, encoding_dim=_encoding_dim,
+            maxlen=_maxlen, target_tokens=_target_tokens,
+            target_token_indices=_target_token_indices, batch_size=batch_size,
+            use_one_hot=_use_one_hot, activity_embeddings=_activity_emb,
+            one_hot_indices=_one_hot_idx,
         )
-        if _use_one_hot:
-            X_train, y_act_train, y_time_train = vectorize_fold(
-                lines_train, ts_train, ts2_train, ts3_train, ts4_train,
-                _divisor, _divisor2, _encoding_dim,
-                use_one_hot=True, one_hot_indices=_one_hot_idx, **_vec_kwargs)
-            X_val, y_act_val, y_time_val = vectorize_fold(
-                lines_val, ts_val, ts2_val, ts3_val, ts4_val,
-                _divisor, _divisor2, _encoding_dim,
-                use_one_hot=True, one_hot_indices=_one_hot_idx, **_vec_kwargs)
-            X_test, y_act_test, y_time_test = vectorize_fold(
-                lines_test, ts_test, ts2_test, ts3_test, ts4_test,
-                _divisor, _divisor2, _encoding_dim,
-                use_one_hot=True, one_hot_indices=_one_hot_idx, **_vec_kwargs)
-        else:
-            X_train, y_act_train, y_time_train = vectorize_fold(
-                lines_train, ts_train, ts2_train, ts3_train, ts4_train,
-                _divisor, _divisor2, _encoding_dim,
-                activity_embeddings=_activity_emb, **_vec_kwargs)
-            X_val, y_act_val, y_time_val = vectorize_fold(
-                lines_val, ts_val, ts2_val, ts3_val, ts4_val,
-                _divisor, _divisor2, _encoding_dim,
-                activity_embeddings=_activity_emb, **_vec_kwargs)
-            X_test, y_act_test, y_time_test = vectorize_fold(
-                lines_test, ts_test, ts2_test, ts3_test, ts4_test,
-                _divisor, _divisor2, _encoding_dim,
-                activity_embeddings=_activity_emb, **_vec_kwargs)
+        train_ds = _make_dataset(lines_train, ts_train, ts2_train, ts3_train, ts4_train, **_ds_kwargs)
+        val_ds   = _make_dataset(lines_val,   ts_val,   ts2_val,   ts3_val,   ts4_val,   **_ds_kwargs)
+        test_ds  = _make_dataset(lines_test,  ts_test,  ts2_test,  ts3_test,  ts4_test,  **_ds_kwargs)
 
         # Build model
         print(f"  Building model ...")
@@ -538,17 +562,16 @@ def run_tax_for_log(
                               verbose=1, min_delta=0.0001),
         ]
         print(f"  Training ...")
-        with tf.device('/CPU:0'):
-            train_ds = tf.data.Dataset.from_tensor_slices(
-                (X_train, {'act_output': y_act_train, 'time_output': y_time_train})
-            ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-            val_ds = tf.data.Dataset.from_tensor_slices(
-                (X_val, {'act_output': y_act_val, 'time_output': y_time_val})
-            ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+        def _named(x, y_act, y_time):
+            return x, {'act_output': y_act, 'time_output': y_time}
+
+        _train_start = time.time()
         model.fit(
-            train_ds, validation_data=val_ds,
+            train_ds.map(_named), validation_data=val_ds.map(_named),
             verbose=1, callbacks=callbacks, epochs=epochs,
         )
+        training_time = time.time() - _train_start
 
         # Evaluate
         print(f"  Evaluating ...")
@@ -558,15 +581,13 @@ def run_tax_for_log(
             optimizer=opt,
             metrics={'act_output': 'acc', 'time_output': 'mae'},
         )
-        with tf.device('/CPU:0'):
-            test_ds = tf.data.Dataset.from_tensor_slices(
-                (X_test, {'act_output': y_act_test, 'time_output': y_time_test})
-            ).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-            pred_ds = tf.data.Dataset.from_tensor_slices(X_test).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-        model.evaluate(test_ds, verbose=1)
-        preds         = model.predict(pred_ds)
-        y_act_pred    = np.argmax(preds[0], axis=1)
-        y_act_true    = np.argmax(y_act_test, axis=1)
+        model.evaluate(test_ds.map(_named), verbose=1)
+        _test_start = time.time()
+        preds      = model.predict(test_ds.map(lambda x, y_act, y_time: x))
+        testing_time = time.time() - _test_start
+        y_act_pred = np.argmax(preds[0], axis=1)
+        y_act_true = np.argmax(
+            np.concatenate([y_act.numpy() for _, y_act, _ in test_ds], axis=0), axis=1)
 
         from sklearn.metrics import accuracy_score, f1_score
         acc = accuracy_score(y_act_true, y_act_pred)
@@ -574,7 +595,8 @@ def run_tax_for_log(
         print(f"  Accuracy={acc:.4f}  F1={f1:.4f}")
 
         # Save per-method CSV
-        result_dict = {'log': log_name, 'method': method, 'accuracy': acc, 'f1': f1}
+        result_dict = {'log': log_name, 'method': method, 'accuracy': acc, 'f1': f1,
+                       'training_time': training_time, 'testing_time': testing_time}
         results_summary.append(result_dict)
         method_dir = os.path.join(_results_dir, log_name, method)
         os.makedirs(method_dir, exist_ok=True)

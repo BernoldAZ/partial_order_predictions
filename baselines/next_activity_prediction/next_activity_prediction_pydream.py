@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 
-import os, random, json, itertools, sys
+import os, random, json, itertools, sys, time
 sys.setrecursionlimit(10000)
 import numpy as np
 import pandas as pd
 from pm4py.objects.log.importer.xes import importer as xes_importer
 from pm4py.objects.log.obj import EventLog
 import pm4py
+import tensorflow as tf
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 from pydream.LogWrapper import LogWrapper
 from pydream.EnhancedPN import EnhancedPN
 from pydream.predictive.nap.NAP import NAP
@@ -168,8 +172,10 @@ def run_pydream_for_log(
 
     nap = NAP(tss_train_path, tss_test_path, options={"n_epochs": epochs, "n_batch_size": batch_size})
     print(f"Training NAP for log {log_name} ...")
+    _train_start = time.time()
     nap.train(model_dir, log_name, save_results=False)
     nap.loadModel(model_dir, log_name)
+    training_time = time.time() - _train_start
 
     # ── Evaluate ─────────────────────────────────────────────────────────────
     with open(tss_test_path) as f:
@@ -179,7 +185,9 @@ def run_pydream_for_log(
         print(f"No labeled test samples for {log_name}, skipping.")
         return None
     test_samples, y_true = zip(*labeled_pairs)
+    _test_start = time.time()
     _, y_pred = batched_predict(nap, list(test_samples))
+    testing_time = time.time() - _test_start
     y_true = list(y_true)
 
     acc       = accuracy_score(y_true, y_pred)
@@ -198,6 +206,8 @@ def run_pydream_for_log(
         "weighted_recall": w_recall,
         "weighted_precision": w_prec,
         "f1": w_f1,
+        "training_time": training_time,
+        "testing_time": testing_time,
     }
     result_dir = os.path.join(_results_dir, log_name)
     os.makedirs(result_dir, exist_ok=True)

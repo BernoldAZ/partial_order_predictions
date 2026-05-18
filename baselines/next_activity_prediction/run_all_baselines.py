@@ -15,7 +15,7 @@ Usage:
     python run_all_baselines.py --run-id 2 --workers 4
 
     Usage with docker:
-    docker run -it --rm -v $(pwd):/app --gpus all ppm-baseline-one python3 run_all_baselines.py --workers 4
+    docker run -it --rm -v $(pwd):/app --gpus all ppm-baseline-one python3 run_all_baselines.py --workers 16 --run-id 3
 """
 
 import argparse

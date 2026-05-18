@@ -5,7 +5,8 @@ import numpy as np
 import torch 
 from torch.utils.data import TensorDataset, DataLoader
 import os
-import pickle 
+import pickle
+import time
 
 
 
@@ -257,27 +258,29 @@ def train_eval(log_name,
     num_epochs = 200 
     num_classes = num_activities 
     batch_interval = 800
-    train_model(model, 
-                optimizer, 
-                train_dataset, 
-                val_dataset, 
-                start_epoch, 
-                num_epochs, 
+    _train_start = time.time()
+    train_model(model,
+                optimizer,
+                train_dataset,
+                val_dataset,
+                start_epoch,
+                num_epochs,
                 remaining_runtime_head,
                 outcome_bool,
-                num_classes, 
-                batch_interval, 
-                backup_path, 
-                1, # num_categoricals_pref, 
-                mean_std_ttne, 
-                mean_std_tsp, 
-                mean_std_tss, 
-                mean_std_rrt, 
-                batch_size, 
+                num_classes,
+                batch_interval,
+                backup_path,
+                1, # num_categoricals_pref,
+                mean_std_ttne,
+                mean_std_tsp,
+                mean_std_tss,
+                mean_std_rrt,
+                batch_size,
                 patience=24,
-                lr_scheduler_present=True, 
+                lr_scheduler_present=True,
                 lr_scheduler=lr_scheduler)
-    
+    training_time = time.time() - _train_start
+
     # Re-initializing new model after training to load best callback
     model = SuTraN_no_context(num_activities=num_activities, 
                         d_model=d_model, 
@@ -327,17 +330,19 @@ def train_eval(log_name,
     results_path = os.path.join(backup_path, "TEST_SET_RESULTS")
     os.makedirs(results_path, exist_ok=True)
 
-    inf_results = inference_loop(model, 
-                                 test_dataset, 
-                                 remaining_runtime_head, 
-                                 outcome_bool, 
-                                 1, # num_categoricals_pref, 
-                                 mean_std_ttne, 
-                                 mean_std_tsp, 
-                                 mean_std_tss, 
-                                 mean_std_rrt, 
-                                 results_path=results_path, 
+    _test_start = time.time()
+    inf_results = inference_loop(model,
+                                 test_dataset,
+                                 remaining_runtime_head,
+                                 outcome_bool,
+                                 1, # num_categoricals_pref,
+                                 mean_std_ttne,
+                                 mean_std_tsp,
+                                 mean_std_tss,
+                                 mean_std_rrt,
+                                 results_path=results_path,
                                  val_batch_size=4096)
+    testing_time = time.time() - _test_start
     
 
     # Retrieving the different metrics 
@@ -415,9 +420,11 @@ def train_eval(log_name,
 
     # Retrieving and storing dictionary of the metrics averaged over all 
     # test set instances (prefix-suffix pairs)
-    avg_results_dict = {"MAE TTNE minutes" : avg_MAE_ttne_minutes, 
-                        "DL sim" : avg_dam_lev, 
-                        "MAE RRT minutes" : avg_MAE_minutes_RRT}
+    avg_results_dict = {"MAE TTNE minutes" : avg_MAE_ttne_minutes,
+                        "DL sim" : avg_dam_lev,
+                        "MAE RRT minutes" : avg_MAE_minutes_RRT,
+                        "training_time" : training_time,
+                        "testing_time" : testing_time}
     path_name_average_results = os.path.join(results_path, 'averaged_results.pkl')
 
     

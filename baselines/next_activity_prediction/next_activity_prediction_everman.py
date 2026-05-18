@@ -8,6 +8,9 @@ import numpy as np
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ["TF_DETERMINISTIC_OPS"] = "1"
 import tensorflow as tf
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 from tensorflow.python.keras.backend import set_session
 from pathlib import Path
 from pm4py.objects.log.importer.xes import importer as xes_importer
@@ -463,6 +466,7 @@ def run_everman_for_log(
 
     # ── Train ────────────────────────────────────────────────────────────────
     print(f"Training ...")
+    _train_start = time.time()
     model.fit(
         train_dataset,
         epochs=epochs,
@@ -472,6 +476,7 @@ def run_everman_for_log(
     if not os.path.exists(model_directory):
         print("No best checkpoint saved — saving final weights as backup.")
         model.save_weights(model_directory)
+    training_time = time.time() - _train_start
 
     # ── Evaluate ─────────────────────────────────────────────────────────────
     print(f"Evaluating ...")
@@ -493,6 +498,7 @@ def run_everman_for_log(
     os.makedirs(result_dir, exist_ok=True)
 
     raw_result_file = os.path.join(result_dir, f"raw_{log_name}.csv")
+    _test_start = time.time()
     with open(raw_result_file, "w") as f:
         f.write("prefix_length;ground_truth;predicted;prediction_probs\n")
         for trace in X_test:
@@ -511,6 +517,7 @@ def run_everman_for_log(
                         np.array2string(probs.numpy(), separator=",", max_line_width=99999) + "\n")
                 if next_event == last_case_id:
                     break
+    testing_time = time.time() - _test_start
 
     y_pred_a = np.argmax(y_pred, axis=1)
     y_true_a = np.argmax(y_true, axis=1)
@@ -546,193 +553,11 @@ def run_everman_for_log(
         "log": log_name, "method": method,
         "accuracy": acc, "mcc": mcc, "brier": brier,
         "recall": w_recall, "precision": w_prec, "f1": w_f1,
+        "training_time": training_time, "testing_time": testing_time,
     }
     pd.DataFrame([result]).to_csv(
         os.path.join(result_dir, f"{log_name}_{method}_results.csv"), index=False)
     print(f"Results saved to '{result_dir}'")
     return result
 
-
-if __name__ == "__main__":
-    # ----------------------- Training and Evaluation -----------------------
-    results_summary = []
-
-    # Loop over each raw log in RAW_DATASETS_DIR.
-    raw_logs = [f for f in os.listdir(RAW_DATASETS_DIR) if f.endswith(".xes.gz")]
-    for raw_log in raw_logs:
-        log_name = os.path.splitext(os.path.splitext(raw_log)[0])[0]
-        train_path = os.path.join(SPLIT_DATASETS_DIR, f"train_{log_name}.xes.gz")
-        val_path = os.path.join(SPLIT_DATASETS_DIR, f"val_{log_name}.xes.gz")
-        test_path = os.path.join(SPLIT_DATASETS_DIR, f"test_{log_name}.xes.gz")
-        print("\n========== Processing log:", log_name, "==========")
-        print("Train:", train_path)
-        print("Val:", val_path)
-        print("Test:", test_path)
-
-        train_log = xes_importer.apply(train_path,
-                                            parameters={"timestamp_sort": True, "timestamp_key": "time:timestamp"})
-        val_log = xes_importer.apply(val_path, parameters={"timestamp_sort": True, "timestamp_key": "time:timestamp"})
-        test_log = xes_importer.apply(test_path,
-                                            parameters={"timestamp_sort": True, "timestamp_key": "time:timestamp"})
-
-        idx = {}
-        current_idx = 0
-        X_train, idx, current_idx = vectorize_log(train_log, idx, current_idx)
-        X_val, idx, current_idx = vectorize_log(val_log, idx, current_idx)
-        if "[UNK]" not in idx:
-            idx["[UNK]"] = current_idx
-            current_idx += 1
-        unk_id = idx["[UNK]"]
-        vocab_size = current_idx  # freeze vocab before test
-        X_test, _, _ = vectorize_log(test_log, idx, current_idx, readonly=True, unk_id=unk_id)
-
-        print("Train events:", sum(len(x) for x in X_train))
-        print("Test events:", sum(len(x) for x in X_test))
-
-        train_dataset = to_dataset(X_train)
-        val_dataset = to_dataset(X_val)
-        test_dataset = to_dataset(X_test)
-
-        for method in encoding_methods:
-            print("\n--- Encoding method:", method, "for log:", log_name, "---")
-            if method == "one_hot":
-                use_one_hot_flag = True
-                chosen_emb_dim = embedding_dim
-            else:
-                use_one_hot_flag = False
-                if method.startswith("Unit Distance"):
-                    activity_embeddings = {activity: np.eye(vocab_size)[i] for activity, i in idx.items() if
-                                        activity != "[EOC]"}
-                    chosen_emb_dim = vocab_size
-                else:
-                    if embedding_source == "train":
-                        embedding_input = X_train
-                    elif embedding_source == "validation":
-                        embedding_input = X_val
-                    elif embedding_source == "train_val":
-                        embedding_input = X_train + X_val
-                    else:
-                        raise ValueError("Unknown embedding_source")
-                    try:
-                        activity_embeddings, chosen_emb_dim = get_embeddings_for_method(method, embedding_input, idx)
-                    except Exception as e:
-                        print(f"Error computing embeddings for method {method} on log {log_name}: {e}")
-            print("Final encoding dimension:", chosen_emb_dim)
-
-            if not use_one_hot_flag:
-                embedding_matrix = create_embedding_matrix(idx, activity_embeddings, chosen_emb_dim)
-
-            # Build the model.
-            if use_one_hot_flag:
-                model = build_model(vocab_size, embedding_dim, rnn_units, BATCH_SIZE)
-            else:
-                model = build_model_pretrained(vocab_size, chosen_emb_dim, rnn_units, BATCH_SIZE, embedding_matrix)
-            model.summary()
-            optimizer = tf.keras.optimizers.legacy.SGD(learning_rate=lr, decay=lrDecay, clipnorm=maxGradNorm, momentum=0.9,
-                                                    nesterov=True)
-
-            model_file_name = log_name + ".h5"
-            model_directory = os.path.join(MODELS_DIR, method, model_file_name)
-
-            model.compile(loss=loss_fn, optimizer=optimizer,
-                        metrics=[tf.keras.metrics.sparse_categorical_accuracy])
-            checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-                model_directory,
-                monitor="val_loss", save_weights_only=True, save_best_only=True, verbose=1)
-
-            history = model.fit(
-                train_dataset,
-                epochs=EPOCHS,
-                callbacks=[checkpoint_callback],
-                validation_data=val_dataset
-            )
-            # After training, check if a best checkpoint was saved.
-            if not os.path.exists(model_directory):
-                print(
-                    "No best checkpoint was saved (validation loss never improved), so saving final model weights as backup.")
-                model.save_weights(model_directory)
-
-            if TEST_FLAG:
-                print("Start testing for log", log_name, "with method", method)
-                if use_one_hot_flag:
-                    # For the baseline one_hot model, build the model with batch_size=1
-                    test_model = build_model(vocab_size, embedding_dim, rnn_units, batch_size=1)
-                    # This call sets the input shape (batch=1, variable sequence length)
-                    test_model.build(tf.TensorShape([1, None]))
-                    test_model.load_weights(model_directory)
-                else:
-                    # For pretrained embedding models, build with the same batch size
-                    test_model = build_model_pretrained(vocab_size, chosen_emb_dim, rnn_units, batch_size=1,
-                                                        embedding_matrix=embedding_matrix)
-                    # Instead of calling build() (which would reinitialize weights), call the model on a dummy input.
-                    dummy_input = tf.zeros([1, 10], dtype=tf.int32)  # dummy sequence of 10 tokens
-                    _ = test_model(dummy_input)
-                    test_model.load_weights(model_directory)
-                y_pred = []
-                y_true = []
-                last_case_id = idx["[EOC]"]
-                d = os.path.join(RESULTS_DIR, log_name, method)
-                os.makedirs(d, exist_ok=True)
-
-                raw_result_file = "raw_" + log_name + ".csv"
-                with open(os.path.join(d, raw_result_file), "w") as f:
-                    f.write("prefix_length;ground_truth;predicted;prediction_probs\n")
-                    for trace in X_test:
-                        for i, event in enumerate(trace):
-                            test_model.reset_states()
-                            inp = trace[:i + 1]
-                            next_event = trace[i + 1]
-                            full_preds = test_model(tf.expand_dims(inp, 0), training=False)
-                            probs = tf.nn.softmax(tf.squeeze(full_preds, 0).numpy()[-1])
-                            y_pred.append(probs)
-                            y_true.append(np.eye(vocab_size)[next_event])
-                            f.write(str(len(inp)) + ";" + str(next_event) + ";" +
-                                    str(np.argmax(probs)) + ";" +
-                                    np.array2string(probs.numpy(), separator=",", max_line_width=99999) + "\n")
-                            if next_event == last_case_id:
-                                break
-
-                from sklearn.metrics import accuracy_score, matthews_corrcoef, f1_score, precision_score, recall_score
-
-                y_pred_a = np.argmax(y_pred, axis=1)
-                y_true_a = np.argmax(y_true, axis=1)
-                result_file = log_name + ".txt"
-                with open(os.path.join(d, result_file), "w") as f:
-                    f.write("Accuracy: " + str(accuracy_score(y_true_a, y_pred_a)))
-                    f.write("\nMCC: " + str(matthews_corrcoef(y_true_a, y_pred_a)))
-
-
-                    def calculate_brier_score(y_pred, y_true):
-                        return np.mean(np.sum((y_true - y_pred) ** 2, axis=1))
-
-
-                    f.write("\nBrier score: " + str(calculate_brier_score(np.array(y_true), np.array(y_pred))))
-                    f.write("\nWeighted recall: " + str(recall_score(y_true_a, y_pred_a, average="weighted")))
-                    f.write("\nWeighted precision: " + str(precision_score(y_true_a, y_pred_a, average="weighted")))
-                    f.write("\nWeighted f1: " + str(f1_score(y_true_a, y_pred_a, average="weighted")))
-                print(f"Results for log {log_name} with method {method} saved.")
-
-                # Delete the CSV after it's no longer needed
-                if os.path.exists(os.path.join(d, raw_result_file)):
-                    os.remove(os.path.join(d, raw_result_file))
-
-            tf.keras.backend.clear_session()
-            # For demonstration, append dummy results.
-            from sklearn.metrics import accuracy_score, f1_score
-
-            preds = model.predict(test_dataset)
-            y_act_pred_probs = preds[0]
-            y_act_pred = np.argmax(y_act_pred_probs, axis=1)
-            result_dict = {"log": log_name, "method": method, "accuracy": accuracy_score(y_true_a, y_pred_a), "f1": f1_score(y_true_a, y_pred_a, average="weighted")}
-            results_summary.append(result_dict)
-    df_results = pd.DataFrame(results_summary)
-    df_results.to_csv(os.path.join(RESULTS_DIR, "all_logs_results.csv"), index=False)
-    print("\nOverall results:")
-    print(df_results)
-    avg_results = df_results.groupby("method").agg({"accuracy": "mean", "f1": "mean"}).reset_index()
-    print("\nAverage results per method:")
-    print(avg_results)
-    avg_results.to_csv(os.path.join(RESULTS_DIR, "average_results_per_method.csv"), index=False)
-
-    print("Pipeline evaluation finished.")
 

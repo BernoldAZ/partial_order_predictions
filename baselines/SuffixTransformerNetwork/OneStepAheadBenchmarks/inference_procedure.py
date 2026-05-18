@@ -41,23 +41,23 @@ def inference_loop(model,
     # Disable gradient computation and reduce memory consumption.
     with torch.no_grad():
 
-        # Initializing tensors storing the evaluation metrics for one 
+        # Initializing tensors storing the evaluation metrics for one
         # step ahead prediction
-        MAE_std_glob = torch.tensor(data=[], dtype=torch.float32).to(device)
-        CE_inference_glob = torch.tensor(data=[], dtype=torch.float32).to(device)
-        accuracy_glob = torch.tensor(data=[], dtype=torch.float32).to(device)
+        MAE_std_glob = torch.tensor(data=[], dtype=torch.float32)
+        CE_inference_glob = torch.tensor(data=[], dtype=torch.float32)
+        accuracy_glob = torch.tensor(data=[], dtype=torch.float32)
 
-        # Composite loss metric used during training, used for LR scheduler benchmark 
-        val_loss = torch.tensor(data=[], dtype=torch.float32).to(device)
+        # Composite loss metric used during training, used for LR scheduler benchmark
+        val_loss = torch.tensor(data=[], dtype=torch.float32)
 
         vloss_metric = MultiOutputMetric(num_classes)
 
         for valbatch_num, vdata in tqdm(enumerate(inference_dataloader), desc="Validation batch calculation"):
                 vinputs = vdata[:-3]
                 vlabels = vdata[-3:]
-                vinputs = [vinput_tensor.clone().to(device) for vinput_tensor in vinputs]
-                # Selecting only the TTNE and ACTIVITY LABELS 
-                vlabels = [vlabels[0].to(device), vlabels[-1].to(device)]
+                vinputs = [vinput_tensor.to(device, non_blocking=True) for vinput_tensor in vinputs]
+                # Selecting only the TTNE and ACTIVITY LABELS
+                vlabels = [vlabels[0].to(device, non_blocking=True), vlabels[-1].to(device, non_blocking=True)]
 
                 # Model predictions for activity and rrt suffix 
                 voutputs = model(vinputs) 
@@ -65,21 +65,21 @@ def inference_loop(model,
                 # Compute val loss and components 
                 batch_losses = vloss_metric(voutputs, vlabels) 
 
-                # Composite loss 
+                # Composite loss
                 vloss_batch = batch_losses[0] # (batch_size,)
-                val_loss = torch.cat(tensors=(val_loss, vloss_batch), dim=-1) # (batch_size,)
+                val_loss = torch.cat(tensors=(val_loss, vloss_batch.cpu()), dim=-1) # (batch_size,)
 
-                # Cross Entropy Loss component 
+                # Cross Entropy Loss component
                 CE_batch = batch_losses[1] # (batch_size,)
-                CE_inference_glob = torch.cat(tensors=(CE_inference_glob, CE_batch), dim=-1)
+                CE_inference_glob = torch.cat(tensors=(CE_inference_glob, CE_batch.cpu()), dim=-1)
 
                 # MAE of the standardized TTNE targets
                 MAE_std_batch = batch_losses[2] # (batch_size,)
-                MAE_std_glob = torch.cat(tensors=(MAE_std_glob, MAE_std_batch), dim=-1) 
+                MAE_std_glob = torch.cat(tensors=(MAE_std_glob, MAE_std_batch.cpu()), dim=-1)
 
                 # Accuracy boolean tensor next activity prediction
                 acc_batch = batch_losses[-1] # (batch_size, )
-                accuracy_glob = torch.cat(tensors=(accuracy_glob, acc_batch), dim=-1) 
+                accuracy_glob = torch.cat(tensors=(accuracy_glob, acc_batch.cpu()), dim=-1)
                 
         # Final validation metrics:
         # ------------------------- 

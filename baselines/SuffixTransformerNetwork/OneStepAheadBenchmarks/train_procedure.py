@@ -194,7 +194,7 @@ def train_model(model,
     model.to(device)
 
     # Creating train and validation dataloaders 
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, pin_memory=True)
     val_dataloader = DataLoader(val_dataset, batch_size=4096, shuffle=False, drop_last=False, pin_memory=True)
     # Tracking running averages over last ``batch_interval`` batches of each epoch
     # & tracking average validation losses

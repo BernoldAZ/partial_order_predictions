@@ -1,0 +1,12 @@
+log,model,method,dl_similarity,ttne_mae_minutes,rrt_mae_minutes,training_time_seconds,testing_time_seconds
+Sepsis,suffix_time,gatv2_gru,0.207307,2856.661198,22448.00625,290.03,3.08
+PrepaidTravelCost,suffix_time,gatv2_gru,0.644556,3350.561719,11178.317708,599.33,4.0
+BPI_Challenge_2012_O,suffix_time,gatv2_gru,0.676754,3171.364323,8213.611979,809.78,6.63
+BPIC15_5,suffix_time,gatv2_gru,0.168315,2576.0375,45431.529167,1006.04,15.82
+RequestForPayment,suffix_time,gatv2_gru,0.829687,2918.736198,7480.090104,1046.28,5.09
+BPIC15_4,suffix_time,gatv2_gru,0.203568,3204.529687,45340.666667,1075.42,9.11
+InternationalDeclarations,suffix_time,gatv2_gru,0.718824,4864.815625,18918.39375,1389.63,12.9
+DomesticDeclarations,suffix_time,gatv2_gru,0.853125,2568.185937,6107.034896,1685.0,6.32
+BPIC15_3,suffix_time,gatv2_gru,0.168779,1076.985677,25536.904167,1954.64,11.28
+BPI_Challenge_2012_A,suffix_time,gatv2_gru,0.719771,1937.938151,6066.271354,2007.1,5.29
+BPI_Challenge_2012_W,suffix_time,gatv2_gru,0.182911,903.356315,9898.15625,2575.72,22.12

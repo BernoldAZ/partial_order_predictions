@@ -361,3 +361,33 @@
 [2026-05-11 09:45:39] DONE | model=SEP_LSTM | log=BPIC15_3
 [2026-05-11 09:45:39] RUNNING | model=BEST | log=Road_Traffic_Fine_Management_Process
 [2026-05-11 09:45:51] DONE | model=BEST | log=Road_Traffic_Fine_Management_Process
+[2026-05-11 10:06:10] DONE | model=ED_LSTM | log=BPIC15_3
+[2026-05-11 10:16:47] DONE | model=SEP_LSTM | log=Hospital_Billing
+[2026-05-11 10:19:01] DONE | model=ED_LSTM | log=Hospital_Billing
+[2026-05-11 10:28:13] DONE | model=SEP_LSTM | log=Road_Traffic_Fine_Management_Process
+[2026-05-11 10:29:05] DONE | model=CRTP_LSTM_NDA | log=Hospital_Billing
+[2026-05-11 10:40:58] DONE | model=CRTP_LSTM_NDA | log=Road_Traffic_Fine_Management_Process
+[2026-05-11 10:49:36] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-11 10:49:36] RUNNING | model=CRTP_LSTM_DA | log=Hospital_Billing
+[2026-05-11 10:49:36] RUNNING | model=CRTP_LSTM_DA | log=Road_Traffic_Fine_Management_Process
+[2026-05-11 10:49:36] RUNNING | model=ED_LSTM | log=Road_Traffic_Fine_Management_Process
+[2026-05-11 10:49:48] ERROR | model=SEP_LSTM | log=InternationalDeclarations
+    Traceback (most recent call last):
+      File "/app/run_all_suffix.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/run_all_suffix.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-11 10:58:27] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-11 10:58:40] ERROR | model=SEP_LSTM | log=InternationalDeclarations
+    Traceback (most recent call last):
+      File "/workspace/baselines/SuffixTransformerNetwork/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/workspace/baselines/SuffixTransformerNetwork/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-11 11:01:31] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-11 11:11:18] DONE | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-11 13:28:20] DONE | model=CRTP_LSTM_DA | log=Road_Traffic_Fine_Management_Process
+[2026-05-11 14:01:35] DONE | model=ED_LSTM | log=Road_Traffic_Fine_Management_Process
+[2026-05-11 14:21:49] DONE | model=CRTP_LSTM_DA | log=Hospital_Billing

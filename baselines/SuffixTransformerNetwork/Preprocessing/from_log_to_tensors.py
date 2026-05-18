@@ -170,9 +170,14 @@ def log_to_tensors(log,
                                                                                                                                      outcome,
                                                                                                                                      log_name)
 
-    return train_data, val_data, test_data
+    counts = {
+        'n_train': n_train_cases, 'train_pairs': n_train_pairs,
+        'n_val':   n_val_cases,   'val_pairs':   n_val_pairs,
+        'n_test':  n_test_cases,  'test_pairs':  n_test_pairs,
+    }
+    return train_data, val_data, test_data, counts
 
-    # These additional parameters are kind of redundant, since they can also be written from disk. 
+    # These additional parameters are kind of redundant, since they can also be written from disk.
     # return train_data, val_data, test_data, num_pref_cat, num_suff_cat, pref_cat_cars, suff_cat_cars, num_activities, train_means_dict, train_std_dict
     
     

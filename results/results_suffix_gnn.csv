@@ -1,2 +1,0 @@
-log,model,activity_accuracy,mean_dls,training_time_seconds,testing_time_seconds
-SEPSIS,GNN_Suffix,0.297877,0.463973,52.22,1.33
