@@ -1,0 +1,408 @@
+"""Train and evaluate GATv2EncoderGRUDecoder for activity suffix + TTNE prediction.
+
+Usage
+-----
+    python run_suffix_time_v1.py <log_name> [results_dir]
+
+Loads pre-built datasets from results_per_log/<log_name>/:
+    train_graphdataset.pt, val_graphdataset.pt, test_graphdataset.pt
+    <log_name>_train_means_dict.pkl, <log_name>_train_std_dict.pkl
+
+Run create_general_data.py first to generate these files.
+"""
+import argparse
+import csv
+import os
+import pickle
+import time
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch_geometric.loader import DataLoader
+
+from model_suffix_time_v1 import GATv2EncoderGRUDecoder
+
+# ─── Hyperparameters ──────────────────────────────────────────────────────────
+D_MODEL     = 64
+DROPOUT     = 0.4
+N_LAYERS    = 1
+LR          = 0.002
+MAX_EPOCHS  = 200
+PATIENCE    = 24
+LR_PATIENCE = 10
+MAX_NORM    = 2.0
+BATCH_SIZE  = 128
+SEED        = 24
+
+# ─── Scheduled sampling ───────────────────────────────────────────────────────
+USE_SCHEDULED_SAMPLING = True    # set False to use teacher forcing instead
+SS_P_TEACHER_START     = 1.0    # p_teacher at epoch 0
+SS_P_TEACHER_END       = 0.0    # p_teacher after SS_ANNEAL_EPOCHS epochs
+SS_ANNEAL_EPOCHS       = MAX_EPOCHS  # epochs over which p_teacher is annealed
+
+
+# ─── Loss ─────────────────────────────────────────────────────────────────────
+
+def _masked_ce(act_logits, act_targets, num_activities):
+    """CE over (B*W, C) vs (B*W,), ignoring padding index 0."""
+    return F.cross_entropy(
+        act_logits.view(-1, num_activities),
+        act_targets.view(-1),
+        ignore_index=0,
+    )
+
+
+def _masked_mae(ttne_preds, ttne_targets):
+    """MAE ignoring positions where target == -100 (padding)."""
+    p    = ttne_preds.view(-1)
+    t    = ttne_targets.view(-1)
+    mask = (t != -100).float()
+    return (torch.abs(p - t) * mask).sum() / mask.sum().clamp(min=1)
+
+
+def _loss(act_logits, ttne_preds, data, num_activities):
+    ce  = _masked_ce(act_logits, data.act_label_seq, num_activities)
+    mae = _masked_mae(ttne_preds, data.ttnext_label)
+    return ce + mae
+
+
+# ─── Metrics (following inference_environment.py) ────────────────────────────
+
+@torch.no_grad()
+def _compute_metrics(suffix_acts, suffix_ttne, act_labels, ttne_labels, rrt_labels,
+                     num_activities, mean_std_ttne, mean_std_rrt):
+    """
+    Parameters
+    ----------
+    suffix_acts  (N, W) int64   greedy predicted activities
+    suffix_ttne  (N, W) float   standardized TTNE predictions
+    act_labels   (N, W) int64   ground truth with END token  (data.act_label_seq)
+    ttne_labels  (N, W) float   standardized TTNE labels, -100 = padding
+    rrt_labels   (N, W) float   standardized RRT labels; [:, 0] = RRT at suffix start
+    mean_std_ttne, mean_std_rrt  [mean, std]
+
+    Returns (dl_sim, ttne_mae_minutes, rrt_mae_minutes).
+    """
+    device  = suffix_acts.device
+    N, W    = suffix_acts.shape
+    end_tok = num_activities - 1
+    ttne_mean, ttne_std = mean_std_ttne
+    rrt_mean,  rrt_std  = mean_std_rrt
+
+    # actual_length: 0-based index of END token in ground truth
+    actual_length = (act_labels == end_tok).to(torch.int64).argmax(dim=-1)  # (N,)
+
+    # pred_length: 0-based index of first predicted END token;
+    # if END is never predicted, force it at the last position
+    has_end     = (suffix_acts == end_tok).any(dim=-1)
+    first_end   = (suffix_acts == end_tok).to(torch.int64).argmax(dim=-1)
+    pred_length = torch.where(has_end, first_end, torch.full_like(first_end, W - 1))
+
+    counting    = torch.arange(W, device=device).unsqueeze(0)  # (1, W)
+    batch_range = torch.arange(N, device=device)
+
+    # ── Damerau-Levenshtein similarity ────────────────────────────────────────
+    len_pred   = pred_length   + 1
+    len_actual = actual_length + 1
+    max_len    = torch.maximum(len_pred, len_actual).float()
+
+    d  = torch.full((N, W + 1, W + 1), fill_value=0, dtype=torch.int64, device=device)
+    ar = torch.arange(W + 1, device=device).unsqueeze(0)
+    d[:, 0, :] = ar
+    d[:, :, 0] = ar
+    for i in range(1, W + 1):
+        for j in range(1, W + 1):
+            cost         = torch.where(suffix_acts[:, i-1] == act_labels[:, j-1], 0, 1)
+            deletion     = d[:, i-1, j]   + 1
+            insertion    = d[:, i, j-1]   + 1
+            substitution = d[:, i-1, j-1] + cost
+            d[:, i, j]  = torch.minimum(torch.minimum(deletion, insertion), substitution)
+            if i > 1 and j > 1:
+                tpos_true   = (
+                    (suffix_acts[:, i-1] == act_labels[:, j-2]) &
+                    (suffix_acts[:, i-2] == act_labels[:, j-1])
+                )
+                min_og_tpos = torch.minimum(d[:, i, j], d[:, i-2, j-2] + cost)
+                d[:, i, j]  = torch.where(tpos_true, min_og_tpos, d[:, i, j])
+    dl_sim = (1.0 - d[batch_range, len_pred, len_actual].float() / max_len).mean().item()
+
+    # ── TTNE MAE ──────────────────────────────────────────────────────────────
+    ttne_preds_sec  = (suffix_ttne.clone() * ttne_std + ttne_mean).clamp(min=0)
+    ttne_labels_sec = (ttne_labels.clone() * ttne_std + ttne_mean).clamp(min=0)
+    ttne_preds_sec[counting > pred_length.unsqueeze(-1)] = 0.0  # zero after predicted END
+
+    before_end   = counting <= actual_length.unsqueeze(-1)
+    ttne_mae_sec = torch.abs(ttne_preds_sec - ttne_labels_sec)[before_end].mean().item()
+
+    # ── RRT MAE ───────────────────────────────────────────────────────────────
+    # RRT prediction = sum of TTNE seconds up to pred_length, excluding the END position
+    rrt_preds_sec = ttne_preds_sec.clone()
+    rrt_preds_sec[batch_range, pred_length] = 0.0
+    rrt_preds_sec = rrt_preds_sec.sum(dim=-1)  # (N,)
+
+    # RRT label = first suffix position, de-standardized to seconds
+    rrt_label_sec = (rrt_labels[:, 0] * rrt_std + rrt_mean).clamp(min=0)  # (N,)
+    rrt_mae_sec   = torch.abs(rrt_preds_sec - rrt_label_sec).mean().item()
+
+    mean_pred_len   = (pred_length   + 1).float().mean().item()
+    mean_actual_len = (actual_length + 1).float().mean().item()
+    return dl_sim, ttne_mae_sec / 60.0, rrt_mae_sec / 60.0, mean_pred_len, mean_actual_len
+
+
+# ─── Evaluation pass ──────────────────────────────────────────────────────────
+
+@torch.no_grad()
+def _evaluate(model, loader, device, num_activities, window_size,
+              mean_std_ttne, mean_std_tss, mean_std_tsp, mean_std_rrt):
+    model.eval()
+    all_acts, all_ttne, all_lbl_acts, all_lbl_ttne, all_lbl_rrt = [], [], [], [], []
+
+    for data in loader:
+        data = data.to(device)
+        B    = data.num_graphs
+        acts, ttne = model(
+            data,
+            window_size=window_size,
+            mean_std_ttne=mean_std_ttne,
+            mean_std_tss=mean_std_tss,
+            mean_std_tsp=mean_std_tsp,
+        )
+        all_acts.append(acts.cpu())
+        all_ttne.append(ttne.cpu())
+        # act_label_seq contains the END token — needed for DL distance computation
+        all_lbl_acts.append(data.act_label_seq.view(B, window_size).cpu())
+        # ttnext_label stored as [W, 1] per sample → batched [B*W, 1] → [B, W]
+        all_lbl_ttne.append(data.ttnext_label.squeeze(-1).view(B, window_size).cpu())
+        # rtime_label stored as [W, 1] per sample → batched [B*W, 1] → [B, W]
+        all_lbl_rrt.append(data.rtime_label.squeeze(-1).view(B, window_size).cpu())
+
+    sa = torch.cat(all_acts,     dim=0)
+    st = torch.cat(all_ttne,     dim=0)
+    la = torch.cat(all_lbl_acts, dim=0)
+    lt = torch.cat(all_lbl_ttne, dim=0)
+    lr = torch.cat(all_lbl_rrt,  dim=0)
+
+    return _compute_metrics(sa, st, la, lt, lr, num_activities, mean_std_ttne, mean_std_rrt)
+
+
+# ─── Main ─────────────────────────────────────────────────────────────────────
+
+def run(log_name: str, results_dir: str = None, model_type: str = 'gatv2_gru'):
+    torch.manual_seed(SEED)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(SEED)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark     = False
+
+    results_dir = results_dir or f'results_time_{model_type}'
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"\n{'='*60}\nLog : {log_name}\nDevice : {device}\n{'='*60}")
+
+    # ── Load pre-built datasets ───────────────────────────────────────────────
+    data_dir   = os.path.join("approach_suffix_v2",'results_per_log', log_name)
+    train_data = torch.load(os.path.join(data_dir, 'train_graphdataset.pt'), weights_only=False)
+    val_data   = torch.load(os.path.join(data_dir, 'val_graphdataset.pt'),   weights_only=False)
+    test_data  = torch.load(os.path.join(data_dir, 'test_graphdataset.pt'),  weights_only=False)
+
+    # ── Load normalization stats ──────────────────────────────────────────────
+    with open(os.path.join(data_dir, f'{log_name}_train_means_dict.pkl'), 'rb') as f:
+        means = pickle.load(f)
+    with open(os.path.join(data_dir, f'{log_name}_train_std_dict.pkl'), 'rb') as f:
+        stds  = pickle.load(f)
+
+    # suffix_df numeric cols are always [ts_start, ts_prev] (indices 0, 1)
+    # timeLabel_df numeric cols are [tt_next, rtime]        (indices 0, 1)
+    mean_std_ttne = [means['timeLabel_df'][0], stds['timeLabel_df'][0]]
+    mean_std_rrt  = [means['timeLabel_df'][1], stds['timeLabel_df'][1]]
+    mean_std_tss  = [means['suffix_df'][0],    stds['suffix_df'][0]]
+    mean_std_tsp  = [means['suffix_df'][1],    stds['suffix_df'][1]]
+
+    # Derive window_size and num_activities from saved cardinality list.
+    # pref_cat_cars = [cardinality_dict[c] for c in cat_cols] where
+    # cat_cols = cat_casefts + cat_eventfts + [act_label], so [-1] is act_label.
+    # num_activities = act_cardinality + 2  (0=pad, 1..C=acts, C+1=END)
+    with open(os.path.join(data_dir, f'{log_name}_cardin_list_prefix.pkl'), 'rb') as f:
+        pref_cat_cars = pickle.load(f)
+    window_size    = train_data[0].suffix_act.shape[0]
+    num_activities = pref_cat_cars[-1] + 2
+
+    train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
+    val_loader   = DataLoader(val_data,   batch_size=BATCH_SIZE, shuffle=False)
+
+    # ── Build model ───────────────────────────────────────────────────────────
+    model = GATv2EncoderGRUDecoder(
+        num_activities=num_activities,
+        d_model=D_MODEL,
+        dropout=DROPOUT,
+        n_layers=N_LAYERS,
+        use_scheduled_sampling=USE_SCHEDULED_SAMPLING,
+    ).to(device)
+    num_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"num_activities={num_activities}  window_size={window_size}")
+    print(f"Parameters: {num_trainable_params:,}")
+
+    optimizer    = torch.optim.NAdam(model.parameters(), lr=LR)
+    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='min', factor=0.5, patience=LR_PATIENCE, threshold=1e-4, min_lr=0)
+
+    os.makedirs(results_dir, exist_ok=True)
+    best_model_path = os.path.join(results_dir, f'{log_name}_{model_type}.pt')
+
+    best_dl_sim   = -1.0
+    best_ttne_mae =  1e9
+    best_rrt_mae  =  1e9
+    patience_count = 0
+    train_start    = time.time()
+
+    # ── Training loop ─────────────────────────────────────────────────────────
+    for epoch in range(MAX_EPOCHS):
+        torch.manual_seed(epoch)
+        model.train()
+        total_loss, n_batches = 0.0, 0
+
+        use_ss = USE_SCHEDULED_SAMPLING and model_type == 'gatv2_gru'
+        if use_ss:
+            progress  = epoch / max(SS_ANNEAL_EPOCHS - 1, 1)
+            p_teacher = max(SS_P_TEACHER_END,
+                            SS_P_TEACHER_START - (SS_P_TEACHER_START - SS_P_TEACHER_END) * progress)
+        else:
+            p_teacher = 1.0
+
+        for data in train_loader:
+            data = data.to(device)
+            optimizer.zero_grad()
+            if use_ss:
+                act_logits, ttne_preds = model(
+                    data,
+                    p_teacher=p_teacher,
+                    mean_std_ttne=mean_std_ttne,
+                    mean_std_tss=mean_std_tss,
+                    mean_std_tsp=mean_std_tsp,
+                )
+            else:
+                act_logits, ttne_preds = model(data)
+            loss = _loss(act_logits, ttne_preds, data, num_activities)
+            loss.backward()
+            nn.utils.clip_grad_norm_(model.parameters(), MAX_NORM)
+            optimizer.step()
+            total_loss += loss.item()
+            n_batches  += 1
+
+        train_loss = total_loss / max(n_batches, 1)
+
+        dl_sim, ttne_mae_min, rrt_mae_min, mean_pred_len, mean_actual_len = _evaluate(
+            model, val_loader, device, num_activities, window_size,
+            mean_std_ttne, mean_std_tss, mean_std_tsp, mean_std_rrt)
+
+        lr_scheduler.step(1.0 - dl_sim)
+        lr = optimizer.param_groups[0]['lr']
+        ss_info = f"  p_teacher={p_teacher:.3f}" if use_ss else ""
+        print(f"[{log_name}] Epoch {epoch+1:4d}  loss={train_loss:.4f}  "
+              f"DL={dl_sim:.4f}  TTNE={ttne_mae_min:.2f}min  "
+              f"RRT={rrt_mae_min:.2f}min  lr={lr:.2e}  "
+              f"len_pred={mean_pred_len:.1f}  len_gt={mean_actual_len:.1f}{ss_info}")
+
+        if dl_sim > best_dl_sim:
+            torch.save(model.state_dict(), best_model_path)
+
+        better = (dl_sim > best_dl_sim or
+                  ttne_mae_min < best_ttne_mae or
+                  rrt_mae_min  < best_rrt_mae)
+        if better:
+            best_dl_sim   = max(best_dl_sim,   dl_sim)
+            best_ttne_mae = min(best_ttne_mae, ttne_mae_min)
+            best_rrt_mae  = min(best_rrt_mae,  rrt_mae_min)
+            patience_count = 0
+        else:
+            patience_count += 1
+            if patience_count >= PATIENCE:
+                print(f"Early stopping at epoch {epoch+1}.")
+                break
+
+    training_time = time.time() - train_start
+
+    # ── Test ──────────────────────────────────────────────────────────────────
+    model.load_state_dict(torch.load(best_model_path, weights_only=True))
+    model.to(device)
+
+    test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
+    test_start  = time.time()
+    dl_sim, ttne_mae_min, rrt_mae_min, _, _ = _evaluate(
+        model, test_loader, device, num_activities, window_size,
+        mean_std_ttne, mean_std_tss, mean_std_tsp, mean_std_rrt)
+    testing_time = time.time() - test_start
+
+    print(f"\n{'─'*60}")
+    print(f"DL similarity : {dl_sim:.4f}")
+    print(f"TTNE MAE      : {ttne_mae_min:.2f} min")
+    print(f"RRT MAE       : {rrt_mae_min:.2f} min")
+    print(f"Training time : {training_time:.1f}s")
+    print(f"Testing time  : {testing_time:.1f}s")
+
+    # ── Save results ──────────────────────────────────────────────────────────
+    csv_path   = os.path.join(results_dir, 'results_suffix_time_gnn.csv')
+    fieldnames = ['log', 'model', 'method',
+                  'dl_similarity',
+                  'ttne_mae_minutes', 'rrt_mae_minutes',
+                  'training_time_seconds', 'testing_time_seconds',
+                  'num_trainable_params']
+    new_row = {
+        'log':                   log_name,
+        'model':                 'suffix_time',
+        'method':                model_type,
+        'dl_similarity':         round(dl_sim,        6),
+        'ttne_mae_minutes':      round(ttne_mae_min,  6),
+        'rrt_mae_minutes':       round(rrt_mae_min,   6),
+        'training_time_seconds': round(training_time, 2),
+        'testing_time_seconds':  round(testing_time,  2),
+        'num_trainable_params':  num_trainable_params,
+    }
+
+    lock_path = csv_path + '.lock'
+    while True:
+        try:
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
+            break
+        except FileExistsError:
+            time.sleep(0.05)
+    try:
+        rows = []
+        if os.path.isfile(csv_path):
+            with open(csv_path, newline='') as f:
+                rows = list(csv.DictReader(f))
+        updated = False
+        for row in rows:
+            if row['log'] == log_name and row['method'] == model_type:
+                row.update(new_row)
+                updated = True
+                break
+        if not updated:
+            rows.append(new_row)
+        with open(csv_path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+    finally:
+        os.remove(lock_path)
+
+    print(f"Results saved → {csv_path}")
+    return {'dl_similarity': dl_sim, 'ttne_mae_minutes': ttne_mae_min,
+            'rrt_mae_minutes': rrt_mae_min}
+
+
+# ─── Entry point ──────────────────────────────────────────────────────────────
+
+def _parse_args():
+    p = argparse.ArgumentParser(
+        description='Train and evaluate GNN suffix+time prediction model')
+    p.add_argument('log_name',    help='Log name (must match results_per_log/<log_name>/)')
+    p.add_argument('results_dir', nargs='?', default=None)
+    p.add_argument('--model', choices=['gatv2_gru'], default='gatv2_gru')
+    return p.parse_args()
+
+
+if __name__ == '__main__':
+    args = _parse_args()
+    run(args.log_name, args.results_dir, model_type=args.model)

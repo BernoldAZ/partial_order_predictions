@@ -397,6 +397,13 @@ def inference_loop(model,
                 MAE_rrt_minutes_path = os.path.join(subfolder_path, 'MAE_rrt_minutes.pt')
                 torch.save(MAE_rrt_minutes, MAE_rrt_minutes_path)
 
+            # Per-instance TTNE MAE: mean over valid suffix positions
+            per_inst_ttne_min = (
+                (MAE_ttne_seconds * before_end_token.float()).sum(dim=1)
+                / suf_len_global.float() / 60.0
+            )
+            torch.save(per_inst_ttne_min.cpu(),
+                       os.path.join(subfolder_path, 'MAE_ttne_minutes.pt'))
 
         # Binary outcome 
         if outcome_bool:

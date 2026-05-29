@@ -1,393 +1,258 @@
-[2026-05-08 22:31:31] RUNNING | model=SuTraN_DA | log=BPIC15_1
-[2026-05-09 00:18:53] DONE | model=SuTraN_DA | log=BPIC15_1
-[2026-05-09 00:18:53] RUNNING | model=SuTraN_DA | log=BPIC15_2
-[2026-05-09 02:45:41] DONE | model=SuTraN_DA | log=BPIC15_2
-[2026-05-09 02:45:41] RUNNING | model=SuTraN_DA | log=BPIC15_3
-[2026-05-09 05:00:20] DONE | model=SuTraN_DA | log=BPIC15_3
-[2026-05-09 05:00:20] RUNNING | model=SuTraN_DA | log=BPIC15_4
-[2026-05-09 12:36:05] RUNNING | model=SuTraN_DA | log=BPIC15_4
-[2026-05-09 13:08:47] DONE | model=SuTraN_DA | log=BPIC15_4
-[2026-05-09 13:08:47] RUNNING | model=SuTraN_DA | log=BPIC15_5
-[2026-05-09 13:45:40] DONE | model=SuTraN_DA | log=BPIC15_5
-[2026-05-09 13:45:40] RUNNING | model=SuTraN_DA | log=RequestForPayment
-[2026-05-09 13:48:55] DONE | model=SuTraN_DA | log=RequestForPayment
-[2026-05-09 13:48:55] RUNNING | model=SuTraN_DA | log=Sepsis
-[2026-05-09 13:56:47] DONE | model=SuTraN_DA | log=Sepsis
-[2026-05-09 13:56:47] RUNNING | model=SuTraN_DA | log=Hospital_Billing
-[2026-05-09 20:41:06] RUNNING | model=SuTraN_DA | log=Hospital_Billing
-[2026-05-10 00:54:46] DONE | model=SuTraN_DA | log=Hospital_Billing
-[2026-05-10 00:54:46] RUNNING | model=SuTraN_DA | log=DomesticDeclarations
-[2026-05-10 01:01:02] DONE | model=SuTraN_DA | log=DomesticDeclarations
-[2026-05-10 01:01:02] RUNNING | model=SuTraN_DA | log=PrepaidTravelCost
-[2026-05-10 01:04:48] DONE | model=SuTraN_DA | log=PrepaidTravelCost
-[2026-05-10 01:04:48] RUNNING | model=SuTraN_DA | log=InternationalDeclarations
-[2026-05-10 01:13:34] DONE | model=SuTraN_DA | log=InternationalDeclarations
-[2026-05-10 01:13:34] RUNNING | model=SuTraN_DA | log=Road_Traffic_Fine_Management_Process
-[2026-05-10 03:16:53] DONE | model=SuTraN_DA | log=Road_Traffic_Fine_Management_Process
-[2026-05-10 03:16:53] RUNNING | model=SuTraN_DA | log=BPI_Challenge_2012_A
-[2026-05-10 03:24:50] DONE | model=SuTraN_DA | log=BPI_Challenge_2012_A
-[2026-05-10 03:24:50] RUNNING | model=SuTraN_DA | log=BPI_Challenge_2012_O
-[2026-05-10 03:26:59] DONE | model=SuTraN_DA | log=BPI_Challenge_2012_O
-[2026-05-10 03:26:59] RUNNING | model=SuTraN_DA | log=BPI_Challenge_2012_W
-[2026-05-10 04:45:18] DONE | model=SuTraN_DA | log=BPI_Challenge_2012_W
-[2026-05-10 04:45:18] RUNNING | model=SuTraN_NDA | log=BPIC15_1
-[2026-05-10 06:19:01] DONE | model=SuTraN_NDA | log=BPIC15_1
-[2026-05-10 06:19:01] RUNNING | model=SuTraN_NDA | log=BPIC15_2
-[2026-05-10 08:24:28] DONE | model=SuTraN_NDA | log=BPIC15_2
-[2026-05-10 08:24:28] RUNNING | model=SuTraN_NDA | log=BPIC15_3
-[2026-05-10 09:33:43] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_1
-[2026-05-10 09:33:43] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_2
-[2026-05-10 09:33:43] RUNNING | model=SuTraN_NDA | log=BPIC15_3
-[2026-05-10 09:33:43] RUNNING | model=SuTraN_NDA | log=BPIC15_5
-[2026-05-10 09:33:43] RUNNING | model=SuTraN_NDA | log=BPIC15_4
-[2026-05-10 09:33:43] RUNNING | model=CRTP_LSTM_DA | log=Sepsis
-[2026-05-10 09:33:43] RUNNING | model=SuTraN_NDA | log=RequestForPayment
-[2026-05-10 09:33:43] RUNNING | model=SuTraN_NDA | log=DomesticDeclarations
-[2026-05-10 09:33:43] RUNNING | model=SuTraN_NDA | log=PrepaidTravelCost
-[2026-05-10 09:33:43] RUNNING | model=SuTraN_NDA | log=InternationalDeclarations
-[2026-05-10 09:46:16] OOM→CPU | model=SuTraN_NDA | log=InternationalDeclarations
-[2026-05-10 09:46:21] OOM→CPU | model=CRTP_LSTM_DA | log=Sepsis
-[2026-05-10 09:47:12] OOM→CPU | model=CRTP_LSTM_DA | log=BPIC15_2
-[2026-05-10 09:47:25] OOM→CPU | model=CRTP_LSTM_DA | log=BPIC15_1
-[2026-05-10 10:09:32] OOM→CPU | model=SuTraN_NDA | log=BPIC15_4
-[2026-05-10 10:11:34] OOM→CPU | model=SuTraN_NDA | log=BPIC15_3
-[2026-05-10 10:25:28] DONE | model=SuTraN_NDA | log=RequestForPayment
-[2026-05-10 10:25:28] RUNNING | model=CRTP_LSTM_DA | log=RequestForPayment
-[2026-05-10 10:28:41] DONE | model=SuTraN_NDA | log=PrepaidTravelCost
-[2026-05-10 10:28:41] RUNNING | model=CRTP_LSTM_DA | log=PrepaidTravelCost
-[2026-05-10 10:29:12] OOM→CPU | model=CRTP_LSTM_DA | log=PrepaidTravelCost
-[2026-05-10 10:32:44] DONE | model=CRTP_LSTM_DA | log=RequestForPayment
-[2026-05-10 10:32:44] RUNNING | model=CRTP_LSTM_NDA | log=RequestForPayment
-[2026-05-10 10:43:03] DONE | model=CRTP_LSTM_NDA | log=RequestForPayment
-[2026-05-10 10:43:03] RUNNING | model=ED_LSTM | log=RequestForPayment
-[2026-05-10 10:58:56] DONE | model=SuTraN_NDA | log=DomesticDeclarations
-[2026-05-10 10:58:56] RUNNING | model=CRTP_LSTM_DA | log=DomesticDeclarations
-[2026-05-10 10:59:41] DONE | model=ED_LSTM | log=RequestForPayment
-[2026-05-10 10:59:41] RUNNING | model=SEP_LSTM | log=RequestForPayment
-[2026-05-10 11:06:07] DONE | model=SEP_LSTM | log=RequestForPayment
-[2026-05-10 11:06:07] RUNNING | model=BEST | log=RequestForPayment
-[2026-05-10 11:06:15] DONE | model=BEST | log=RequestForPayment
-[2026-05-10 11:06:15] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_A
-[2026-05-10 11:15:48] DONE | model=CRTP_LSTM_DA | log=DomesticDeclarations
-[2026-05-10 11:15:48] RUNNING | model=CRTP_LSTM_NDA | log=DomesticDeclarations
-[2026-05-10 11:29:48] DONE | model=CRTP_LSTM_NDA | log=DomesticDeclarations
-[2026-05-10 11:29:48] RUNNING | model=ED_LSTM | log=DomesticDeclarations
-[2026-05-10 12:03:34] DONE | model=ED_LSTM | log=DomesticDeclarations
-[2026-05-10 12:03:34] RUNNING | model=SEP_LSTM | log=DomesticDeclarations
-[2026-05-10 12:10:27] DONE | model=SEP_LSTM | log=DomesticDeclarations
-[2026-05-10 12:10:27] RUNNING | model=BEST | log=DomesticDeclarations
-[2026-05-10 12:10:34] DONE | model=BEST | log=DomesticDeclarations
-[2026-05-10 12:10:34] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_O
-[2026-05-10 12:20:42] OOM→CPU | model=SuTraN_NDA | log=BPIC15_5
-[2026-05-10 12:23:43] DONE | model=SuTraN_NDA | log=BPI_Challenge_2012_A
-[2026-05-10 12:23:43] RUNNING | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_A
-[2026-05-10 12:31:05] DONE | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_A
-[2026-05-10 12:31:05] RUNNING | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_A
-[2026-05-10 12:31:32] OOM→CPU | model=SuTraN_NDA | log=BPI_Challenge_2012_O
-[2026-05-10 12:31:32] OOM→CPU | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_A
-[2026-05-10 14:55:09] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_1
-[2026-05-10 14:55:09] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_2
-[2026-05-10 14:55:09] RUNNING | model=SuTraN_NDA | log=BPIC15_3
-[2026-05-10 14:55:09] RUNNING | model=SuTraN_NDA | log=BPIC15_4
-[2026-05-10 14:55:09] RUNNING | model=SuTraN_NDA | log=BPIC15_5
-[2026-05-10 14:55:09] RUNNING | model=CRTP_LSTM_DA | log=Sepsis
-[2026-05-10 14:55:09] RUNNING | model=CRTP_LSTM_DA | log=PrepaidTravelCost
-[2026-05-10 14:55:09] RUNNING | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_A
-[2026-05-10 14:55:09] RUNNING | model=SuTraN_NDA | log=InternationalDeclarations
-[2026-05-10 14:55:09] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_O
-[2026-05-10 15:17:46] DONE | model=CRTP_LSTM_DA | log=PrepaidTravelCost
-[2026-05-10 15:17:46] RUNNING | model=CRTP_LSTM_NDA | log=PrepaidTravelCost
-[2026-05-10 15:24:57] DONE | model=CRTP_LSTM_DA | log=Sepsis
-[2026-05-10 15:24:57] RUNNING | model=BEST | log=Sepsis
-[2026-05-10 15:25:05] DONE | model=BEST | log=Sepsis
-[2026-05-10 15:25:05] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_W
-[2026-05-10 15:42:05] DONE | model=CRTP_LSTM_NDA | log=PrepaidTravelCost
-[2026-05-10 15:42:05] RUNNING | model=ED_LSTM | log=PrepaidTravelCost
-[2026-05-10 15:52:53] DONE | model=SuTraN_NDA | log=BPI_Challenge_2012_O
-[2026-05-10 15:52:53] RUNNING | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_O
-[2026-05-10 16:03:40] DONE | model=ED_LSTM | log=PrepaidTravelCost
-[2026-05-10 16:03:40] RUNNING | model=SEP_LSTM | log=PrepaidTravelCost
-[2026-05-10 16:06:16] DONE | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_A
-[2026-05-10 16:06:16] RUNNING | model=ED_LSTM | log=BPI_Challenge_2012_A
-[2026-05-10 16:07:37] DONE | model=SuTraN_NDA | log=InternationalDeclarations
-[2026-05-10 16:07:37] RUNNING | model=CRTP_LSTM_DA | log=InternationalDeclarations
-[2026-05-10 16:14:14] DONE | model=SEP_LSTM | log=PrepaidTravelCost
-[2026-05-10 16:14:14] RUNNING | model=BEST | log=PrepaidTravelCost
-[2026-05-10 16:14:18] DONE | model=BEST | log=PrepaidTravelCost
-[2026-05-10 16:15:21] DONE | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_O
-[2026-05-10 16:15:21] RUNNING | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_O
-[2026-05-10 16:31:06] DONE | model=CRTP_LSTM_DA | log=BPIC15_2
-[2026-05-10 16:31:06] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_2
-[2026-05-10 16:32:39] DONE | model=ED_LSTM | log=BPI_Challenge_2012_A
-[2026-05-10 16:32:39] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_A
-[2026-05-10 16:41:15] DONE | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_O
-[2026-05-10 16:41:15] RUNNING | model=ED_LSTM | log=BPI_Challenge_2012_O
-[2026-05-10 16:41:56] DONE | model=CRTP_LSTM_DA | log=BPIC15_1
-[2026-05-10 16:41:56] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_1
-[2026-05-10 17:00:16] DONE | model=SEP_LSTM | log=BPI_Challenge_2012_A
-[2026-05-10 17:00:16] RUNNING | model=BEST | log=BPI_Challenge_2012_A
-[2026-05-10 17:00:22] DONE | model=BEST | log=BPI_Challenge_2012_A
-[2026-05-10 17:04:15] DONE | model=SuTraN_NDA | log=BPIC15_4
-[2026-05-10 17:04:15] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_4
-[2026-05-10 17:04:34] DONE | model=ED_LSTM | log=BPI_Challenge_2012_O
-[2026-05-10 17:04:34] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_O
-[2026-05-10 17:09:58] DONE | model=CRTP_LSTM_NDA | log=BPIC15_2
-[2026-05-10 17:09:58] RUNNING | model=ED_LSTM | log=BPIC15_2
-[2026-05-10 17:16:58] DONE | model=CRTP_LSTM_NDA | log=BPIC15_1
-[2026-05-10 17:16:58] RUNNING | model=ED_LSTM | log=BPIC15_1
-[2026-05-10 17:20:40] DONE | model=CRTP_LSTM_DA | log=InternationalDeclarations
-[2026-05-10 17:20:40] RUNNING | model=CRTP_LSTM_NDA | log=InternationalDeclarations
-[2026-05-10 17:25:38] DONE | model=SEP_LSTM | log=BPI_Challenge_2012_O
-[2026-05-10 17:25:38] RUNNING | model=BEST | log=BPI_Challenge_2012_O
-[2026-05-10 17:25:43] DONE | model=BEST | log=BPI_Challenge_2012_O
-[2026-05-10 17:43:10] DONE | model=ED_LSTM | log=BPIC15_1
-[2026-05-10 17:43:10] RUNNING | model=SEP_LSTM | log=BPIC15_1
-[2026-05-10 17:56:02] DONE | model=SEP_LSTM | log=BPIC15_1
-[2026-05-10 17:56:02] RUNNING | model=BEST | log=BPIC15_1
-[2026-05-10 17:56:55] DONE | model=BEST | log=BPIC15_1
-[2026-05-10 18:02:32] DONE | model=CRTP_LSTM_NDA | log=InternationalDeclarations
-[2026-05-10 18:02:32] RUNNING | model=ED_LSTM | log=InternationalDeclarations
-[2026-05-10 18:07:38] DONE | model=ED_LSTM | log=BPIC15_2
-[2026-05-10 18:07:38] RUNNING | model=SEP_LSTM | log=BPIC15_2
-[2026-05-10 18:18:32] DONE | model=SEP_LSTM | log=BPIC15_2
-[2026-05-10 18:18:32] RUNNING | model=BEST | log=BPIC15_2
-[2026-05-10 18:19:34] DONE | model=BEST | log=BPIC15_2
-[2026-05-10 18:21:39] DONE | model=CRTP_LSTM_DA | log=BPIC15_4
-[2026-05-10 18:21:39] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_4
-[2026-05-10 18:45:09] DONE | model=CRTP_LSTM_NDA | log=BPIC15_4
-[2026-05-10 18:45:09] RUNNING | model=ED_LSTM | log=BPIC15_4
-[2026-05-10 18:45:58] DONE | model=ED_LSTM | log=InternationalDeclarations
-[2026-05-10 18:45:58] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
-[2026-05-10 18:46:20] ERROR | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-23 10:43:46] RUNNING | model=SuTraN_DA | log=BPIC15_1
+[2026-05-23 10:43:46] RUNNING | model=SuTraN_NDA | log=BPIC15_1
+[2026-05-23 10:43:46] RUNNING | model=ED_LSTM | log=BPIC15_1
+[2026-05-23 11:23:32] OOM→CPU | model=ED_LSTM | log=BPIC15_1
+[2026-05-23 14:09:34] DONE | model=ED_LSTM | log=BPIC15_1
+[2026-05-23 14:09:34] RUNNING | model=SEP_LSTM | log=BPIC15_1
+[2026-05-23 14:17:13] ERROR | model=SEP_LSTM | log=BPIC15_1
     Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
         _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
         raise RuntimeError(
     RuntimeError: Subprocess exited with code 1
-[2026-05-10 18:46:20] RUNNING | model=BEST | log=InternationalDeclarations
-[2026-05-10 18:46:29] DONE | model=BEST | log=InternationalDeclarations
-[2026-05-10 19:26:47] DONE | model=ED_LSTM | log=BPIC15_4
-[2026-05-10 19:26:47] RUNNING | model=SEP_LSTM | log=BPIC15_4
-[2026-05-10 19:39:29] DONE | model=SEP_LSTM | log=BPIC15_4
-[2026-05-10 19:39:29] RUNNING | model=BEST | log=BPIC15_4
-[2026-05-10 19:40:07] DONE | model=BEST | log=BPIC15_4
-[2026-05-10 20:48:39] DONE | model=SuTraN_NDA | log=BPI_Challenge_2012_W
-[2026-05-10 20:48:39] RUNNING | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_W
-[2026-05-10 21:41:18] DONE | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_W
-[2026-05-10 21:41:18] RUNNING | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_W
-[2026-05-11 00:35:16] RUNNING | model=SuTraN_NDA | log=BPIC15_3
-[2026-05-11 00:35:16] RUNNING | model=SuTraN_NDA | log=BPIC15_5
-[2026-05-11 00:35:16] RUNNING | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_W
-[2026-05-11 00:35:16] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
-[2026-05-11 00:35:16] RUNNING | model=SuTraN_DA | log=BPI Challenge 2017
-[2026-05-11 00:35:16] RUNNING | model=SuTraN_NDA | log=Hospital_Billing
-[2026-05-11 00:35:16] RUNNING | model=SuTraN_NDA | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 00:35:24] ERROR | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-23 14:17:13] RUNNING | model=SuTraN_DA | log=BPIC15_2
+[2026-05-23 14:47:05] OOM→CPU | model=SuTraN_DA | log=BPIC15_2
+[2026-05-23 16:35:00] DONE | model=SuTraN_NDA | log=BPIC15_1
+[2026-05-23 16:35:00] RUNNING | model=SuTraN_NDA | log=BPIC15_2
+[2026-05-23 18:13:26] DONE | model=SuTraN_DA | log=BPIC15_1
+[2026-05-23 18:13:26] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_2
+[2026-05-23 18:48:04] DONE | model=CRTP_LSTM_DA | log=BPIC15_2
+[2026-05-23 18:48:04] RUNNING | model=ED_LSTM | log=BPIC15_2
+[2026-05-23 19:22:03] DONE | model=ED_LSTM | log=BPIC15_2
+[2026-05-23 19:22:03] RUNNING | model=SEP_LSTM | log=BPIC15_2
+[2026-05-23 19:26:05] ERROR | model=SEP_LSTM | log=BPIC15_2
     Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
         _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
         raise RuntimeError(
     RuntimeError: Subprocess exited with code 1
-[2026-05-11 01:43:05] DONE | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_W
-[2026-05-11 01:43:05] RUNNING | model=ED_LSTM | log=BPI_Challenge_2012_W
-[2026-05-11 04:21:09] DONE | model=ED_LSTM | log=BPI_Challenge_2012_W
-[2026-05-11 04:21:09] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_W
-[2026-05-11 04:56:32] DONE | model=SEP_LSTM | log=BPI_Challenge_2012_W
-[2026-05-11 04:56:32] RUNNING | model=BEST | log=BPI_Challenge_2012_W
-[2026-05-11 04:58:11] DONE | model=BEST | log=BPI_Challenge_2012_W
-[2026-05-11 05:10:14] DONE | model=SuTraN_NDA | log=Hospital_Billing
-[2026-05-11 05:10:14] RUNNING | model=CRTP_LSTM_DA | log=Hospital_Billing
-[2026-05-11 06:39:54] DONE | model=SuTraN_NDA | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 06:39:54] RUNNING | model=CRTP_LSTM_DA | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 06:53:51] DONE | model=SuTraN_NDA | log=BPIC15_5
-[2026-05-11 06:53:51] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_5
-[2026-05-11 07:49:29] DONE | model=SuTraN_NDA | log=BPIC15_3
-[2026-05-11 07:49:29] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_3
-[2026-05-11 08:01:06] DONE | model=CRTP_LSTM_DA | log=BPIC15_5
-[2026-05-11 08:01:06] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_5
-[2026-05-11 08:24:09] DONE | model=CRTP_LSTM_NDA | log=BPIC15_5
-[2026-05-11 08:24:09] RUNNING | model=ED_LSTM | log=BPIC15_5
-[2026-05-11 08:44:57] DONE | model=CRTP_LSTM_DA | log=BPIC15_3
-[2026-05-11 08:44:57] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_3
-[2026-05-11 09:03:00] DONE | model=CRTP_LSTM_NDA | log=BPIC15_3
-[2026-05-11 09:03:00] RUNNING | model=ED_LSTM | log=BPIC15_3
-[2026-05-11 09:14:51] DONE | model=ED_LSTM | log=BPIC15_5
-[2026-05-11 09:14:51] RUNNING | model=SEP_LSTM | log=BPIC15_5
-[2026-05-11 09:22:47] DONE | model=SEP_LSTM | log=BPIC15_5
-[2026-05-11 09:22:47] RUNNING | model=BEST | log=BPIC15_5
-[2026-05-11 09:23:33] DONE | model=BEST | log=BPIC15_5
-[2026-05-11 09:31:49] RUNNING | model=ED_LSTM | log=BPIC15_3
-[2026-05-11 09:31:49] RUNNING | model=SuTraN_DA | log=BPI Challenge 2017
-[2026-05-11 09:31:49] RUNNING | model=CRTP_LSTM_DA | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:31:49] RUNNING | model=CRTP_LSTM_DA | log=Hospital_Billing
-[2026-05-11 09:31:49] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
-[2026-05-11 09:31:57] ERROR | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-23 19:26:05] RUNNING | model=SuTraN_DA | log=BPIC15_3
+[2026-05-23 19:28:31] RUNNING | model=SuTraN_DA | log=BPIC15_2
+[2026-05-23 19:28:31] RUNNING | model=SEP_LSTM | log=BPIC15_1
+[2026-05-23 19:28:31] RUNNING | model=SuTraN_NDA | log=BPIC15_2
+[2026-05-23 19:36:01] ERROR | model=SEP_LSTM | log=BPIC15_1
     Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
         _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
         raise RuntimeError(
     RuntimeError: Subprocess exited with code 1
-[2026-05-11 09:36:45] ERROR | model=ED_LSTM | log=BPIC15_3
+[2026-05-23 19:36:01] RUNNING | model=SEP_LSTM | log=BPIC15_2
+[2026-05-23 19:43:00] ERROR | model=SEP_LSTM | log=BPIC15_2
     Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
         _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
-        raise RuntimeError(
-    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
-[2026-05-11 09:36:45] RUNNING | model=SEP_LSTM | log=BPIC15_3
-[2026-05-11 09:36:45] ERROR | model=CRTP_LSTM_DA | log=Road_Traffic_Fine_Management_Process
-    Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
-        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
-        raise RuntimeError(
-    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
-[2026-05-11 09:36:45] ERROR | model=CRTP_LSTM_DA | log=Hospital_Billing
-    Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
-        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
-        raise RuntimeError(
-    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
-[2026-05-11 09:36:45] RUNNING | model=CRTP_LSTM_NDA | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:36:45] RUNNING | model=CRTP_LSTM_NDA | log=Hospital_Billing
-[2026-05-11 09:36:46] ERROR | model=SEP_LSTM | log=BPIC15_3
-    Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
-        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
-        raise RuntimeError(
-    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
-[2026-05-11 09:36:46] RUNNING | model=BEST | log=BPIC15_3
-[2026-05-11 09:36:46] ERROR | model=CRTP_LSTM_NDA | log=Road_Traffic_Fine_Management_Process
-    Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
-        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
-        raise RuntimeError(
-    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
-[2026-05-11 09:36:46] RUNNING | model=ED_LSTM | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:36:46] ERROR | model=CRTP_LSTM_NDA | log=Hospital_Billing
-    Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
-        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
-        raise RuntimeError(
-    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
-[2026-05-11 09:36:46] RUNNING | model=ED_LSTM | log=Hospital_Billing
-[2026-05-11 09:36:46] ERROR | model=SuTraN_DA | log=BPI Challenge 2017
-    Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
-        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
-        raise RuntimeError(
-    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
-[2026-05-11 09:36:46] RUNNING | model=SuTraN_NDA | log=BPI Challenge 2017
-[2026-05-11 09:37:34] RUNNING | model=BEST | log=BPIC15_3
-[2026-05-11 09:37:34] RUNNING | model=ED_LSTM | log=BPIC15_3
-[2026-05-11 09:37:34] RUNNING | model=SEP_LSTM | log=BPIC15_3
-[2026-05-11 09:37:34] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
-[2026-05-11 09:37:34] RUNNING | model=CRTP_LSTM_DA | log=Hospital_Billing
-[2026-05-11 09:37:34] RUNNING | model=BEST | log=Hospital_Billing
-[2026-05-11 09:37:34] RUNNING | model=CRTP_LSTM_NDA | log=Hospital_Billing
-[2026-05-11 09:37:34] RUNNING | model=ED_LSTM | log=Hospital_Billing
-[2026-05-11 09:37:34] RUNNING | model=SEP_LSTM | log=Hospital_Billing
-[2026-05-11 09:37:34] RUNNING | model=CRTP_LSTM_DA | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:37:40] ERROR | model=SEP_LSTM | log=InternationalDeclarations
-    Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
-        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
         raise RuntimeError(
     RuntimeError: Subprocess exited with code 1
-[2026-05-11 09:37:40] RUNNING | model=CRTP_LSTM_NDA | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:37:53] DONE | model=BEST | log=Hospital_Billing
-[2026-05-11 09:37:53] RUNNING | model=ED_LSTM | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:38:15] DONE | model=BEST | log=BPIC15_3
-[2026-05-11 09:38:15] RUNNING | model=SEP_LSTM | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:38:27] ERROR | model=ED_LSTM | log=Road_Traffic_Fine_Management_Process
+[2026-05-23 19:43:00] RUNNING | model=SuTraN_DA | log=BPIC15_3
+[2026-05-24 01:53:23] DONE | model=SuTraN_NDA | log=BPIC15_2
+[2026-05-24 01:53:23] RUNNING | model=SuTraN_NDA | log=BPIC15_3
+[2026-05-24 02:35:04] DONE | model=SuTraN_DA | log=BPIC15_2
+[2026-05-24 02:35:04] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_3
+[2026-05-24 02:49:14] DONE | model=SuTraN_DA | log=BPIC15_3
+[2026-05-24 02:49:14] RUNNING | model=ED_LSTM | log=BPIC15_3
+[2026-05-24 03:11:42] DONE | model=CRTP_LSTM_DA | log=BPIC15_3
+[2026-05-24 03:11:42] RUNNING | model=SEP_LSTM | log=BPIC15_3
+[2026-05-24 03:17:51] ERROR | model=SEP_LSTM | log=BPIC15_3
     Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
         _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
-        raise RuntimeError(
-    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
-[2026-05-11 09:38:27] RUNNING | model=BEST | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:38:27] ERROR | model=CRTP_LSTM_NDA | log=Road_Traffic_Fine_Management_Process
-    Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
-        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
-        raise RuntimeError(
-    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
-[2026-05-11 09:38:27] RUNNING | model=SuTraN_DA | log=BPI Challenge 2017
-[2026-05-11 09:38:27] ERROR | model=ED_LSTM | log=Hospital_Billing
-    Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
-        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
-        raise RuntimeError(
-    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
-[2026-05-11 09:38:27] RUNNING | model=SuTraN_NDA | log=BPI Challenge 2017
-[2026-05-11 09:38:27] ERROR | model=SEP_LSTM | log=Road_Traffic_Fine_Management_Process
-    Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
-        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
-        raise RuntimeError(
-    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
-[2026-05-11 09:38:27] RUNNING | model=CRTP_LSTM_DA | log=BPI Challenge 2017
-[2026-05-11 09:38:30] RUNNING | model=ED_LSTM | log=BPIC15_3
-[2026-05-11 09:38:30] RUNNING | model=SEP_LSTM | log=BPIC15_3
-[2026-05-11 09:38:30] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
-[2026-05-11 09:38:30] RUNNING | model=CRTP_LSTM_DA | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:38:30] RUNNING | model=ED_LSTM | log=Hospital_Billing
-[2026-05-11 09:38:30] RUNNING | model=CRTP_LSTM_DA | log=Hospital_Billing
-[2026-05-11 09:38:30] RUNNING | model=CRTP_LSTM_NDA | log=Hospital_Billing
-[2026-05-11 09:38:30] RUNNING | model=SEP_LSTM | log=Hospital_Billing
-[2026-05-11 09:38:30] RUNNING | model=CRTP_LSTM_NDA | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:38:30] RUNNING | model=ED_LSTM | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:38:37] ERROR | model=SEP_LSTM | log=InternationalDeclarations
-    Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
-        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
         raise RuntimeError(
     RuntimeError: Subprocess exited with code 1
-[2026-05-11 09:38:37] RUNNING | model=SEP_LSTM | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:45:39] DONE | model=SEP_LSTM | log=BPIC15_3
-[2026-05-11 09:45:39] RUNNING | model=BEST | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 09:45:51] DONE | model=BEST | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 10:06:10] DONE | model=ED_LSTM | log=BPIC15_3
-[2026-05-11 10:16:47] DONE | model=SEP_LSTM | log=Hospital_Billing
-[2026-05-11 10:19:01] DONE | model=ED_LSTM | log=Hospital_Billing
-[2026-05-11 10:28:13] DONE | model=SEP_LSTM | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 10:29:05] DONE | model=CRTP_LSTM_NDA | log=Hospital_Billing
-[2026-05-11 10:40:58] DONE | model=CRTP_LSTM_NDA | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 10:49:36] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
-[2026-05-11 10:49:36] RUNNING | model=CRTP_LSTM_DA | log=Hospital_Billing
-[2026-05-11 10:49:36] RUNNING | model=CRTP_LSTM_DA | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 10:49:36] RUNNING | model=ED_LSTM | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 10:49:48] ERROR | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-24 03:17:51] RUNNING | model=SuTraN_DA | log=BPIC15_4
+[2026-05-24 03:25:08] DONE | model=ED_LSTM | log=BPIC15_3
+[2026-05-24 03:25:08] RUNNING | model=SuTraN_NDA | log=BPIC15_4
+[2026-05-24 04:29:33] DONE | model=SuTraN_NDA | log=BPIC15_4
+[2026-05-24 04:29:33] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_4
+[2026-05-24 04:51:46] DONE | model=SuTraN_DA | log=BPIC15_4
+[2026-05-24 04:51:46] RUNNING | model=ED_LSTM | log=BPIC15_4
+[2026-05-24 05:01:14] DONE | model=CRTP_LSTM_DA | log=BPIC15_4
+[2026-05-24 05:01:14] RUNNING | model=SEP_LSTM | log=BPIC15_4
+[2026-05-24 05:05:22] ERROR | model=SEP_LSTM | log=BPIC15_4
     Traceback (most recent call last):
-      File "/app/run_all_suffix.py", line 252, in _train_one
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
         _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/app/run_all_suffix.py", line 238, in _run_subprocess
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
         raise RuntimeError(
     RuntimeError: Subprocess exited with code 1
-[2026-05-11 10:58:27] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
-[2026-05-11 10:58:40] ERROR | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-24 05:05:22] RUNNING | model=SuTraN_DA | log=BPIC15_5
+[2026-05-24 05:17:30] DONE | model=ED_LSTM | log=BPIC15_4
+[2026-05-24 05:17:30] RUNNING | model=SuTraN_NDA | log=BPIC15_5
+[2026-05-24 06:23:20] DONE | model=SuTraN_NDA | log=BPIC15_3
+[2026-05-24 06:23:20] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_5
+[2026-05-24 06:52:41] DONE | model=SuTraN_DA | log=BPIC15_5
+[2026-05-24 06:52:41] RUNNING | model=ED_LSTM | log=BPIC15_5
+[2026-05-24 07:08:43] DONE | model=CRTP_LSTM_DA | log=BPIC15_5
+[2026-05-24 07:08:43] RUNNING | model=SEP_LSTM | log=BPIC15_5
+[2026-05-24 07:14:33] ERROR | model=SEP_LSTM | log=BPIC15_5
     Traceback (most recent call last):
-      File "/workspace/baselines/SuffixTransformerNetwork/run_all_suffix_baselines.py", line 252, in _train_one
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
         _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
-      File "/workspace/baselines/SuffixTransformerNetwork/run_all_suffix_baselines.py", line 238, in _run_subprocess
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
         raise RuntimeError(
     RuntimeError: Subprocess exited with code 1
-[2026-05-11 11:01:31] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
-[2026-05-11 11:11:18] DONE | model=SEP_LSTM | log=InternationalDeclarations
-[2026-05-11 13:28:20] DONE | model=CRTP_LSTM_DA | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 14:01:35] DONE | model=ED_LSTM | log=Road_Traffic_Fine_Management_Process
-[2026-05-11 14:21:49] DONE | model=CRTP_LSTM_DA | log=Hospital_Billing
+[2026-05-24 07:14:33] RUNNING | model=SuTraN_DA | log=RequestForPayment
+[2026-05-24 07:15:07] DONE | model=ED_LSTM | log=BPIC15_5
+[2026-05-24 07:15:07] RUNNING | model=SuTraN_NDA | log=RequestForPayment
+[2026-05-24 07:22:19] DONE | model=SuTraN_DA | log=RequestForPayment
+[2026-05-24 07:22:19] RUNNING | model=CRTP_LSTM_DA | log=RequestForPayment
+[2026-05-24 07:23:36] DONE | model=SuTraN_NDA | log=RequestForPayment
+[2026-05-24 07:23:36] RUNNING | model=ED_LSTM | log=RequestForPayment
+[2026-05-24 07:29:11] DONE | model=ED_LSTM | log=RequestForPayment
+[2026-05-24 07:29:11] RUNNING | model=SEP_LSTM | log=RequestForPayment
+[2026-05-24 07:30:25] DONE | model=CRTP_LSTM_DA | log=RequestForPayment
+[2026-05-24 07:30:25] RUNNING | model=SuTraN_DA | log=Sepsis
+[2026-05-24 07:33:24] ERROR | model=SEP_LSTM | log=RequestForPayment
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 07:33:24] RUNNING | model=SuTraN_NDA | log=Sepsis
+[2026-05-24 07:50:06] DONE | model=SuTraN_NDA | log=Sepsis
+[2026-05-24 07:50:06] RUNNING | model=CRTP_LSTM_DA | log=Sepsis
+[2026-05-24 07:54:15] DONE | model=SuTraN_DA | log=Sepsis
+[2026-05-24 07:54:15] RUNNING | model=ED_LSTM | log=Sepsis
+[2026-05-24 07:57:26] DONE | model=CRTP_LSTM_DA | log=Sepsis
+[2026-05-24 07:57:26] RUNNING | model=SEP_LSTM | log=Sepsis
+[2026-05-24 07:57:41] DONE | model=ED_LSTM | log=Sepsis
+[2026-05-24 07:57:41] RUNNING | model=SuTraN_DA | log=DomesticDeclarations
+[2026-05-24 07:58:56] ERROR | model=SEP_LSTM | log=Sepsis
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 07:58:56] RUNNING | model=SuTraN_NDA | log=DomesticDeclarations
+[2026-05-24 08:07:53] DONE | model=SuTraN_DA | log=DomesticDeclarations
+[2026-05-24 08:07:53] RUNNING | model=CRTP_LSTM_DA | log=DomesticDeclarations
+[2026-05-24 08:15:55] DONE | model=SuTraN_NDA | log=DomesticDeclarations
+[2026-05-24 08:15:55] RUNNING | model=ED_LSTM | log=DomesticDeclarations
+[2026-05-24 08:19:33] DONE | model=CRTP_LSTM_DA | log=DomesticDeclarations
+[2026-05-24 08:19:33] RUNNING | model=SuTraN_DA | log=PrepaidTravelCost
+[2026-05-24 08:24:08] DONE | model=ED_LSTM | log=DomesticDeclarations
+[2026-05-24 08:24:08] RUNNING | model=SuTraN_NDA | log=PrepaidTravelCost
+[2026-05-24 08:24:52] DONE | model=SuTraN_DA | log=PrepaidTravelCost
+[2026-05-24 08:24:52] RUNNING | model=CRTP_LSTM_DA | log=PrepaidTravelCost
+[2026-05-24 08:29:17] DONE | model=SuTraN_NDA | log=BPIC15_5
+[2026-05-24 08:29:17] RUNNING | model=ED_LSTM | log=PrepaidTravelCost
+[2026-05-24 08:29:42] DONE | model=CRTP_LSTM_DA | log=PrepaidTravelCost
+[2026-05-24 08:29:42] RUNNING | model=SEP_LSTM | log=PrepaidTravelCost
+[2026-05-24 08:30:40] ERROR | model=SEP_LSTM | log=PrepaidTravelCost
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 08:30:40] RUNNING | model=SuTraN_DA | log=InternationalDeclarations
+[2026-05-24 08:31:34] DONE | model=SuTraN_NDA | log=PrepaidTravelCost
+[2026-05-24 08:31:34] RUNNING | model=SuTraN_NDA | log=InternationalDeclarations
+[2026-05-24 08:33:03] DONE | model=ED_LSTM | log=PrepaidTravelCost
+[2026-05-24 08:33:03] RUNNING | model=CRTP_LSTM_DA | log=InternationalDeclarations
+[2026-05-24 08:39:05] DONE | model=SuTraN_DA | log=InternationalDeclarations
+[2026-05-24 08:39:05] RUNNING | model=ED_LSTM | log=InternationalDeclarations
+[2026-05-24 08:43:36] DONE | model=CRTP_LSTM_DA | log=InternationalDeclarations
+[2026-05-24 08:43:36] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-24 08:45:09] DONE | model=ED_LSTM | log=InternationalDeclarations
+[2026-05-24 08:45:09] RUNNING | model=SuTraN_DA | log=BPI_Challenge_2012_A
+[2026-05-24 08:47:23] ERROR | model=SEP_LSTM | log=InternationalDeclarations
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 08:47:23] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_A
+[2026-05-24 08:50:56] DONE | model=SuTraN_NDA | log=InternationalDeclarations
+[2026-05-24 08:50:56] RUNNING | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_A
+[2026-05-24 08:52:16] DONE | model=SuTraN_DA | log=BPI_Challenge_2012_A
+[2026-05-24 08:52:16] RUNNING | model=ED_LSTM | log=BPI_Challenge_2012_A
+[2026-05-24 08:54:45] DONE | model=ED_LSTM | log=BPI_Challenge_2012_A
+[2026-05-24 08:54:45] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_A
+[2026-05-24 08:55:45] DONE | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_A
+[2026-05-24 08:55:45] RUNNING | model=SuTraN_DA | log=BPI_Challenge_2012_O
+[2026-05-24 08:57:54] ERROR | model=SEP_LSTM | log=BPI_Challenge_2012_A
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 08:57:54] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_O
+[2026-05-24 08:58:47] DONE | model=SuTraN_DA | log=BPI_Challenge_2012_O
+[2026-05-24 08:58:47] RUNNING | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_O
+[2026-05-24 09:01:18] DONE | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_O
+[2026-05-24 09:01:18] RUNNING | model=ED_LSTM | log=BPI_Challenge_2012_O
+[2026-05-24 09:01:45] DONE | model=SuTraN_NDA | log=BPI_Challenge_2012_A
+[2026-05-24 09:01:45] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_O
+[2026-05-24 09:03:59] DONE | model=ED_LSTM | log=BPI_Challenge_2012_O
+[2026-05-24 09:03:59] RUNNING | model=SuTraN_DA | log=BPI_Challenge_2012_W
+[2026-05-24 09:04:45] ERROR | model=SEP_LSTM | log=BPI_Challenge_2012_O
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 09:04:45] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_W
+[2026-05-24 09:08:14] DONE | model=SuTraN_NDA | log=BPI_Challenge_2012_O
+[2026-05-24 09:08:14] RUNNING | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_W
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=BPIC15_1
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=BPIC15_2
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=BPIC15_3
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=BPIC15_4
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=BPIC15_5
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=RequestForPayment
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=Sepsis
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=PrepaidTravelCost
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_A
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_O
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_W
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=Hospital_Billing
+[2026-05-24 09:30:32] RUNNING | model=SEP_LSTM | log=Road_Traffic_Fine_Management_Process
+[2026-05-24 09:34:18] DONE | model=SEP_LSTM | log=Sepsis
+[2026-05-24 09:35:46] DONE | model=SEP_LSTM | log=PrepaidTravelCost
+[2026-05-24 09:40:12] DONE | model=SEP_LSTM | log=BPIC15_2
+[2026-05-24 09:40:15] DONE | model=SEP_LSTM | log=BPIC15_4
+[2026-05-24 09:40:57] DONE | model=SEP_LSTM | log=BPIC15_1
+[2026-05-24 09:41:41] DONE | model=SEP_LSTM | log=RequestForPayment
+[2026-05-24 09:42:06] DONE | model=SEP_LSTM | log=BPIC15_5
+[2026-05-24 09:42:26] RUNNING | model=SuTraN_DA | log=BPI_Challenge_2012_W
+[2026-05-24 09:42:26] RUNNING | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_W
+[2026-05-24 09:42:26] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_W
+[2026-05-24 09:43:09] DONE | model=SEP_LSTM | log=BPI_Challenge_2012_O
+[2026-05-24 09:43:12] DONE | model=SEP_LSTM | log=BPIC15_3
+[2026-05-24 09:46:17] DONE | model=SEP_LSTM | log=BPI_Challenge_2012_A
+[2026-05-24 09:46:59] DONE | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-24 10:04:14] DONE | model=SEP_LSTM | log=BPI_Challenge_2012_W
+[2026-05-24 10:28:08] DONE | model=CRTP_LSTM_DA | log=BPI_Challenge_2012_W
+[2026-05-24 10:28:08] RUNNING | model=ED_LSTM | log=BPI_Challenge_2012_W
+[2026-05-24 11:00:49] DONE | model=SEP_LSTM | log=Hospital_Billing
+[2026-05-24 11:13:00] DONE | model=ED_LSTM | log=BPI_Challenge_2012_W
+[2026-05-24 11:13:00] RUNNING | model=SuTraN_DA | log=Hospital_Billing
+[2026-05-24 11:13:28] DONE | model=SEP_LSTM | log=Road_Traffic_Fine_Management_Process
+[2026-05-24 13:54:48] DONE | model=SuTraN_DA | log=BPI_Challenge_2012_W
+[2026-05-24 13:54:48] RUNNING | model=SuTraN_NDA | log=Hospital_Billing
+[2026-05-24 13:57:57] DONE | model=SuTraN_NDA | log=BPI_Challenge_2012_W
+[2026-05-24 13:57:57] RUNNING | model=CRTP_LSTM_DA | log=Hospital_Billing
+[2026-05-24 16:02:50] DONE | model=SuTraN_NDA | log=Hospital_Billing
+[2026-05-24 16:02:50] RUNNING | model=ED_LSTM | log=Hospital_Billing
+[2026-05-24 16:42:36] DONE | model=ED_LSTM | log=Hospital_Billing
+[2026-05-24 16:42:36] RUNNING | model=SuTraN_DA | log=Road_Traffic_Fine_Management_Process
+[2026-05-24 17:16:11] DONE | model=CRTP_LSTM_DA | log=Hospital_Billing
+[2026-05-24 17:16:11] RUNNING | model=SuTraN_NDA | log=Road_Traffic_Fine_Management_Process
+[2026-05-24 17:48:58] DONE | model=SuTraN_DA | log=Hospital_Billing
+[2026-05-24 17:48:58] RUNNING | model=CRTP_LSTM_DA | log=Road_Traffic_Fine_Management_Process
+[2026-05-24 19:54:15] DONE | model=CRTP_LSTM_DA | log=Road_Traffic_Fine_Management_Process
+[2026-05-24 19:54:15] RUNNING | model=ED_LSTM | log=Road_Traffic_Fine_Management_Process
+[2026-05-24 19:58:36] DONE | model=SuTraN_NDA | log=Road_Traffic_Fine_Management_Process
+[2026-05-24 20:11:41] DONE | model=SuTraN_DA | log=Road_Traffic_Fine_Management_Process
+[2026-05-24 20:35:59] DONE | model=ED_LSTM | log=Road_Traffic_Fine_Management_Process

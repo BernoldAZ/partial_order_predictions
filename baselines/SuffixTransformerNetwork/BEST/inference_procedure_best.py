@@ -278,6 +278,13 @@ def inference_loop(best_model,
             os.path.join(results_path, 'MAE_rrt_minutes.pt')
         )
 
+        # Per-instance TTNE MAE: mean over valid suffix positions
+        per_inst_ttne_min = (
+            (MAE_ttne_sec * at_or_before_end.float()).sum(dim=1)
+            / suf_len_tensor.float() / 60.0
+        )
+        torch.save(per_inst_ttne_min, os.path.join(results_path, 'MAE_ttne_minutes.pt'))
+
     # -----------------------------------------------------------------------
     # 10.  Assemble and return results list
     # -----------------------------------------------------------------------

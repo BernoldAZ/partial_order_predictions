@@ -1,0 +1,150 @@
+[2026-05-24 16:56:00] RUNNING | log=RequestForPayment
+[2026-05-24 16:56:00] RUNNING | log=Sepsis
+[2026-05-24 16:56:00] RUNNING | log=Hospital_Billing
+[2026-05-24 16:56:00] RUNNING | log=DomesticDeclarations
+[2026-05-24 16:56:00] RUNNING | log=PrepaidTravelCost
+[2026-05-24 16:56:00] RUNNING | log=InternationalDeclarations
+[2026-05-24 16:56:00] RUNNING | log=BPI_Challenge_2012_A
+[2026-05-24 16:56:00] RUNNING | log=BPI_Challenge_2012_O
+[2026-05-24 16:56:00] RUNNING | log=BPI_Challenge_2012_W
+[2026-05-24 16:56:00] RUNNING | log=BPIC15_1
+[2026-05-24 16:56:00] RUNNING | log=BPIC15_2
+[2026-05-24 16:56:00] RUNNING | log=BPIC15_3
+[2026-05-24 16:56:00] RUNNING | log=BPIC15_4
+[2026-05-24 16:56:00] RUNNING | log=BPIC15_5
+[2026-05-24 16:56:00] RUNNING | log=Road_Traffic_Fine_Management_Process
+[2026-05-24 16:56:04] ERROR | log=RequestForPayment
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=Road_Traffic_Fine_Management_Process
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=BPI_Challenge_2012_W
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=BPI_Challenge_2012_A
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=BPIC15_5
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=BPI_Challenge_2012_O
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=InternationalDeclarations
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=Hospital_Billing
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=Sepsis
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=BPIC15_4
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=DomesticDeclarations
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=BPIC15_2
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=BPIC15_3
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 16:56:05] ERROR | log=PrepaidTravelCost
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 278, in _run_one
+        _run_subprocess(_build_code(log_file, log_name, results_dir, model,
+      File "/workspace/approach_suffix_v2/run_all_suffix.py", line 243, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-24 18:39:34] RUNNING | log=RequestForPayment
+[2026-05-24 18:39:34] RUNNING | log=Sepsis
+[2026-05-24 18:39:34] RUNNING | log=Hospital_Billing
+[2026-05-24 18:39:34] RUNNING | log=DomesticDeclarations
+[2026-05-24 18:39:34] RUNNING | log=PrepaidTravelCost
+[2026-05-24 18:39:34] RUNNING | log=InternationalDeclarations
+[2026-05-24 18:39:34] RUNNING | log=BPI_Challenge_2012_A
+[2026-05-24 18:39:34] RUNNING | log=BPI_Challenge_2012_O
+[2026-05-24 18:39:34] RUNNING | log=BPI_Challenge_2012_W
+[2026-05-24 18:39:34] RUNNING | log=BPIC15_1
+[2026-05-24 18:39:34] RUNNING | log=BPIC15_2
+[2026-05-24 18:39:34] RUNNING | log=BPIC15_3
+[2026-05-24 18:39:34] RUNNING | log=BPIC15_4
+[2026-05-24 18:39:34] RUNNING | log=BPIC15_5
+[2026-05-24 18:39:34] RUNNING | log=Road_Traffic_Fine_Management_Process
+[2026-05-24 18:57:46] DONE | log=PrepaidTravelCost
+[2026-05-24 19:00:23] DONE | log=Sepsis
+[2026-05-24 19:03:21] DONE | log=BPI_Challenge_2012_O
+[2026-05-24 19:11:02] DONE | log=RequestForPayment
+[2026-05-24 19:27:18] DONE | log=BPIC15_4
+[2026-05-24 19:29:47] DONE | log=BPIC15_2
+[2026-05-24 19:32:16] DONE | log=BPIC15_1
+[2026-05-24 19:37:44] DONE | log=InternationalDeclarations
+[2026-05-24 19:38:30] DONE | log=BPIC15_3
+[2026-05-24 19:39:00] DONE | log=BPI_Challenge_2012_A
+[2026-05-24 19:39:21] DONE | log=DomesticDeclarations
+[2026-05-24 19:39:39] DONE | log=BPIC15_5
+[2026-05-24 20:47:58] DONE | log=Road_Traffic_Fine_Management_Process
+[2026-05-24 21:03:21] DONE | log=Hospital_Billing
+[2026-05-25 01:17:11] DONE | log=BPI_Challenge_2012_W

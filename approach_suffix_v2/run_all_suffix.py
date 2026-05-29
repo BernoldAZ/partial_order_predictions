@@ -12,8 +12,12 @@ Supported models and their output CSVs
 ---------------------------------------
   suffix_time                 → results_time_gatv2_gru/run_N/results_suffix_time_gnn.csv
   suffix_time_stop            → results_time_gatv2_gru_stop/run_N/results_suffix_time_gnn.csv
-  suffix                      → results_suffix_gatv2_gru/run_N/results_suffix_gnn.csv
-  suffix_stop                 → results_suffix_gatv2_gru_stop/run_N/results_suffix_gnn.csv
+  suffix_time_stop_v2_1       → results_time_gatv2_gru_stop/run_N/results_suffix_time_gnn_v2_1.csv
+  suffix_time_data_aware      → results_time_gatv2_data_aware_gru_stop/run_N/results_suffix_time_gnn.csv
+  suffix_time_cross_attn      → results_time_gatv2_cross_attn_gru/run_N/results_suffix_time_gnn.csv
+  suffix_time_multilabel      → results_multilabel_gatv2_gru_multilabel/run_N/results_multilabel.csv
+  gru_suffix                  → results_gru_suffix/run_N/results_gru_suffix.csv
+  gru_suffix_v2               → results_gru_suffix_v2/run_N/results_gru_suffix_v2.csv
 
 Usage
 -----
@@ -23,7 +27,7 @@ Usage
     python run_all_suffix.py --logs-dir /path/to/logs
 
 Usage with docker:
-    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --workers 16 --model suffix_time
+    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --workers 16 --model gru_suffix_v2
 """
 
 import argparse
@@ -77,17 +81,46 @@ MODEL_CONFIGS = {
         'default_encoder': 'gatv2_gru_stop',
         'pass_encoder':    False,
     },
-    'suffix': {
-        'module':          'approach_suffix_v2.run_suffix_v1',
-        'results_sub':     'results_suffix',
-        'csv_file':        'results_suffix_gnn.csv',
-        'default_encoder': 'gatv2_gru',
+    'suffix_time_data_aware': {
+        'module':          'approach_suffix_v2.run_suffix_time_v3',
+        'results_sub':     'results_time',
+        'csv_file':        'results_suffix_time_gnn.csv',
+        'default_encoder': 'gatv2_data_aware_gru_stop',
+        'pass_encoder':    False,
     },
-    'suffix_stop': {
-        'module':          'approach_suffix_v2.run_suffix_v2',
-        'results_sub':     'results_suffix',
-        'csv_file':        'results_suffix_gnn.csv',
+    'suffix_time_cross_attn': {
+        'module':          'approach_suffix_v2.run_suffix_time_v4',
+        'results_sub':     'results_time',
+        'csv_file':        'results_suffix_time_gnn.csv',
+        'default_encoder': 'gatv2_cross_attn_gru',
+        'pass_encoder':    False,
+    },
+    'suffix_time_stop_v2_1': {
+        'module':          'run_suffix_time_v2_1',
+        'results_sub':     'results_time',
+        'csv_file':        'results_suffix_time_gnn_v2_1.csv',
         'default_encoder': 'gatv2_gru_stop',
+        'pass_encoder':    False,
+    },
+    'suffix_time_multilabel': {
+        'module':          'run_multilabel_v1',
+        'results_sub':     'results_multilabel',
+        'csv_file':        'results_multilabel.csv',
+        'default_encoder': 'gatv2_gru_multilabel',
+        'pass_encoder':    False,
+    },
+    'gru_suffix': {
+        'module':          'approach_suffix_v2.models.run_gru_suffix',
+        'results_sub':     'results',
+        'csv_file':        'results_gru_suffix.csv',
+        'default_encoder': 'gru_suffix',
+        'pass_encoder':    False,
+    },
+    'gru_suffix_v2': {
+        'module':          'approach_suffix_v2.models.run_gru_suffix_v2',
+        'results_sub':     'results',
+        'csv_file':        'results_gru_suffix_v2.csv',
+        'default_encoder': 'gru_suffix_v2',
         'pass_encoder':    False,
     },
 }
@@ -160,6 +193,7 @@ _PREAMBLE = f"""\
 import sys, os
 sys.path.insert(0, {_PROJECT_ROOT!r})
 sys.path.insert(0, {_HERE!r})
+sys.path.insert(0, {os.path.join(_HERE, 'models')!r})
 os.chdir({_PROJECT_ROOT!r})
 """
 
@@ -325,13 +359,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model",
         default="suffix_time",
-        choices=list(MODEL_CONFIGS),
+        choices=sorted(MODEL_CONFIGS),
         help="Which model to run (default: suffix_time)",
     )
     parser.add_argument(
         "--encoder",
         default=None,
-        choices=["gatv2_gru", "gatv2_gru_stop"],
+        choices=["gatv2_gru", "gatv2_gru_stop", "gatv2_data_aware_gru_stop", "gatv2_cross_attn_gru", "gatv2_gru_multilabel", "gatv2_gru_stop_v2_1"],
         help="GNN encoder variant (default: auto-selected from model config)",
     )
 

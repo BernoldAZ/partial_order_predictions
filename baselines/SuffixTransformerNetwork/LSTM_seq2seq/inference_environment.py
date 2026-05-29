@@ -179,10 +179,10 @@ class BatchInference():
 
         # Right padding decoded activity predictions with index 0 
         # starting from the first END token prediction
-        pred_length = torch.argmax((self.suffix_acts_decoded== (self.num_classes-1)).to(torch.int64), dim=-1) 
-        counting_tensor = torch.arange(self.window_size, dtype=torch.int64).to(device) # (window_size,)
+        pred_length = torch.argmax((self.suffix_acts_decoded== (self.num_classes-1)).to(torch.int64), dim=-1)
+        counting_tensor = torch.arange(self.window_size, dtype=torch.int64).to(pred_length.device) # (window_size,)
         #       Repeat the tensor along the first dimension to match the desired shape
-        counting_tensor = counting_tensor.unsqueeze(0).repeat(self.batch_size, 1).to(device) # (batch_size, window_size)
+        counting_tensor = counting_tensor.unsqueeze(0).repeat(self.batch_size, 1) # (batch_size, window_size)
         padding_bool = counting_tensor > pred_length.unsqueeze(-1) # (batch_size, window_size)
         padding_inds = torch.nonzero(input=padding_bool, as_tuple=True)
         self.suffix_acts_decoded[padding_inds] = 0
@@ -349,13 +349,13 @@ class BatchInference():
 
         # --------------------------------------------
         #       Generate a tensor with values counting from 0 to window_size
-        counting_tensor = torch.arange(self.window_size, dtype=torch.int64).to(device) # (window_size,)
+        counting_tensor = torch.arange(self.window_size, dtype=torch.int64).to(self.pred_length.device) # (window_size,)
         #       Repeat the tensor along the first dimension to match the desired shape
-        counting_tensor = counting_tensor.unsqueeze(0).repeat(self.batch_size, 1).to(device) # (batch_size, window_size)
+        counting_tensor = counting_tensor.unsqueeze(0).repeat(self.batch_size, 1) # (batch_size, window_size)
 
-        # Deriving boolean tensor of shape (batch_size, window_size) 
-        # containing True for the indices after its END token prediction 
-        # in the predicted activity suffix 
+        # Deriving boolean tensor of shape (batch_size, window_size)
+        # containing True for the indices after its END token prediction
+        # in the predicted activity suffix
         pad_preds = counting_tensor > self.pred_length.unsqueeze(-1) # (batch_size, window_size)
 
         # Padding both prediction tensors 
@@ -461,11 +461,12 @@ class BatchInference():
         # dimension the predicted activities, and the outermost dimension 
         # the self.batch_size instances. (self.window_size+1 because 
         # first row and column stand for empty strings)
-        d = torch.full(size=(self.batch_size, self.window_size+1, self.window_size+1), fill_value=0, dtype=torch.int64).to(device) # (B, WS+1, WS+1)
+        _dev = self.suffix_acts_decoded.device
+        d = torch.full(size=(self.batch_size, self.window_size+1, self.window_size+1), fill_value=0, dtype=torch.int64).to(_dev) # (B, WS+1, WS+1)
 
-        # Initialize distances first row and column for each of the 
+        # Initialize distances first row and column for each of the
         # self.batch_size instances (empty strings)
-        arange_tens = torch.arange(start=0, end=self.window_size+1, dtype=torch.int64).unsqueeze(0).to(device) # (1, WS+1)
+        arange_tens = torch.arange(start=0, end=self.window_size+1, dtype=torch.int64).unsqueeze(0).to(_dev) # (1, WS+1)
         # First row for each instance 
         d[:, 0, :] = arange_tens
         # First column for each instance 
@@ -524,7 +525,7 @@ class BatchInference():
 
         # Derive integer indexing tensor for the outermost (batch) 
         # dimension
-        batch_arange = torch.arange(start=0, end=self.batch_size, dtype=torch.int64).to(device) # (self.batch_size, )
+        batch_arange = torch.arange(start=0, end=self.batch_size, dtype=torch.int64).to(_dev) # (self.batch_size, )
 
         # For each of the batch_size instances i, the dam lev distance is 
         # contained in the cell with row index len_pred[i] and column 

@@ -518,6 +518,26 @@ def construct_datasets(
     with open(os.path.join(output_directory, 'tss_index.txt'), 'w') as _f:
         _f.write(str(tss_index))
 
+    # Concurrent-ending-prefix mask for the test set.
+    # A prefix is "concurrent-ending" when its last event shares its timestamp
+    # with the second-to-last event (ts_start equality, preserved under
+    # standardization).
+    num_pref_cat = 1 + len(cat_casefts) + len(cat_eventfts)  # act_label + cat features
+    prefix_num   = test_data[num_pref_cat]            # (N, W, nn_pref)
+    padding_mask = test_data[num_pref_cat + 1]        # (N, W) True=padding
+    ts_start     = prefix_num[:, :, tss_index]                # (N, W)
+    N, W         = ts_start.shape
+    pref_len = torch.argmax(padding_mask.to(torch.int64), dim=1)          # (N,)
+    pref_len = torch.where(pref_len == 0, torch.full((N,), W, dtype=torch.int64), pref_len)
+    last_idx = pref_len - 1
+    prev_idx = torch.clamp(last_idx - 1, min=0)
+    idx_N    = torch.arange(N)
+    conc_mask = (pref_len > 1) & (ts_start[idx_N, last_idx] == ts_start[idx_N, prev_idx])
+    torch.save(conc_mask, os.path.join(output_directory, 'test_concurrent_mask.pt'))
+    conc_count = conc_mask.sum().item()
+    print(f"Concurrent-ending-prefix test samples: {conc_count} / {N}")
+    counts['conc_count'] = conc_count
+
     return counts
 
 
@@ -534,7 +554,7 @@ def _run_one_log(args):
     except Exception as exc:
         return {'log': log_name, 'n_train': '', 'train_pairs': '',
                 'n_val': '', 'val_pairs': '', 'n_test': '', 'test_pairs': '',
-                'error': str(exc)}
+                'conc_count': '', 'error': str(exc)}
 
 
 def run_all_logs(folder, output_file,
@@ -601,7 +621,7 @@ def run_all_logs(folder, output_file,
     args_list = [(path, name, kw) for path, name in files]
 
     fieldnames = ['log', 'n_train', 'train_pairs', 'n_val', 'val_pairs',
-                  'n_test', 'test_pairs', 'error']
+                  'n_test', 'test_pairs', 'conc_count', 'error']
 
     print(f"Processing {len(files)} logs with {workers} workers ...")
     with open(output_file, 'w', newline='') as f:
@@ -618,7 +638,8 @@ def run_all_logs(folder, output_file,
                     print(f"  {r['log']}  "
                           f"train={r['n_train']} ({r['train_pairs']} pairs)  "
                           f"val={r['n_val']} ({r['val_pairs']} pairs)  "
-                          f"test={r['n_test']} ({r['test_pairs']} pairs)")
+                          f"test={r['n_test']} ({r['test_pairs']} pairs)  "
+                          f"conc={r['conc_count']}")
                 writer.writerow(r)
                 f.flush()
 

@@ -283,7 +283,16 @@ def inference_loop(model,
             MAE_rrt_minutes_path = os.path.join(subfolder_path, 'MAE_rrt_minutes.pt')
             torch.save(MAE_rrt_minutes, MAE_rrt_minutes_path)
 
-        # Length differences: 
+            # Per-instance TTNE MAE: MAE_2_seconds_global is flat (total_events,),
+            # split by suf_len_global to get per-instance means of shape (num_prefs,).
+            splits = suf_len_global.cpu().tolist()
+            per_inst_ttne_min = torch.stack(
+                [chunk.mean() for chunk in MAE_2_seconds_global.cpu().split([int(s) for s in splits])]
+            ) / 60.0
+            torch.save(per_inst_ttne_min,
+                       os.path.join(subfolder_path, 'MAE_ttne_minutes.pt'))
+
+        # Length differences:
         total_num = length_diff_global.shape[0]
         num_too_early = length_diff_too_early_global.shape[0]
         num_too_late = length_diff_too_late_global.shape[0]

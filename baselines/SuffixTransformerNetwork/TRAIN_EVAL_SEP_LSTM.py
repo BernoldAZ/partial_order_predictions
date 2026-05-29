@@ -350,7 +350,40 @@ def train_eval(log_name,
                         "DL sim" : avg_dam_lev,
                         "MAE RRT minutes" : avg_MAE_rrt_sum_minutes,
                         "training_time" : training_time,
-                        "testing_time" : testing_time}
+                        "testing_time" : testing_time,
+                        "num_trainable_params" : sum(p.numel() for p in model.parameters() if p.requires_grad)}
+    # ── Next-act and concurrent-subset metrics ──────────────────────────────
+    from sklearn.metrics import accuracy_score, f1_score as _f1_score
+    _acts    = torch.load(os.path.join(results_path, 'suffix_acts_decoded.pt'))
+    _labels  = torch.load(os.path.join(results_path, 'labels.pt'))
+    _dl      = torch.load(os.path.join(results_path, 'dam_lev_similarity.pt'))
+    _rrt     = torch.load(os.path.join(results_path, 'MAE_rrt_minutes.pt'))
+    _ttne    = torch.load(os.path.join(results_path, 'MAE_ttne_minutes.pt'))
+    _conc    = torch.load(os.path.join('results_per_log', log_name, 'test_concurrent_mask.pt'))
+    _act_lbl = _labels[-1]
+    def _nap(pred, gt):
+        p, g = pred.numpy(), gt.numpy()
+        return (float(accuracy_score(g, p)),
+                float(_f1_score(g, p, average='weighted', zero_division=0)))
+    next_acc, next_f1 = _nap(_acts[:, 0], _act_lbl[:, 0])
+    n_conc = int(_conc.sum().item())
+    if n_conc > 0:
+        conc_dl, conc_ttne, conc_rrt = (float(_dl[_conc].mean()),
+                                         float(_ttne[_conc].mean()),
+                                         float(_rrt[_conc].mean()))
+        conc_acc, conc_f1 = _nap(_acts[_conc, 0], _act_lbl[_conc, 0])
+    else:
+        conc_dl = conc_ttne = conc_rrt = conc_acc = conc_f1 = None
+    avg_results_dict.update({
+        'next_act_accuracy':         round(next_acc, 6),
+        'next_act_f1_weighted':      round(next_f1,  6),
+        'conc_n_samples':            n_conc,
+        'conc_dl_similarity':        (round(conc_dl,   6) if conc_dl   is not None else ''),
+        'conc_ttne_mae_minutes':     (round(conc_ttne, 6) if conc_ttne is not None else ''),
+        'conc_rrt_mae_minutes':      (round(conc_rrt,  6) if conc_rrt  is not None else ''),
+        'conc_next_act_accuracy':    (round(conc_acc,  6) if conc_acc  is not None else ''),
+        'conc_next_act_f1_weighted': (round(conc_f1,   6) if conc_f1   is not None else ''),
+    })
     path_name_average_results = os.path.join(results_path, 'averaged_results.pkl')
 
     

@@ -1,0 +1,208 @@
+
+=== Log: BPI Challenge 2017 ===
+  Model                                   method  accuracy       f1
+    GRU                                      nap  0.884762 0.872970
+    GNN                                nap_layer  0.858878 0.842317
+pydream                                      NAP  0.831960 0.814407
+    tax                                  one_hot  0.819217 0.815484
+everman        Activity-Context N-Grams PPMI w_5  0.799738 0.774053
+everman   Activity-Context Bag Of Words PPMI w_5  0.798829 0.775431
+everman Gamallo Fernandez 2023 Context Based w_3  0.779123 0.746215
+everman         De Koninck 2018 act2vec CBOW w_3  0.751475 0.709904
+everman                                  one_hot  0.635639 0.550749
+everman            Bose 2009 Substitution Scores  0.619357 0.543011
+
+=== Log: BPIC15_1 ===
+  Model                                   method  accuracy       f1
+    GNN                                nap_layer  0.197225 0.186123
+    GRU                                      nap  0.193138 0.183373
+    tax                                  one_hot  0.184089 0.180251
+everman        Activity-Context N-Grams PPMI w_5  0.157545 0.135682
+everman   Activity-Context Bag Of Words PPMI w_5  0.155383 0.129494
+pydream                                      NAP  0.103668 0.079456
+everman         De Koninck 2018 act2vec CBOW w_3  0.064718 0.034943
+everman Gamallo Fernandez 2023 Context Based w_3  0.055025 0.023055
+everman            Bose 2009 Substitution Scores  0.032434 0.003260
+everman                                  one_hot  0.003579 0.000814
+
+=== Log: BPIC15_2 ===
+  Model                                   method  accuracy       f1
+    GNN                                nap_layer  0.265669 0.249624
+    GRU                                      nap  0.242535 0.229479
+everman   Activity-Context Bag Of Words PPMI w_5  0.205124 0.169894
+everman        Activity-Context N-Grams PPMI w_5  0.181018 0.142783
+    tax                                  one_hot  0.159669 0.148327
+pydream                                      NAP  0.137633 0.120588
+everman         De Koninck 2018 act2vec CBOW w_3  0.092332 0.054606
+everman Gamallo Fernandez 2023 Context Based w_3  0.060132 0.021373
+everman            Bose 2009 Substitution Scores  0.054261 0.012156
+everman                                  one_hot  0.012275 0.000587
+
+=== Log: BPIC15_3 ===
+  Model                                   method  accuracy       f1
+    GRU                                      nap  0.290590 0.285113
+    GNN                                nap_layer  0.288635 0.275416
+    tax                                  one_hot  0.236239 0.233182
+pydream                                      NAP  0.185116 0.170298
+everman   Activity-Context Bag Of Words PPMI w_5  0.173888 0.154669
+everman        Activity-Context N-Grams PPMI w_5  0.156094 0.135235
+everman         De Koninck 2018 act2vec CBOW w_3  0.113779 0.063140
+everman Gamallo Fernandez 2023 Context Based w_3  0.072333 0.026110
+everman                                  one_hot  0.042098 0.006604
+everman            Bose 2009 Substitution Scores  0.036166 0.005200
+
+=== Log: BPIC15_4 ===
+  Model                                   method  accuracy       f1
+    GNN                                nap_layer  0.360918 0.339179
+    GRU                                      nap  0.320544 0.310506
+    tax                                  one_hot  0.315334 0.299477
+pydream                                      NAP  0.242649 0.216198
+everman   Activity-Context Bag Of Words PPMI w_5  0.239457 0.201479
+everman        Activity-Context N-Grams PPMI w_5  0.236545 0.200688
+everman         De Koninck 2018 act2vec CBOW w_3  0.136492 0.077007
+everman            Bose 2009 Substitution Scores  0.063614 0.012968
+everman Gamallo Fernandez 2023 Context Based w_3  0.056555 0.021952
+everman                                  one_hot  0.010323 0.002591
+
+=== Log: BPIC15_5 ===
+  Model                                   method  accuracy       f1
+    GRU                                      nap  0.315152 0.299865
+    GNN                                nap_layer  0.312561 0.292996
+    tax                                  one_hot  0.267156 0.245571
+everman   Activity-Context Bag Of Words PPMI w_5  0.205869 0.173117
+everman        Activity-Context N-Grams PPMI w_5  0.183341 0.151947
+pydream                                      NAP  0.164851 0.151245
+everman         De Koninck 2018 act2vec CBOW w_3  0.089669 0.049099
+everman Gamallo Fernandez 2023 Context Based w_3  0.056988 0.030427
+everman            Bose 2009 Substitution Scores  0.033422 0.005485
+everman                                  one_hot  0.017786 0.000622
+
+=== Log: BPI_Challenge_2012_A ===
+  Model                                   method  accuracy       f1
+everman   Activity-Context Bag Of Words PPMI w_5  0.803324 0.771913
+everman        Activity-Context N-Grams PPMI w_5  0.802378 0.768680
+everman         De Koninck 2018 act2vec CBOW w_3  0.797232 0.765238
+everman Gamallo Fernandez 2023 Context Based w_3  0.796699 0.761158
+    tax                                  one_hot  0.793328 0.757009
+    GNN                                nap_layer  0.792010 0.747157
+everman                                  one_hot  0.790311 0.745994
+pydream                                      NAP  0.717292 0.655981
+    GRU                                      nap  0.705131 0.662969
+everman            Bose 2009 Substitution Scores  0.679167 0.607984
+
+=== Log: BPI_Challenge_2012_O ===
+  Model                                   method  accuracy       f1
+    GRU                                      nap  0.832400 0.810146
+    GNN                                nap_layer  0.830999 0.809217
+    tax                                  one_hot  0.802833 0.787309
+everman   Activity-Context Bag Of Words PPMI w_5  0.792379 0.754334
+everman        Activity-Context N-Grams PPMI w_5  0.792379 0.754334
+everman            Bose 2009 Substitution Scores  0.792379 0.754334
+everman Gamallo Fernandez 2023 Context Based w_3  0.792379 0.754334
+everman                                  one_hot  0.792379 0.754334
+pydream                                      NAP  0.789161 0.762125
+everman         De Koninck 2018 act2vec CBOW w_3  0.785442 0.742237
+
+=== Log: BPI_Challenge_2012_W ===
+  Model                                   method  accuracy       f1
+    GRU                                      nap  0.910911 0.910059
+    GNN                                nap_layer  0.901358 0.900397
+pydream                                      NAP  0.845361 0.835264
+everman        Activity-Context N-Grams PPMI w_5  0.827636 0.803935
+    tax                                  one_hot  0.807153 0.811725
+everman   Activity-Context Bag Of Words PPMI w_5  0.796695 0.776413
+everman Gamallo Fernandez 2023 Context Based w_3  0.791004 0.767831
+everman         De Koninck 2018 act2vec CBOW w_3  0.789157 0.759742
+everman            Bose 2009 Substitution Scores  0.772688 0.728095
+everman                                  one_hot  0.763172 0.723302
+
+=== Log: DomesticDeclarations ===
+  Model                                   method  accuracy       f1
+everman         De Koninck 2018 act2vec CBOW w_3  0.905392 0.868393
+everman   Activity-Context Bag Of Words PPMI w_5  0.904614 0.867726
+everman        Activity-Context N-Grams PPMI w_5  0.904614 0.867726
+    tax                                  one_hot  0.902669 0.873528
+    GNN                                nap_layer  0.892911 0.848182
+    GRU                                      nap  0.892817 0.847268
+everman            Bose 2009 Substitution Scores  0.883218 0.841090
+pydream                                      NAP  0.882923 0.837322
+everman Gamallo Fernandez 2023 Context Based w_3  0.738738 0.679920
+everman                                  one_hot  0.721155 0.653530
+
+=== Log: Hospital_Billing ===
+  Model                                   method  accuracy       f1
+pydream                                      NAP  0.924629 0.901678
+everman                                  one_hot  0.827764 0.771423
+everman         De Koninck 2018 act2vec CBOW w_3  0.823627 0.768007
+everman Gamallo Fernandez 2023 Context Based w_3  0.819031 0.765733
+    tax                                  one_hot  0.811838 0.799915
+    GRU                                      nap  0.810163 0.800833
+everman        Activity-Context N-Grams PPMI w_5  0.806005 0.786134
+everman   Activity-Context Bag Of Words PPMI w_5  0.804045 0.788342
+everman            Bose 2009 Substitution Scores  0.803517 0.783684
+    GNN                                nap_layer  0.802053 0.785899
+
+=== Log: InternationalDeclarations ===
+  Model                                   method  accuracy       f1
+    GNN                                nap_layer  0.878850 0.845292
+    GRU                                      nap  0.877774 0.843078
+    tax                                  one_hot  0.872583 0.846402
+pydream                                      NAP  0.866160 0.829373
+everman        Activity-Context N-Grams PPMI w_5  0.836624 0.788752
+everman   Activity-Context Bag Of Words PPMI w_5  0.834653 0.787032
+everman         De Koninck 2018 act2vec CBOW w_3  0.816164 0.765223
+everman Gamallo Fernandez 2023 Context Based w_3  0.724501 0.652195
+everman                                  one_hot  0.683445 0.609586
+everman            Bose 2009 Substitution Scores  0.670768 0.594845
+
+=== Log: PrepaidTravelCost ===
+  Model                                   method  accuracy       f1
+    tax                                  one_hot  0.869739 0.845521
+    GNN                                nap_layer  0.863962 0.833517
+    GRU                                      nap  0.862938 0.833463
+everman   Activity-Context Bag Of Words PPMI w_5  0.849601 0.817990
+pydream                                      NAP  0.841882 0.814191
+everman        Activity-Context N-Grams PPMI w_5  0.828737 0.781377
+everman         De Koninck 2018 act2vec CBOW w_3  0.804245 0.749451
+everman            Bose 2009 Substitution Scores  0.773948 0.710708
+everman Gamallo Fernandez 2023 Context Based w_3  0.759434 0.701333
+everman                                  one_hot  0.636430 0.549007
+
+=== Log: RequestForPayment ===
+  Model                                   method  accuracy       f1
+everman   Activity-Context Bag Of Words PPMI w_5  0.889413 0.849616
+    tax                                  one_hot  0.889059 0.851601
+everman         De Koninck 2018 act2vec CBOW w_3  0.887761 0.847905
+everman        Activity-Context N-Grams PPMI w_5  0.887525 0.842083
+pydream                                      NAP  0.881752 0.834699
+    GRU                                      nap  0.881224 0.832856
+    GNN                                nap_layer  0.880681 0.831801
+everman Gamallo Fernandez 2023 Context Based w_3  0.722530 0.655533
+everman                                  one_hot  0.702349 0.632741
+everman            Bose 2009 Substitution Scores  0.686534 0.585357
+
+=== Log: Road_Traffic_Fine_Management_Process ===
+  Model                                   method  accuracy       f1
+pydream                                      NAP  0.899421 0.870803
+    GNN                                nap_layer  0.833268 0.774933
+    GRU                                      nap  0.833177 0.774486
+    tax                                  one_hot  0.827625 0.787374
+everman   Activity-Context Bag Of Words PPMI w_5  0.824392 0.767138
+everman        Activity-Context N-Grams PPMI w_5  0.824331 0.767761
+everman Gamallo Fernandez 2023 Context Based w_3  0.824325 0.767383
+everman                                  one_hot  0.824271 0.766865
+everman            Bose 2009 Substitution Scores  0.824258 0.767029
+everman         De Koninck 2018 act2vec CBOW w_3  0.824251 0.766854
+
+=== Log: Sepsis ===
+  Model                                   method  accuracy       f1
+    GRU                                      nap  0.670732 0.664195
+    GNN                                nap_layer  0.652704 0.647672
+    tax                                  one_hot  0.638403 0.625409
+everman   Activity-Context Bag Of Words PPMI w_5  0.612768 0.580582
+pydream                                      NAP  0.610267 0.580590
+everman        Activity-Context N-Grams PPMI w_5  0.595021 0.554759
+everman Gamallo Fernandez 2023 Context Based w_3  0.544737 0.485415
+everman         De Koninck 2018 act2vec CBOW w_3  0.540054 0.476783
+everman            Bose 2009 Substitution Scores  0.503328 0.452925
+everman                                  one_hot  0.396352 0.305368

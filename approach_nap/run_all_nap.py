@@ -14,6 +14,7 @@ Supported models and their output CSVs
   nap_time_mlp → results_time_mlp/run_N/results_nap_time_mlp.csv
   nap_multiple → results_multiple/run_N/results_nap_multiple_gnn.csv
   nap_layer    → results_layer/run_N/results_nap_layer_gnn.csv
+  nap_gru      → results_gru/run_N/results_nap_gru.csv
 
 Usage
 -----
@@ -24,7 +25,7 @@ Usage
     python run_all_nap.py --logs-dir /path/to/logs
 
 Usage with docker:
-    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_nap/run_all_nap.py --workers 16 --model nap_layer
+    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_nap/run_all_nap.py --workers 16 --model nap_gru
 """
 
 import argparse
@@ -86,6 +87,11 @@ MODEL_CONFIGS = {
         'module':      'approach_nap.run_nap_layer',
         'results_sub': 'results_layer',
         'csv_file':    'results_nap_layer_gnn.csv',
+    },
+    'nap_gru': {
+        'module':      'approach_nap.run_gru',
+        'results_sub': 'results_gru',
+        'csv_file':    'results_nap_gru.csv',
     },
 }
 
@@ -288,7 +294,7 @@ if __name__ == "__main__":
         "--model",
         default="nap",
         choices=list(MODEL_CONFIGS),
-        help="Which model to run: nap, nap_time_mlp, nap_multiple, nap_layer (default: nap)",
+        help="Which model to run: nap, nap_time_mlp, nap_multiple, nap_layer, nap_gru (default: nap)",
     )
     parser.add_argument(
         "--run-id",

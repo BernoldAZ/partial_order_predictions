@@ -1,209 +1,185 @@
+
+=== Log: .ipynb_checkpoints ===
+          Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean  # params
+    SuTraN (DA)                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+   SuTraN (NDA)                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+ CRTP-LSTM (DA)                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+CRTP-LSTM (NDA)                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+        ED-LSTM                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+       SEP-LSTM                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+           BEST                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+
+=== Log: BPI Challenge 2017 ===
+          Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean  # params
+    SuTraN (DA)                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+   SuTraN (NDA)                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+ CRTP-LSTM (DA)                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+CRTP-LSTM (NDA)                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+        ED-LSTM                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+       SEP-LSTM                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+           BEST                   NaN                    NaN                   NaN          NaN                 NaN                     NaN                    NaN                   NaN                  NaN       NaN
+
 === Log: BPIC15_1 ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-            SEP-LSTM                0.2109               0.0032              2330.6800              132.9700            44917.0000            2622.6400
-        SuTraN (NDA)                0.2071                  NaN              2076.9300                   NaN            48349.8500                  NaN
-     GNN_Suffix_Stop                0.1872                  NaN                    NaN                   NaN                   NaN                  NaN
-             ED-LSTM                0.1841               0.0000              2081.6300                0.0000            50910.2100               0.0000
-     GNN_Suffix_time                0.1825                  NaN              2079.8477                   NaN            50822.2542                  NaN
-                BEST                0.1807               0.0000                    NaN                0.0000                   NaN               0.0000
-GNN_Suffix_time_Stop                0.1791                  NaN              2088.7438                   NaN            50519.5000                  NaN
-         SuTraN (DA)                0.1779                  NaN              2076.9600                   NaN            45421.1500                  NaN
-          GNN_Suffix                0.1739                  NaN                    NaN                   NaN                   NaN                  NaN
-     CRTP-LSTM (NDA)                0.1615                  NaN              3074.4800                   NaN            37865.1300                  NaN
-      CRTP-LSTM (DA)                0.1428                  NaN              2705.6000                   NaN            43188.1600                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean      # params
+            SEP-LSTM                0.2112              2233.2400            46810.2800    9923.0000              0.2084               2023.5400             46193.8800                0.1830               0.1635   273618.0000
+        SuTraN (NDA)                0.2064              2076.8600            48934.2000    9923.0000              0.2052               1875.0500             49053.5100                0.1567               0.1478   149619.0000
+             ED-LSTM                0.1926              2081.9900            50769.7100    9923.0000              0.1903               1880.3700             49734.4800                0.0426               0.0387   295954.0000
+GNN_Suffix_time_Stop                0.1884              2080.0353            50812.7625    9923.0000              0.1831               2066.3303             49785.7958                0.0798               0.0821    96597.0000
+                BEST                0.1807                    NaN                   NaN    9923.0000              0.1786               3785.8500             52118.4300                0.1722               0.1600           NaN
+         SuTraN (DA)                0.1778              2076.8400            45440.2900    9923.0000              0.1765               1875.0400             44856.7500                0.1388               0.1223 14712671.0000
+     CRTP-LSTM (NDA)                0.1647              3329.8300            48981.3700    9923.0000              0.1590               2990.4400             50242.3900                0.0386               0.0332   151698.0000
+      CRTP-LSTM (DA)                0.1459              3131.8700            41142.7000    9923.0000              0.1408               2760.8000             40782.3600                0.0369               0.0243 15070914.0000
 
 === Log: BPIC15_2 ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-            SEP-LSTM                0.2055               0.0031              4113.8400               95.2200            64836.4600            2177.0800
-     GNN_Suffix_time                0.2028                  NaN              3123.5435                   NaN            83432.1333                  NaN
-GNN_Suffix_time_Stop                0.1962                  NaN              3118.4867                   NaN            83632.8500                  NaN
-     GNN_Suffix_Stop                0.1945                  NaN                    NaN                   NaN                   NaN                  NaN
-                BEST                0.1913               0.0000                    NaN                0.0000                   NaN               0.0000
-          GNN_Suffix                0.1878                  NaN                    NaN                   NaN                   NaN                  NaN
-        SuTraN (NDA)                0.1827               0.0000              3118.7400                0.0000            79929.0900               0.0000
-         SuTraN (DA)                0.1771                  NaN              3118.6200                   NaN            86220.4800                  NaN
-             ED-LSTM                0.1639               0.0000              3119.5100                0.0000            83631.7100               0.0000
-     CRTP-LSTM (NDA)                0.1557                  NaN              5637.9300                   NaN            73936.2400                  NaN
-      CRTP-LSTM (DA)                0.1491                  NaN              5560.5400                   NaN            57015.4400                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean     # params
+            SEP-LSTM                0.2043              4149.1500            64395.4100    7628.0000              0.1962               3775.6800             64582.3900                0.1768               0.1655  271890.0000
+GNN_Suffix_time_Stop                0.1967              3227.4146            80596.6667    7628.0000              0.1867               3184.0677             80336.1333                0.1092               0.1001   95301.0000
+                BEST                0.1913                    NaN                   NaN    7628.0000              0.1842               6654.7000            113037.6600                0.2069               0.1901          NaN
+        SuTraN (NDA)                0.1864              3117.8800            79634.5200    7628.0000              0.1733               3003.9600             79190.7900                0.1699               0.1571  148707.0000
+         SuTraN (DA)                0.1761              3117.8500            86937.7000    7628.0000              0.1613               3003.9400             85757.5200                0.1597               0.1564 7294615.0000
+             ED-LSTM                0.1677              3118.3200            83635.7700    7628.0000              0.1570               3004.4200             83207.5600                0.0473               0.0466  294658.0000
+      CRTP-LSTM (DA)                0.1257              4801.1200            53396.0500    7628.0000              0.1193               4862.0600             52417.4600                0.0233               0.0194 7562218.0000
+     CRTP-LSTM (NDA)                0.1239              5198.4200            70897.5800    7628.0000              0.1134               5308.1100             70969.8400                0.0190               0.0172  150210.0000
 
 === Log: BPIC15_3 ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-            SEP-LSTM                0.2324               0.0059              1192.7500               13.5300            22953.7600             384.1800
-        SuTraN (NDA)                0.2263                  NaN              1077.1700                   NaN            19824.6200                  NaN
-         SuTraN (DA)                0.2254               0.0000              1077.3400                0.0000            20043.4600               0.0000
-                BEST                0.2250               0.0000                    NaN                0.0000                   NaN               0.0000
-     GNN_Suffix_time                0.2230                  NaN              1079.4742                   NaN            25454.1229                  NaN
-GNN_Suffix_time_Stop                0.2181                  NaN              1091.3020                   NaN            25059.7729                  NaN
-     GNN_Suffix_Stop                0.2018                  NaN                    NaN                   NaN                   NaN                  NaN
-          GNN_Suffix                0.2016                  NaN                    NaN                   NaN                   NaN                  NaN
-             ED-LSTM                0.1925               0.0000              1079.8300                0.0000            25409.3000               0.0000
-      CRTP-LSTM (DA)                0.1839                  NaN              1553.8400                   NaN            20131.3300                  NaN
-     CRTP-LSTM (NDA)                0.1691                  NaN              1458.6000                   NaN            20118.9100                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean      # params
+            SEP-LSTM                0.2329              1213.6000            22599.2400   10616.0000              0.2253                864.2000             20896.0700                0.2520               0.2453   272754.0000
+        SuTraN (NDA)                0.2265              1077.1100            19846.0000   10616.0000              0.2225                749.0500             18768.4600                0.2163               0.2162   149163.0000
+                BEST                0.2250                    NaN                   NaN   10616.0000              0.2191               1793.1600             30755.5400                0.2220               0.2141           NaN
+         SuTraN (DA)                0.2250              1077.2900            20040.6900   10616.0000              0.2226                749.2400             18958.7000                0.2115               0.2072 16991649.0000
+GNN_Suffix_time_Stop                0.2186              1082.3253            25353.5729   10616.0000              0.2047               1016.4569             23034.2938                0.1367               0.1361    95949.0000
+             ED-LSTM                0.1969              1077.0000            25536.7500   10616.0000              0.1877                748.9200             23220.5700                0.0942               0.0924   295306.0000
+     CRTP-LSTM (NDA)                0.1750              1525.1200            20651.2900   10616.0000              0.1702               1183.6000             19437.2000                0.0560               0.0574   150954.0000
+      CRTP-LSTM (DA)                0.1731              1679.5300            20448.0900   10616.0000              0.1730               1247.6700             19129.5800                0.0456               0.0382 17371505.0000
 
 === Log: BPIC15_4 ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-            SEP-LSTM                0.2496               0.0004              3771.5900              569.7600            67215.9500           25791.1100
-          GNN_Suffix                0.2313                  NaN                    NaN                   NaN                   NaN                  NaN
-        SuTraN (NDA)                0.2299               0.0000              2477.7700                0.0000            98062.5900               0.0000
-     GNN_Suffix_Stop                0.2295                  NaN                    NaN                   NaN                   NaN                  NaN
-     GNN_Suffix_time                0.2288                  NaN              2267.7951                   NaN            42141.0917                  NaN
-GNN_Suffix_time_Stop                0.2240                  NaN              3354.5070                   NaN            42372.5208                  NaN
-                BEST                0.2223               0.0000                    NaN                0.0000                   NaN               0.0000
-             ED-LSTM                0.2212               0.0000              2416.2000                0.0000            41175.0900               0.0000
-     CRTP-LSTM (NDA)                0.1956               0.0000              4043.5200                0.0000           105493.7400               0.0000
-      CRTP-LSTM (DA)                0.1824                  NaN              4710.0800                   NaN           104248.2800                  NaN
-         SuTraN (DA)                0.1815                  NaN              3782.0700                   NaN            65078.7600                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean     # params
+            SEP-LSTM                0.2484              3251.7300            47796.9200    7332.0000              0.2435               3047.4800             48591.2400                0.3176               0.2942  267688.0000
+        SuTraN (NDA)                0.2255              2486.0200            98507.1500    7332.0000              0.2199               2467.6200             98795.4000                0.2373               0.2235  146469.0000
+             ED-LSTM                0.2236              2408.5400            41252.1800    7332.0000              0.2177               2287.2800             41879.8400                0.0766               0.0692  290916.0000
+                BEST                0.2223                    NaN                   NaN    7332.0000              0.2143               6491.5100            128186.3700                0.2894               0.2660          NaN
+GNN_Suffix_time_Stop                0.2217              3363.2818            43058.9083    7332.0000              0.2124               3374.5682             43875.9333                0.1585               0.1504   91175.0000
+     CRTP-LSTM (NDA)                0.1984              4355.5800           113211.7400    7332.0000              0.1939               4390.0800            113975.2000                0.0506               0.0456  146548.0000
+      CRTP-LSTM (DA)                0.1850              5105.3700           123178.9700    7332.0000              0.1836               5406.9600            122627.5000                0.0430               0.0384 9131235.0000
+         SuTraN (DA)                0.1721              3642.0700            61879.3200    7332.0000              0.1672               4020.6300             62320.5900                0.2185               0.2097 8831562.0000
 
 === Log: BPIC15_5 ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-            SEP-LSTM                0.2054               0.0046              2507.7700               63.0600            47744.7200             799.3200
-     GNN_Suffix_Stop                0.1911                  NaN                    NaN                   NaN                   NaN                  NaN
-        SuTraN (NDA)                0.1899                  NaN              2200.8100                   NaN            46504.9200                  NaN
-GNN_Suffix_time_Stop                0.1895                  NaN              2217.0216                   NaN            47571.8000                  NaN
-                BEST                0.1881                  NaN                    NaN                   NaN                   NaN                  NaN
-          GNN_Suffix                0.1878                  NaN                    NaN                   NaN                   NaN                  NaN
-     GNN_Suffix_time                0.1876                  NaN              2273.6938                   NaN            46284.7750                  NaN
-             ED-LSTM                0.1724                  NaN              2461.9900                   NaN            45363.7300                  NaN
-         SuTraN (DA)                0.1723                  NaN              3008.7100                   NaN            44964.8200                  NaN
-     CRTP-LSTM (NDA)                0.1447                  NaN              3440.6300                   NaN            53353.9800                  NaN
-      CRTP-LSTM (DA)                0.1336                  NaN              3160.4100                   NaN            48580.6000                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean      # params
+            SEP-LSTM                0.1972              2416.6500            47633.9600    9966.0000              0.1902               2230.7200             47391.9900                0.2511               0.2346   270423.0000
+GNN_Suffix_time_Stop                0.1909              2220.5401            47179.4208    9966.0000              0.1844               2180.0478             47176.7458                0.2153               0.1962    93710.0000
+        SuTraN (NDA)                0.1891              2206.7300            46440.8200    9966.0000              0.1878               1975.7000             45937.0900                0.1988               0.1869   147916.0000
+                BEST                0.1881                    NaN                   NaN    9966.0000              0.1818               4413.8400             75823.2000                0.2301               0.2146           NaN
+         SuTraN (DA)                0.1731              2906.2500            44816.0200    9966.0000              0.1696               2883.2900             44954.6200                0.1671               0.1451 13312400.0000
+             ED-LSTM                0.1706              2555.0500            45069.3100    9966.0000              0.1660               2365.7400             44964.8900                0.1124               0.1036   293259.0000
+      CRTP-LSTM (DA)                0.1439              3305.8300            50681.2000    9966.0000              0.1362               3146.3500             50925.8200                0.0319               0.0237 13673850.0000
+     CRTP-LSTM (NDA)                0.1364              2785.7100            45877.6500    9966.0000              0.1335               2617.3900             45295.0000                0.0554               0.0438   148923.0000
 
 === Log: BPI_Challenge_2012_A ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-          GNN_Suffix                0.7388                  NaN                    NaN                   NaN                   NaN                  NaN
-     GNN_Suffix_Stop                0.7240                  NaN                    NaN                   NaN                   NaN                  NaN
-GNN_Suffix_time_Stop                0.7210                  NaN              2194.5378                   NaN             5810.5562                  NaN
-     GNN_Suffix_time                0.7210                  NaN              2195.9753                   NaN             5858.8760                  NaN
-     CRTP-LSTM (NDA)                0.7159                  NaN              2062.6500                   NaN             5934.3000                  NaN
-            SEP-LSTM                0.7093               0.0392              1855.4300               50.8700             7525.4300            2439.6700
-         SuTraN (DA)                0.7011                  NaN              2012.2300                   NaN             5958.0700                  NaN
-                BEST                0.6833                  NaN                    NaN                   NaN                   NaN                  NaN
-             ED-LSTM                0.6833                  NaN              1994.6100                   NaN            10562.6500                  NaN
-        SuTraN (NDA)                0.6829                  NaN              2006.0500                   NaN             6110.5700                  NaN
-      CRTP-LSTM (DA)                0.6387                  NaN              2613.9900                   NaN             6333.3200                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean     # params
+     CRTP-LSTM (NDA)                0.7387              2053.2500             5945.4700    1289.0000              1.0000                100.5300                92.5800                1.0000               1.0000   95679.0000
+            SEP-LSTM                0.7370              1918.5700             5914.4700    1289.0000              1.0000                  0.0000                 0.0000                1.0000               1.0000  207579.0000
+GNN_Suffix_time_Stop                0.7200              2195.0865             5800.7312    1289.0000              1.0000                511.7780               200.4471                1.0000               1.0000   32018.0000
+         SuTraN (DA)                0.7011              2008.0900             5953.7600    1289.0000              0.7688                  1.7400                17.1000                0.5376               0.4566 2794285.0000
+             ED-LSTM                0.6833              1993.8100            10558.4800    1289.0000              1.0000                  3.1800                 3.3900                1.0000               1.0000  238479.0000
+        SuTraN (NDA)                0.6833              2002.7800             6108.6500    1289.0000              1.0000                  0.3600                 1.6200                1.0000               1.0000  120016.0000
+                BEST                0.6833                    NaN                   NaN    1289.0000              1.0000                930.2700              1860.5400                1.0000               1.0000          NaN
+      CRTP-LSTM (DA)                0.6373              2520.8200             6385.1800    1289.0000              0.8340               1110.6300              1157.3700                0.6680               0.5850 2869580.0000
 
 === Log: BPI_Challenge_2012_O ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-            SEP-LSTM                0.7292               0.0002              2681.1400                6.9400             6695.2400              15.4400
-             ED-LSTM                0.7286                  NaN              2813.9100                   NaN             6895.1300                  NaN
-        SuTraN (NDA)                0.7286                  NaN              2811.4700                   NaN             7727.7700                  NaN
-     GNN_Suffix_time                0.7277                  NaN              2541.9005                   NaN             6747.5766                  NaN
-GNN_Suffix_time_Stop                0.7245                  NaN              2601.3604                   NaN             6714.6078                  NaN
-     CRTP-LSTM (NDA)                0.7244                  NaN              3068.3400                   NaN             7533.7300                  NaN
-                BEST                0.7189                  NaN                    NaN                   NaN                   NaN                  NaN
-         SuTraN (DA)                0.7177                  NaN              2986.1300                   NaN             8512.2400                  NaN
-          GNN_Suffix                0.7167                  NaN                    NaN                   NaN                   NaN                  NaN
-     GNN_Suffix_Stop                0.7126                  NaN                    NaN                   NaN                   NaN                  NaN
-      CRTP-LSTM (DA)                0.5783                  NaN              4478.2600                   NaN             9129.2800                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean    # params
+            SEP-LSTM                0.7288              2714.7200             6736.6000     532.0000              0.7440               3185.7400              8978.7900                0.9173               0.9018 206850.0000
+             ED-LSTM                0.7287              2809.3900             6883.9500     532.0000              0.7400               2954.3100              8795.6100                0.9173               0.8957 237746.0000
+        SuTraN (NDA)                0.7285              2800.6800             7684.8900     532.0000              0.7414               2967.6200             10718.1700                0.9211               0.8992 119827.0000
+     CRTP-LSTM (NDA)                0.7246              3047.3100             7482.2500     532.0000              0.7266               3783.1300             10381.6900                0.9023               0.8936  95090.0000
+GNN_Suffix_time_Stop                0.7243              2571.4716             6709.8807     532.0000              0.7353               2430.2562              8683.8146                0.9135               0.8965  31093.0000
+                BEST                0.7189                    NaN                   NaN     532.0000              0.7382               4304.4200             10084.6500                0.9154               0.8937         NaN
+         SuTraN (DA)                0.7177              2987.5200             8541.5300     532.0000              0.7256               3519.4800             12003.4500                0.8985               0.8668 626957.0000
+      CRTP-LSTM (DA)                0.5496              4448.2200             9711.8400     532.0000              0.5406               3897.3200              9386.1600                0.5244               0.6384 660108.0000
 
 === Log: BPI_Challenge_2012_W ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-             ED-LSTM                0.2967                  NaN               978.7700                   NaN            11991.0100                  NaN
-     CRTP-LSTM (NDA)                0.2713                  NaN              1097.2200                   NaN             8185.2200                  NaN
-GNN_Suffix_time_Stop                0.2615                  NaN               892.6210                   NaN            10190.3490                  NaN
-      CRTP-LSTM (DA)                0.2515                  NaN              1125.8200                   NaN             9265.4000                  NaN
-            SEP-LSTM                0.2295               0.0232               971.1300                5.5700            15122.5800             872.1200
-     GNN_Suffix_Stop                0.2223                  NaN                    NaN                   NaN                   NaN                  NaN
-         SuTraN (DA)                0.2157                  NaN               871.0100                   NaN             8885.0400                  NaN
-     GNN_Suffix_time                0.1636                  NaN               895.4817                   NaN            11170.9917                  NaN
-        SuTraN (NDA)                0.1627                  NaN               921.1600                   NaN             7854.1800                  NaN
-                BEST                0.1604                  NaN                    NaN                   NaN                   NaN                  NaN
-          GNN_Suffix                0.1471                  NaN                    NaN                   NaN                   NaN                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean     # params
+             ED-LSTM                0.3033               976.0600            11584.4000      17.0000              0.3985                110.2100              2031.9600                0.8824               0.9314  237746.0000
+     CRTP-LSTM (NDA)                0.2687              1089.8700             8061.9300      17.0000              0.2751                217.4000              3565.8300                0.0588               0.0882   95090.0000
+      CRTP-LSTM (DA)                0.2564              1025.8400             8991.9200      17.0000              0.1683                288.0400              3195.0100                0.1176               0.1631 1733046.0000
+GNN_Suffix_time_Stop                0.2551               891.7299            10765.8625      17.0000              0.2307                140.7803              1575.7199                0.4706               0.5000   31093.0000
+            SEP-LSTM                0.2507              1001.4800            14905.4600      17.0000              0.1548                 82.6400              2307.8800                1.0000               1.0000  206850.0000
+         SuTraN (DA)                0.2211               871.6400             8824.7300      17.0000              0.0715                 77.2700              1693.7400                0.0000               0.0000 1674263.0000
+        SuTraN (NDA)                0.1633               921.2100             7866.4600      17.0000              0.1005                 77.5700              2172.4500                0.2941               0.2167  119827.0000
+                BEST                0.1604                    NaN                   NaN      17.0000              0.1588                974.8300             61408.8600                1.0000               1.0000          NaN
 
 === Log: DomesticDeclarations ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-         SuTraN (DA)                0.9611                  NaN              2129.1300                   NaN             4838.5700                  NaN
-                BEST                0.9528                  NaN                    NaN                   NaN                   NaN                  NaN
-            SEP-LSTM                0.9527               0.0000              2122.5200                4.3300             5438.4000              74.9200
-             ED-LSTM                0.9526                  NaN              2114.0300                   NaN             5497.2100                  NaN
-        SuTraN (NDA)                0.9525                  NaN              2114.0300                   NaN             4924.3800                  NaN
-GNN_Suffix_time_Stop                0.9524                  NaN              2203.9979                   NaN             6201.6974                  NaN
-     GNN_Suffix_time                0.9523                  NaN              2212.5656                   NaN             6138.5411                  NaN
-     CRTP-LSTM (NDA)                0.9520                  NaN              2195.6600                   NaN             4929.2200                  NaN
-     GNN_Suffix_Stop                0.9230                  NaN                    NaN                   NaN                   NaN                  NaN
-          GNN_Suffix                0.9230                  NaN                    NaN                   NaN                   NaN                  NaN
-      CRTP-LSTM (DA)                0.8697                  NaN              2612.1900                   NaN             5260.6900                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean      # params
+         SuTraN (DA)                0.9606              2147.5900             4803.1200       0.0000                 NaN                     NaN                    NaN                   NaN                  NaN 29232464.0000
+            SEP-LSTM                0.9528              2112.8500             5477.0800       0.0000                 NaN                     NaN                    NaN                   NaN                  NaN   209055.0000
+                BEST                0.9528                    NaN                   NaN       0.0000                 NaN                     NaN                    NaN                   NaN                  NaN           NaN
+GNN_Suffix_time_Stop                0.9527              2206.1500             6279.4453       0.0000                 NaN                     NaN                    NaN                   NaN                  NaN    33886.0000
+             ED-LSTM                0.9526              2113.3400             5487.7800       0.0000                 NaN                     NaN                    NaN                   NaN                  NaN   239963.0000
+        SuTraN (NDA)                0.9525              2112.7700             4921.6300       0.0000                 NaN                     NaN                    NaN                   NaN                  NaN   120412.0000
+     CRTP-LSTM (NDA)                0.9518              2195.0800             4921.5900       0.0000                 NaN                     NaN                    NaN                   NaN                  NaN    96875.0000
+      CRTP-LSTM (DA)                0.9058              2561.5800             5158.7300       0.0000                 NaN                     NaN                    NaN                   NaN                  NaN 29524898.0000
 
 === Log: Hospital_Billing ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-         SuTraN (DA)                0.9530                  NaN             17995.1600                   NaN            44521.8400                  NaN
-      CRTP-LSTM (DA)                0.9500                  NaN             17620.9900                   NaN            39607.1600                  NaN
-            SEP-LSTM                0.8545                  NaN             17166.0400                   NaN            41678.2200                  NaN
-             ED-LSTM                0.8543                  NaN             17998.5500                   NaN            44760.1200                  NaN
-     CRTP-LSTM (NDA)                0.8530                  NaN             17834.5700                   NaN            43100.4000                  NaN
-                BEST                0.8521                  NaN                    NaN                   NaN                   NaN                  NaN
-        SuTraN (NDA)                0.8507                  NaN             17897.8700                   NaN            44662.0600                  NaN
-GNN_Suffix_time_Stop                0.8429                  NaN             15805.8448                   NaN            39569.0917                  NaN
-     GNN_Suffix_time                0.8418                  NaN             16082.3812                   NaN            39761.0333                  NaN
-     GNN_Suffix_Stop                0.8411                  NaN                    NaN                   NaN                   NaN                  NaN
-          GNN_Suffix                0.8406                  NaN                    NaN                   NaN                   NaN                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean    # params
+         SuTraN (DA)                0.9525             17982.8600            44510.4700      48.0000              0.7979              10554.3200             32953.2900                0.7708               0.7370 297485.0000
+      CRTP-LSTM (DA)                0.9493             18436.3800            42465.1300      48.0000              0.8795              11630.0400             35496.5000                0.8750               0.8655 342715.0000
+             ED-LSTM                0.8543             17987.4700            44790.4600      48.0000              0.7786              10609.7900             34717.9400                0.6875               0.5997 240109.0000
+GNN_Suffix_time_Stop                0.8540             15842.2750            39824.1792      48.0000              0.8546              17191.1646             35669.9042                0.8333               0.8132  34032.0000
+            SEP-LSTM                0.8537             17362.4400            42228.7600      48.0000              0.8165               9492.2300             33202.4900                0.7917               0.8048 209273.0000
+                BEST                0.8521                    NaN                   NaN      48.0000              0.8442              15972.1700             34769.3900                0.8125               0.8326         NaN
+        SuTraN (NDA)                0.8508             17904.7500            44618.4700      48.0000              0.7605              12838.6000             31309.0900                0.6667               0.5825 120494.0000
+     CRTP-LSTM (NDA)                0.8504             18079.3600            43545.5400      48.0000              0.7820              11355.5200             35971.1200                0.7083               0.6723  97053.0000
 
 === Log: InternationalDeclarations ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-            SEP-LSTM                0.9159               0.0000              4463.9800                0.0000            16074.7800               0.0000
-        SuTraN (NDA)                0.9151                  NaN              4738.1600                   NaN            15044.8400                  NaN
-     GNN_Suffix_time                0.9109                  NaN              4328.6440                   NaN            17735.6708                  NaN
-GNN_Suffix_time_Stop                0.9105                  NaN              4372.0750                   NaN            18519.2812                  NaN
-             ED-LSTM                0.9085                  NaN              4685.1200                   NaN            15462.8600                  NaN
-     CRTP-LSTM (NDA)                0.9065                  NaN              5269.1400                   NaN            15346.6900                  NaN
-                BEST                0.9033                  NaN                    NaN                   NaN                   NaN                  NaN
-          GNN_Suffix                0.9011                  NaN                    NaN                   NaN                   NaN                  NaN
-     GNN_Suffix_Stop                0.8945                  NaN                    NaN                   NaN                   NaN                  NaN
-         SuTraN (DA)                0.8728                  NaN              4676.9800                   NaN            18092.5000                  NaN
-      CRTP-LSTM (DA)                0.6721                  NaN              6126.8400                   NaN            18681.9000                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean      # params
+            SEP-LSTM                0.9158              4454.5900            15873.2700     131.0000              0.9293               3586.5600             19529.0100                0.9084               0.8668   212210.0000
+        SuTraN (NDA)                0.9152              4738.4300            14914.3400     131.0000              0.9282               3684.3400             17709.8100                0.9008               0.8595   121403.0000
+GNN_Suffix_time_Stop                0.9101              4352.1047            18631.3792     131.0000              0.9056               4118.1388             20953.6854                0.9084               0.8668    37341.0000
+             ED-LSTM                0.9085              4697.3800            15408.3700     131.0000              0.9283               3628.5300             18387.1200                0.9084               0.8668   242842.0000
+     CRTP-LSTM (NDA)                0.9067              5125.9600            15056.9100     131.0000              0.9267               4299.0200             16736.4000                0.9084               0.8668    99804.0000
+                BEST                0.9033                    NaN                   NaN     131.0000              0.8526               6528.8200             26070.5400                0.6565               0.5300           NaN
+         SuTraN (DA)                0.8734              4698.3000            18516.1700     131.0000              0.7866               4192.0400             20301.5900                0.4504               0.2893 27236564.0000
+      CRTP-LSTM (DA)                0.6732              5438.8100            20552.9200     131.0000              0.7332               4615.3300             23123.1300                0.2901               0.3390 27713855.0000
 
 === Log: PrepaidTravelCost ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-            SEP-LSTM                0.9164               0.0006              3148.0600               27.4900             8695.8600             120.6400
-                BEST                0.9126                  NaN                    NaN                   NaN                   NaN                  NaN
-        SuTraN (NDA)                0.9106                  NaN              3162.1600                   NaN             8499.6200                  NaN
-     CRTP-LSTM (NDA)                0.9096                  NaN              3459.3200                   NaN             8707.6500                  NaN
-     GNN_Suffix_time                0.9032                  NaN              2925.4443                   NaN             9732.5729                  NaN
-GNN_Suffix_time_Stop                0.9028                  NaN              2924.9919                   NaN            10243.9146                  NaN
-         SuTraN (DA)                0.8963                  NaN              3237.3400                   NaN             9113.9900                  NaN
-     GNN_Suffix_Stop                0.8933                  NaN                    NaN                   NaN                   NaN                  NaN
-          GNN_Suffix                0.8906                  NaN                    NaN                   NaN                   NaN                  NaN
-             ED-LSTM                0.8711                  NaN              3307.3000                   NaN             9429.8300                  NaN
-      CRTP-LSTM (DA)                0.6802                  NaN              4531.3800                   NaN            12328.3900                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean     # params
+            SEP-LSTM                0.9172              3156.1300             8614.7700      17.0000              0.9559               1492.2600              3213.7700                0.8235               0.7468  211762.0000
+                BEST                0.9126                    NaN                   NaN      17.0000              0.9853               2047.9200              4712.0200                0.9412               0.9438          NaN
+     CRTP-LSTM (NDA)                0.9125              3344.8400             8710.3900      17.0000              0.9559               1513.1500              3862.6100                0.8235               0.7468   99082.0000
+        SuTraN (NDA)                0.9106              3163.6800             8497.0700      17.0000              0.9412               1687.8300              3446.0600                0.8235               0.7468  121227.0000
+GNN_Suffix_time_Stop                0.9046              2937.2388             9927.2531      17.0000              0.9559               1769.9983              3855.4880                0.8235               0.7468   37037.0000
+         SuTraN (DA)                0.8967              3241.0300             9108.5300      17.0000              0.9412               1804.2000              3846.6000                0.8235               0.7468 3763107.0000
+             ED-LSTM                0.8704              3308.7300             9416.2500      17.0000              0.9412               1664.8900              3895.5800                0.8235               0.7468  242538.0000
+      CRTP-LSTM (DA)                0.6856              4007.0900            10412.7200      17.0000              0.3529               2772.2800              6438.6900                0.0000               0.0000 3968229.0000
 
 === Log: RequestForPayment ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-         SuTraN (DA)                0.9626                  NaN              2485.0700                   NaN             5657.0600                  NaN
-        SuTraN (NDA)                0.9392                  NaN              2505.3000                   NaN             5898.7100                  NaN
-GNN_Suffix_time_Stop                0.9392                  NaN              2523.0263                   NaN             6793.4328                  NaN
-                BEST                0.9381                  NaN                    NaN                   NaN                   NaN                  NaN
-            SEP-LSTM                0.9379               0.0000              2503.3200               32.7000             6634.6100              97.4000
-     GNN_Suffix_time                0.9378                  NaN              2573.4406                   NaN             7064.8068                  NaN
-             ED-LSTM                0.9374                  NaN              2511.7400                   NaN             6578.1000                  NaN
-     CRTP-LSTM (NDA)                0.9373                  NaN              2566.1000                   NaN             5912.4300                  NaN
-     GNN_Suffix_Stop                0.9117                  NaN                    NaN                   NaN                   NaN                  NaN
-          GNN_Suffix                0.9102                  NaN                    NaN                   NaN                   NaN                  NaN
-      CRTP-LSTM (DA)                0.8379                  NaN              2976.2700                   NaN             6352.8600                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean      # params
+         SuTraN (DA)                0.9626              2481.9600             5655.1200       8.0000              1.0000                714.7300              1621.7700                1.0000               1.0000 15515104.0000
+GNN_Suffix_time_Stop                0.9396              2637.2456             7494.3891       8.0000              1.0000                795.2633              1550.2979                1.0000               1.0000    33959.0000
+        SuTraN (NDA)                0.9392              2503.3500             5892.8600       8.0000              1.0000                769.2200              1607.2800                1.0000               1.0000   120453.0000
+             ED-LSTM                0.9387              2505.9800             6613.6200       8.0000              1.0000                758.3000              1516.6000                1.0000               1.0000   240036.0000
+                BEST                0.9381                    NaN                   NaN       8.0000              1.0000               1189.9900              2379.9700                1.0000               1.0000           NaN
+            SEP-LSTM                0.9379              2499.8500             6669.5500       8.0000              1.0000                851.2900              1649.6300                1.0000               1.0000   209164.0000
+     CRTP-LSTM (NDA)                0.9373              2579.2900             5894.1500       8.0000              1.0000                773.9800              1544.3500                1.0000               1.0000    96964.0000
+      CRTP-LSTM (DA)                0.8550              2866.6700             6540.8900       8.0000              0.8750               1721.0100              3442.0200                0.7500               0.8571 15769897.0000
 
 === Log: Road_Traffic_Fine_Management_Process ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-         SuTraN (DA)                0.8114                  NaN             83552.1800                   NaN           265846.8300                  NaN
-             ED-LSTM                0.8097                  NaN             82591.2400                   NaN           298905.3300                  NaN
-        SuTraN (NDA)                0.8091                  NaN             82203.3200                   NaN           266437.9700                  NaN
-          GNN_Suffix                0.8090                  NaN                    NaN                   NaN                   NaN                  NaN
-                BEST                0.8090                  NaN                    NaN                   NaN                   NaN                  NaN
-     CRTP-LSTM (NDA)                0.8077                  NaN             89431.9800                   NaN           269034.0300                  NaN
-      CRTP-LSTM (DA)                0.8073                  NaN            100318.0700                   NaN           260923.3000                  NaN
-            SEP-LSTM                0.8051                  NaN             84084.8700                   NaN           300014.1300                  NaN
-GNN_Suffix_time_Stop                0.7987                  NaN            102692.8583                   NaN           262554.6500                  NaN
-     GNN_Suffix_Stop                0.7978                  NaN                    NaN                   NaN                   NaN                  NaN
-     GNN_Suffix_time                0.7922                  NaN            134624.8250                   NaN           283447.9333                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean    # params
+         SuTraN (DA)                0.8113             83651.5900           265790.2000    2679.0000              0.9419              52584.3100            175018.7200                0.9694               0.9622 125657.0000
+             ED-LSTM                0.8096             82571.3200           298858.6700    2679.0000              0.9380              55302.0600            182449.5300                0.9660               0.9607 238550.0000
+        SuTraN (NDA)                0.8093             82210.8200           266459.4500    2679.0000              0.9395              54005.5200            184649.7700                0.9686               0.9617 120055.0000
+                BEST                0.8090                    NaN                   NaN    2679.0000              0.9395             104592.8800            252758.0500                0.9694               0.9625         NaN
+     CRTP-LSTM (NDA)                0.8087             89102.3800           264908.9300    2679.0000              0.9073              59239.9600            185458.0800                0.9044               0.9261  95766.0000
+      CRTP-LSTM (DA)                0.8066             99889.2600           270408.2500    2679.0000              0.8988              67345.2400            193721.5800                0.8973               0.9251 119261.0000
+            SEP-LSTM                0.8060             83806.1700           297306.6300    2679.0000              0.9004              66018.3200            190688.6100                0.8910               0.9181 207686.0000
+GNN_Suffix_time_Stop                0.7986            103169.6833           262482.4333    2679.0000              0.9395              91517.1000            183638.4167                0.9694               0.9621  32089.0000
 
 === Log: Sepsis ===
-               Model  DL similarity ↑ mean  DL similarity ↑ std  MAE TTNE (min) ↓ mean  MAE TTNE (min) ↓ std  MAE RRT (min) ↓ mean  MAE RRT (min) ↓ std
-            SEP-LSTM                0.5125                  NaN              2883.2100                   NaN            24000.3500                  NaN
-GNN_Suffix_time_Stop                0.5095                  NaN              2939.8727                   NaN            22296.5688                  NaN
-      CRTP-LSTM (DA)                0.4960                  NaN              3214.8700                   NaN            20927.6600                  NaN
-     GNN_Suffix_time                0.4896                  NaN              3050.2560                   NaN            22365.7458                  NaN
-          GNN_Suffix                0.4758                  NaN                    NaN                   NaN                   NaN                  NaN
-     GNN_Suffix_Stop                0.4546                  NaN                    NaN                   NaN                   NaN                  NaN
-                BEST                0.4488                  NaN                    NaN                   NaN                   NaN                  NaN
-         SuTraN (DA)                0.4114                  NaN              2934.0700                   NaN            20968.8200                  NaN
-     CRTP-LSTM (NDA)                0.3967                  NaN              3104.6600                   NaN            21821.4200                  NaN
-        SuTraN (NDA)                0.3620                  NaN              2909.1500                   NaN            21572.6200                  NaN
-             ED-LSTM                0.1178                  NaN              2868.6100                   NaN            22241.7700                  NaN
+               Model  DL similarity ↑ mean  MAE TTNE (min) ↓ mean  MAE RRT (min) ↓ mean  Conc N mean  Conc DL sim ↑ mean  Conc TTNE (min) ↓ mean  Conc RRT (min) ↓ mean  Conc next acc ↑ mean  Conc next F1 ↑ mean    # params
+      CRTP-LSTM (DA)                0.4960              3214.8700            20927.6600     794.0000              0.4464               4313.5600             23933.8900                0.3841               0.3699 135541.0000
+GNN_Suffix_time_Stop                0.4938              2936.6745            22453.9083     794.0000              0.4398               3435.9424             25727.7312                0.5227               0.5077  33886.0000
+            SEP-LSTM                0.4640              2895.5100            25312.5800     794.0000              0.3967               3888.0700             28760.9700                0.6083               0.5883 209055.0000
+                BEST                0.4488                    NaN                   NaN     794.0000              0.4037               5527.9600             46146.2200                0.5315               0.5096         NaN
+         SuTraN (DA)                0.4114              2934.0700            20968.8200     794.0000              0.2989               3966.3800             24518.8800                0.3111               0.2536 127244.0000
+     CRTP-LSTM (NDA)                0.3420              2980.9100            21716.5000     794.0000              0.2855               4087.5100             24836.1700                0.2846               0.2079  96875.0000
+        SuTraN (NDA)                0.3309              2915.5400            21569.7300     794.0000              0.2376               3975.1200             24606.2000                0.4144               0.3500 120412.0000
+             ED-LSTM                0.1670              2904.3400            29994.7000     794.0000              0.1559               3951.1300             31353.9400                0.2406               0.1566 239963.0000

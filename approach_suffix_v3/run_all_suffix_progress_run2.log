@@ -1,0 +1,53 @@
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=BPIC15_1
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=BPIC15_2
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=BPIC15_3
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=BPIC15_5
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=BPIC15_4
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=RequestForPayment
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=Sepsis
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=DomesticDeclarations
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=PrepaidTravelCost
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_A
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_O
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_W
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=Road_Traffic_Fine_Management_Process
+[2026-05-25 12:20:18] RUNNING | model=SEP_LSTM | log=Hospital_Billing
+[2026-05-25 12:21:35] ERROR | model=SEP_LSTM | log=BPI_Challenge_2012_W
+    Traceback (most recent call last):
+      File "/app/approach_suffix_v3/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/approach_suffix_v3/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-05-25 12:26:07] DONE | model=SEP_LSTM | log=Sepsis
+[2026-05-25 12:27:16] DONE | model=SEP_LSTM | log=PrepaidTravelCost
+[2026-05-25 12:33:28] DONE | model=SEP_LSTM | log=BPIC15_2
+[2026-05-25 12:34:12] ERROR | model=SEP_LSTM | log=RequestForPayment
+    Traceback (most recent call last):
+      File "/app/approach_suffix_v3/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/approach_suffix_v3/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-05-25 12:34:12] ERROR | model=SEP_LSTM | log=DomesticDeclarations
+    Traceback (most recent call last):
+      File "/app/approach_suffix_v3/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/approach_suffix_v3/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-05-25 12:34:12] ERROR | model=SEP_LSTM | log=BPI_Challenge_2012_A
+    Traceback (most recent call last):
+      File "/app/approach_suffix_v3/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/approach_suffix_v3/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-05-25 12:34:12] ERROR | model=SEP_LSTM | log=BPI_Challenge_2012_O
+    Traceback (most recent call last):
+      File "/app/approach_suffix_v3/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/approach_suffix_v3/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)

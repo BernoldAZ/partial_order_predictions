@@ -263,6 +263,19 @@ def inference_loop(model,
 
         val_loss_avg = (torch.sum(val_loss) / val_loss.shape[0]).item()
 
+        if results_path:
+            subfolder_path = results_path
+            dam_lev_sim_path = os.path.join(subfolder_path, 'dam_lev_similarity.pt')
+            torch.save(dam_lev_similarity, dam_lev_sim_path)
+            MAE_rrt_minutes_path = os.path.join(subfolder_path, 'MAE_rrt_minutes.pt')
+            torch.save(MAE_rrt_minutes, MAE_rrt_minutes_path)
+            # Per-instance TTNE MAE: split flat tensor by suffix length, then mean per instance
+            per_inst_ttne_min = torch.stack([
+                chunk.mean()
+                for chunk in torch.split(MAE_ttne_seconds_global, suf_len_global.tolist())
+            ]) / 60.0
+            torch.save(per_inst_ttne_min, os.path.join(subfolder_path, 'MAE_ttne_minutes.pt'))
+
     return_list = [avg_dam_lev, percentage_too_early, percentage_too_late]
     return_list += [percentage_correct, mean_absolute_length_diff, mean_too_early, mean_too_late]
 
