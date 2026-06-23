@@ -8,6 +8,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import os
 import pickle
 import time
+import networkx as nx
 
 
 
@@ -74,7 +75,60 @@ def load_checkpoint(model, path_to_checkpoint, train_or_eval, lr):
         
     return model, optimizer, final_epoch_trained, final_loss
 
-def train_eval(log_name, 
+
+def _build_suffix_graph(acts, nb_bits):
+    """Build a NetworkX DiGraph for a suffix.
+
+    Mirrors the prefix graph edge structure:
+      - intra-block: pairwise bidirectional edges between concurrent events
+      - inter-block: all events in block_i -> all events in block_{i+1}
+
+    Position 0 always starts block 0; nb_bits[i] for i >= 1 determines
+    whether event i starts a new block (True) or is concurrent with the
+    previous event (False).
+    """
+    n = len(acts)
+    G = nx.DiGraph()
+    if n == 0:
+        return G
+    for i in range(n):
+        G.add_node(i, act=int(acts[i]))
+    blocks = [[0]]
+    for i in range(1, n):
+        if nb_bits[i]:
+            blocks.append([i])
+        else:
+            blocks[-1].append(i)
+    for block in blocks:
+        for u in block:
+            for v in block:
+                if u != v:
+                    G.add_edge(u, v)
+    for bi in range(len(blocks) - 1):
+        for u in blocks[bi]:
+            for v in blocks[bi + 1]:
+                G.add_edge(u, v)
+    return G
+
+
+def _node_match(n1, n2):
+    return n1['act'] == n2['act']
+
+
+def _graph_edit_similarity(G_pred, G_true):
+    """GES = 1 - GED / max(|V|+|E|) using a fast greedy upper bound."""
+    np_n, np_e = G_pred.number_of_nodes(), G_pred.number_of_edges()
+    nt_n, nt_e = G_true.number_of_nodes(), G_true.number_of_edges()
+    if np_n == 0 and nt_n == 0:
+        return 1.0
+    if np_n == 0 or nt_n == 0:
+        return 0.0
+    denom = (np_n + np_e) + (nt_n + nt_e)
+    ged = next(nx.optimize_graph_edit_distance(G_pred, G_true, node_match=_node_match))
+    return 1.0 - ged / denom
+
+
+def train_eval(log_name,
                tss_index):
     """Training and automatically evaluating the SEP-LSTM benchmark 
     model with the parameters used in the SuTraN paper. 
@@ -383,6 +437,31 @@ def train_eval(log_name,
         'conc_rrt_mae_minutes':      (round(conc_rrt,  6) if conc_rrt  is not None else ''),
         'conc_next_act_accuracy':    (round(conc_acc,  6) if conc_acc  is not None else ''),
         'conc_next_act_f1_weighted': (round(conc_f1,   6) if conc_f1   is not None else ''),
+    })
+    _nb_labels = torch.load(
+        os.path.join('results_per_log', log_name, 'test_new_block_labels.pt'))
+    end_tok = num_activities - 1
+    _W = _acts.shape[1]
+    _ges_vals = []
+    _conc_ges_vals = []
+    for _i in range(len(_acts)):
+        _end_pos = (_acts[_i] == end_tok).nonzero(as_tuple=True)[0]
+        _pl = int(_end_pos[0]) if len(_end_pos) > 0 else _W
+        _end_lbl_pos = (_act_lbl[_i] == end_tok).nonzero(as_tuple=True)[0]
+        _al = int(_end_lbl_pos[0])
+        _G_pred = _build_suffix_graph(_acts[_i, :_pl].tolist(), [True] * _pl)
+        _G_true = _build_suffix_graph(
+            _act_lbl[_i, :_al].tolist(),
+            (_nb_labels[_i, :_al] > 0.5).tolist())
+        _sim = _graph_edit_similarity(_G_pred, _G_true)
+        _ges_vals.append(_sim)
+        if bool(_conc[_i]):
+            _conc_ges_vals.append(_sim)
+    ges = sum(_ges_vals) / len(_ges_vals) if _ges_vals else 1.0
+    conc_ges = sum(_conc_ges_vals) / len(_conc_ges_vals) if _conc_ges_vals else None
+    avg_results_dict.update({
+        'ges_approx':      round(ges, 6),
+        'conc_ges_approx': (round(conc_ges, 6) if conc_ges is not None else ''),
     })
     path_name_average_results = os.path.join(results_path, 'averaged_results.pkl')
 

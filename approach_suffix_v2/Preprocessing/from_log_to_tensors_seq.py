@@ -1,269 +1,293 @@
-"""Sequential preprocessing pipeline for suffix prediction.
+"""Sequential preprocessing pipeline.
 
-Drop-in companion to from_log_to_tensors.py and from_log_to_tensors_graph.py.
-Identical outer structure (sort → train/test split → window filter →
-train/val split → time columns → pair building → normalization → tensors),
-but prefixes are represented as lightweight (act, log_dt, conc) sequences
-rather than padded SuTraN tensors or PyG graphs.
+Produces padded prefix sequence tensors instead of PyG graphs.
+The prefix is flattened into a temporal sequence of events; each event carries:
+  - activity label  (int64, shifted +1, 0 = padding)
+  - ts_start        (float32, normalised)
+  - ts_prev         (float32, normalised)
+  - new_block_flag  (float32, 1.0 = first event of a new timestamp block, 0.0 = concurrent)
 
-Token convention
-----------------
-  0        = PAD  (prefix padding, suffix padding)
-  1..N     = activity classes (1-indexed)
-  N+1      = OOV  (unseen test activities)
-  N+2      = EOS  (end-of-sequence marker appended to every suffix)
-  num_classes = N+3
+All prefixes are padded to window_size (matching the suffix padding, same as the baselines).
+Prefixes longer than window_size are truncated to the last window_size events.
+Suffix tensors are identical to the graph pipeline.
 
-Pair generation
----------------
-For a case of length T, prefix lengths 1..T are generated (matching the
-graph pipeline). The full-case prefix (length T) produces a suffix
-containing only the EOS token.
+Public entry point: log_to_sequences()
 
-Returns
--------
-train_data, val_data, test_data : list of dict
-stats : dict
-conc_mask : BoolTensor
-counts : dict
+Returned dicts (one per split) contain:
+  prefix_act       (N, P)    int64
+  prefix_num       (N, P, 2) float32  [ts_start, ts_prev]
+  prefix_nb        (N, P)    float32
+  last_prefix_num  (N, 2)    float32  [ts_start, ts_prev] of last prefix event
+  prefix_len       (N,)      int64    actual (unpadded) prefix length
+  suffix_act       (N, W)    int64    shifted +1, 0 = pad
+  suffix_num       (N, W, 2) float32  -1 = pad
+  ttnext_label     (N, W)    float32  -100 = pad
+  rtime_label      (N, W)    float32  -100 = pad
+  act_label_seq    (N, W)    int64    incl. END token, 0 = pad
+  new_block_label  (N, W)    float32  0 = pad
 """
 
-import math
+import os
+import pickle
 
 import numpy as np
-import pandas as pd
 import torch
 
-from Preprocessing.create_benchmarks import remainTimeOrClassifBenchmark
-from Preprocessing.dataframes_pipeline import (
-    create_numeric_timeCols,
-    sort_log,
-    split_train_val,
-)
+from Preprocessing.dataframes_pipeline import main_dataframe_pipeline
 
 
-# ---------------------------------------------------------------------------
-# Raw pair builder
-# ---------------------------------------------------------------------------
+def _make_act_label_mapping(cardinality_dict, act_label):
+    car  = cardinality_dict[act_label] + 1
+    keys = [str(i) for i in range(car - 1)] + ['END_TOKEN']
+    return dict(zip(keys, range(1, car + 1)))
 
-def _df_to_raw(df, split_name, case_id, act_label, timestamp,
-               act_to_idx, oov_idx, eos_idx, prefix_dict, mode):
-    """Build raw prefix-suffix pair dicts for one DataFrame split.
 
-    split_name : 'train_val' | 'test'
+def _collect_samples(pref_suff, case_id, act_label, timestamp,
+                     suffix_num_cols, window_size, outcome, act_mapping):
+    """Convert one pref_suff tuple into a list of sample dicts (prefix unpadded).
+
+    Returns (samples, max_actual_prefix_len_in_split).
     """
-    raw = []
-    for cid, grp in df.groupby(case_id, sort=False):
-        grp = grp.sort_values(timestamp).reset_index(drop=True)
-        T   = len(grp)
+    prefix_df    = pref_suff[0]
+    suffix_df    = pref_suff[1]
+    timeLabel_df = pref_suff[2]
+    actLabel_df  = pref_suff[3]
+    if outcome:
+        outcomeLabel_df = pref_suff[4]
 
-        acts      = [act_to_idx.get(a, oov_idx) for a in grp[act_label]]
-        prevs     = grp['ts_prev'].values.astype(float)
-        ts_starts = grp['ts_start'].values.astype(float)
-        concs     = [1 if prevs[i] == 0.0 and i > 0 else 0 for i in range(T)]
-        dt_logs   = [math.log(1.0 + max(prevs[i], 0.0)) for i in range(T)]
+    prefix_ids = list(prefix_df.drop_duplicates(subset=case_id)[case_id])
+    pref_grp = dict(list(prefix_df.groupby(case_id, sort=False)))
+    suff_grp = dict(list(suffix_df.groupby(case_id, sort=False)))
+    tlab_grp = dict(list(timeLabel_df.groupby(case_id, sort=False)))
+    alab_grp = dict(list(actLabel_df.groupby(case_id, sort=False)))
+    if outcome:
+        out_grp = dict(list(outcomeLabel_df.groupby(case_id, sort=False)))
 
-        if split_name == 'test' and mode == 'preferred' and cid in prefix_dict:
-            # prefix_dict[cid] = 0-based idx of first post-sep event
-            # only prefixes that include that event are valid
-            min_plen = prefix_dict[cid] + 1
-            max_plen = T
-        elif split_name == 'train_val' and mode == 'workaround' and cid in prefix_dict:
-            # prefix_dict[cid] = 0-based idx of last pre-sep event
-            # prefix must not cross sep time
-            min_plen = 1
-            max_plen = min(prefix_dict[cid] + 1, T)
-        else:
-            min_plen = 1
-            max_plen = T
+    W        = window_size
+    samples  = []
+    max_plen = 0
 
-        for plen in range(min_plen, max_plen + 1):
-            suf_acts = acts[plen:]    + [eos_idx]
-            suf_dt   = dt_logs[plen:] + [0.0]
-            suf_conc = concs[plen:]   + [0]
-            raw.append({
-                'prefix_act':       acts[:plen],
-                'prefix_dt':        dt_logs[:plen],
-                'prefix_conc':      concs[:plen],
-                'suffix_act':       suf_acts,
-                'suffix_dt':        suf_dt,
-                'suffix_conc':      suf_conc,
-                'slen':             len(suf_acts),
-                'last_prefix_act':      acts[plen - 1],
-                'last_prefix_dt':       dt_logs[plen - 1],
-                'last_prefix_conc':     concs[plen - 1],
-                'last_prefix_ts_start': ts_starts[plen - 1],
-                'prev_prefix_ts_start': ts_starts[plen - 2] if plen >= 2 else 0.0,
-            })
-    return raw
+    for pid in prefix_ids:
+        pref_rows = pref_grp[pid]
+        suff_rows = suff_grp[pid]
+        time_rows = tlab_grp[pid]
+        act_rows  = alab_grp[pid]
 
+        k = len(pref_rows)
 
-# ---------------------------------------------------------------------------
-# Tensor converter
-# ---------------------------------------------------------------------------
+        # Prefix activity (int64, shifted +1)
+        p_act = pref_rows[act_label].to_numpy().astype(np.int64) + 1   # (k,)
 
-def _to_tensors(raw, dt_mean, dt_std, W):
-    """Convert raw pair dicts to fixed-size padded tensor dicts."""
-    dataset = []
-    for s in raw:
-        plen = len(s['prefix_act'])
-        slen = min(s['slen'], W)
+        # Prefix [ts_start, ts_prev]
+        p_num = pref_rows[['ts_start', 'ts_prev']].to_numpy().astype(np.float32)  # (k, 2)
 
-        p_act  = torch.tensor(s['prefix_act'],  dtype=torch.long)
-        p_dt   = torch.tensor(
-            [(v - dt_mean) / dt_std for v in s['prefix_dt']], dtype=torch.float)
-        p_conc = torch.tensor(s['prefix_conc'], dtype=torch.long)
+        # Prefix new_block_flag: 1.0 if event starts a new timestamp block
+        pref_ts = pref_rows[timestamp].to_numpy()
+        p_nb    = np.ones(k, dtype=np.float32)                         # first event always new block
+        if k > 1:
+            p_nb[1:] = (pref_ts[1:] != pref_ts[:-1]).astype(np.float32)
 
-        suf_act  = torch.zeros(W, dtype=torch.long)
-        suf_dt   = torch.zeros(W, dtype=torch.float)
-        suf_conc = torch.zeros(W, dtype=torch.long)
-        suf_mask = torch.zeros(W, dtype=torch.bool)
+        # Truncate prefix to window_size (keep last W events, matching baseline behaviour)
+        if k > window_size:
+            p_act = p_act[-window_size:]
+            p_num = p_num[-window_size:]
+            p_nb  = p_nb[-window_size:]
+            k     = window_size
 
-        suf_act[:slen]  = torch.tensor(s['suffix_act'][:slen],  dtype=torch.long)
-        suf_dt[:slen]   = torch.tensor(
-            [(v - dt_mean) / dt_std for v in s['suffix_dt'][:slen]], dtype=torch.float)
-        suf_conc[:slen] = torch.tensor(s['suffix_conc'][:slen], dtype=torch.long)
-        suf_mask[:slen] = True
+        if k > max_plen:
+            max_plen = k
 
-        dataset.append({
-            'prefix_act':       p_act,
-            'prefix_dt':        p_dt,
-            'prefix_conc':      p_conc,
-            'suffix_act':       suf_act,
-            'suffix_dt':        suf_dt,
-            'suffix_conc':      suf_conc,
-            'suffix_mask':      suf_mask,
-            'prefix_len':       plen,
-            'last_prefix_act':  s['last_prefix_act'],
-            'last_prefix_dt':   float((s['last_prefix_dt'] - dt_mean) / dt_std),
-            'last_prefix_conc': s['last_prefix_conc'],
+        # Last prefix event [ts_start, ts_prev] — seed for autoregressive time updates
+        last_pnum = p_num[-1].copy()
+
+        # Suffix activity (padded 0)
+        s_act_raw = suff_rows[act_label].to_numpy().astype(np.int64) + 1
+        s_act     = np.zeros(W, dtype=np.int64)
+        s_act[:len(s_act_raw)] = s_act_raw
+
+        # Suffix [ts_start, ts_prev] (padded -1)
+        s_num_raw = suff_rows[suffix_num_cols].to_numpy().astype(np.float32)
+        s_num     = np.full((W, 2), -1.0, dtype=np.float32)
+        s_num[:len(s_num_raw)] = s_num_raw
+
+        # Time labels (padded -100)
+        ttnext  = time_rows['tt_next'].to_numpy().astype(np.float32)
+        rtime   = time_rows['rtime'].to_numpy().astype(np.float32)
+        ttn_buf = np.full(W, -100.0, dtype=np.float32)
+        rt_buf  = np.full(W, -100.0, dtype=np.float32)
+        ttn_buf[:len(ttnext)] = ttnext
+        rt_buf[:len(rtime)]   = rtime
+
+        # Ground-truth activity label sequence (incl. END token, padded 0)
+        act_seq     = (act_rows[act_label].astype(str).map(act_mapping)
+                       .to_numpy().astype(np.int64))
+        act_seq_buf = np.zeros(W, dtype=np.int64)
+        act_seq_buf[:len(act_seq)] = act_seq
+
+        # New-block label for suffix
+        suff_ts = suff_rows[timestamp].to_numpy()
+        prev_ts = np.concatenate([[pref_ts[-1]], suff_ts[:-1]])
+        nb_raw  = (suff_ts != prev_ts).astype(np.float32)
+        nb_buf  = np.zeros(W, dtype=np.float32)
+        nb_buf[:len(nb_raw)] = nb_raw
+
+        samples.append({
+            'p_act':           p_act,
+            'p_num':           p_num,
+            'p_nb':            p_nb,
+            'last_pnum':       last_pnum,
+            'k':               k,
+            's_act':           s_act,
+            's_num':           s_num,
+            'ttn':             ttn_buf,
+            'rtime':           rt_buf,
+            'act_label_seq':   act_seq_buf,
+            'new_block_label': nb_buf,
         })
-    return dataset
+
+    return samples, max_plen
 
 
-# ---------------------------------------------------------------------------
-# Public entry point
-# ---------------------------------------------------------------------------
+def _pad_and_stack(samples, max_prefix_len):
+    """Pad all prefix tensors to max_prefix_len and stack into a dict of tensors."""
+    N = len(samples)
+    W = samples[0]['s_act'].shape[0]
 
-def log_to_sequential_tensors(
-    log, log_name, start_date, start_before_date, end_date, max_days,
-    test_len_share, val_len_share, window_size, mode,
-    case_id='case:concept:name',
-    act_label='concept:name',
-    timestamp='time:timestamp',
-):
-    """Build (act, log_dt, conc) prefix-suffix tensor pairs.
+    prefix_act      = np.zeros((N, max_prefix_len), dtype=np.int64)
+    prefix_num      = np.zeros((N, max_prefix_len, 2), dtype=np.float32)
+    prefix_nb       = np.zeros((N, max_prefix_len), dtype=np.float32)
+    last_prefix_num = np.zeros((N, 2), dtype=np.float32)
+    prefix_len      = np.zeros(N, dtype=np.int64)
+    suffix_act      = np.zeros((N, W), dtype=np.int64)
+    suffix_num      = np.full((N, W, 2), -1.0, dtype=np.float32)
+    ttnext_label    = np.full((N, W), -100.0, dtype=np.float32)
+    rtime_label     = np.full((N, W), -100.0, dtype=np.float32)
+    act_label_seq   = np.zeros((N, W), dtype=np.int64)
+    new_block_label = np.zeros((N, W), dtype=np.float32)
 
-    Same parameters and outer structure as log_to_tensors() and
-    log_to_graphs(). Only activity + timestamp are used; no graph
-    construction or feature encoding.
+    for i, s in enumerate(samples):
+        k = s['k']
+        prefix_act[i, :k]  = s['p_act']
+        prefix_num[i, :k]  = s['p_num']
+        prefix_nb[i, :k]   = s['p_nb']
+        last_prefix_num[i] = s['last_pnum']
+        prefix_len[i]      = k
+        suffix_act[i]      = s['s_act']
+        suffix_num[i]      = s['s_num']
+        ttnext_label[i]    = s['ttn']
+        rtime_label[i]     = s['rtime']
+        act_label_seq[i]   = s['act_label_seq']
+        new_block_label[i] = s['new_block_label']
+
+    return {
+        'prefix_act':      torch.from_numpy(prefix_act),
+        'prefix_num':      torch.from_numpy(prefix_num),
+        'prefix_nb':       torch.from_numpy(prefix_nb),
+        'last_prefix_num': torch.from_numpy(last_prefix_num),
+        'prefix_len':      torch.from_numpy(prefix_len),
+        'suffix_act':      torch.from_numpy(suffix_act),
+        'suffix_num':      torch.from_numpy(suffix_num),
+        'ttnext_label':    torch.from_numpy(ttnext_label),
+        'rtime_label':     torch.from_numpy(rtime_label),
+        'act_label_seq':   torch.from_numpy(act_label_seq),
+        'new_block_label': torch.from_numpy(new_block_label),
+    }
+
+
+def log_to_sequences(log,
+                     log_name,
+                     start_date,
+                     start_before_date,
+                     end_date,
+                     max_days,
+                     test_len_share,
+                     val_len_share,
+                     window_size,
+                     mode,
+                     case_id='case:concept:name',
+                     act_label='concept:name',
+                     timestamp='time:timestamp',
+                     cat_casefts=[],
+                     num_casefts=[],
+                     cat_eventfts=[],
+                     num_eventfts=[],
+                     outcome=None):
+    """Return train/val/test as dicts of stacked tensors.
+
+    Calls the same dataframe pipeline as log_to_graphs().  Prefix events are
+    flattened into a padded sequence rather than a graph.
 
     Parameters
     ----------
-    log : pd.DataFrame
-    log_name : str
-    start_date, start_before_date, end_date : str or None
-    max_days : float
-    test_len_share, val_len_share : float
-    window_size : int
-    mode : {'preferred', 'workaround'}
-    case_id, act_label, timestamp : str
+    (Same as log_to_graphs.)
 
     Returns
     -------
-    train_data, val_data, test_data : list of dict
-    stats : dict
-    conc_mask : BoolTensor
+    train_dict, val_dict, test_dict : dict of torch.Tensor
     counts : dict
+        n_train, train_pairs, n_val, val_pairs, n_test, test_pairs
+    num_activities : int
+    max_prefix_len : int
     """
-    # ── 1. Sort + chronological train/test split ──────────────────────────
-    log = sort_log(log, case_id=case_id, timestamp=timestamp, act_label=act_label)
-    train_df, test_df, prefix_dict = remainTimeOrClassifBenchmark(
-        dataset=log, file_name=log_name,
-        start_date=start_date, start_before_date=start_before_date,
-        end_date=end_date, max_days=max_days,
-        test_len_share=test_len_share,
-        case_id=case_id, timestamp=timestamp, mode=mode,
-    )
+    log_transformed = False
+    print("Generating Dataframes...")
+    (train_pref_suff, val_pref_suff, test_pref_suff,
+     cardinality_dict, num_cols_dict, cat_cols_dict,
+     train_means_dict, train_std_dict) = main_dataframe_pipeline(
+        log, log_name, start_date, start_before_date, end_date, max_days,
+        test_len_share, val_len_share, window_size, log_transformed, mode,
+        case_id, act_label, timestamp,
+        cat_casefts, num_casefts, cat_eventfts, num_eventfts, outcome)
 
-    # ── 2. Filter traces longer than window_size ──────────────────────────
-    def _filter_len(df):
-        lens = df.groupby(case_id, sort=False)[act_label].transform('count')
-        return df[lens <= window_size].reset_index(drop=True)
+    n_train = train_pref_suff[0]['orig_case_id'].nunique()
+    n_val   = val_pref_suff[0]['orig_case_id'].nunique()
+    n_test  = test_pref_suff[0]['orig_case_id'].nunique()
+    p_train = int(train_pref_suff[0].drop_duplicates('orig_case_id')['case_length'].sum())
+    p_val   = int(val_pref_suff[0].drop_duplicates('orig_case_id')['case_length'].sum())
+    p_test  = int(test_pref_suff[0].drop_duplicates('orig_case_id')['case_length'].sum())
+    print(f"Cases – train: {n_train}  val: {n_val}  test: {n_test}")
+    print(f"Pairs – train: {p_train}  val: {p_val}  test: {p_test}")
 
-    train_df = _filter_len(train_df)
-    test_df  = _filter_len(test_df)
+    suffix_num_cols = num_cols_dict['suffix_df']
+    act_mapping     = _make_act_label_mapping(cardinality_dict, act_label)
+    num_activities  = cardinality_dict[act_label] + 2
 
-    # ── 3. Further split train → train + val ─────────────────────────────
-    train_df, val_df = split_train_val(train_df, val_len_share, case_id, timestamp)
+    print("Collecting train samples...")
+    train_raw, train_maxp = _collect_samples(
+        train_pref_suff, case_id, act_label, timestamp,
+        suffix_num_cols, window_size, outcome, act_mapping)
 
-    # ── 4. Add ts_prev / ts_start / etc. time columns ────────────────────
-    train_df = create_numeric_timeCols(train_df, case_id, timestamp, act_label)
-    val_df   = create_numeric_timeCols(val_df,   case_id, timestamp, act_label)
-    test_df  = create_numeric_timeCols(test_df,  case_id, timestamp, act_label)
+    print("Collecting val samples...")
+    val_raw, val_maxp = _collect_samples(
+        val_pref_suff, case_id, act_label, timestamp,
+        suffix_num_cols, window_size, outcome, act_mapping)
 
-    # ── 5. Activity vocabulary from train + val (1-indexed; 0 = PAD) ─────
-    train_val_acts = sorted(
-        pd.concat([train_df, val_df], ignore_index=True)[act_label].unique()
-    )
-    act_to_idx  = {a: i + 1 for i, a in enumerate(train_val_acts)}
-    num_acts    = len(act_to_idx)
-    oov_idx     = num_acts + 1
-    eos_idx     = num_acts + 2
-    num_classes = num_acts + 3
+    print("Collecting test samples...")
+    test_raw, test_maxp = _collect_samples(
+        test_pref_suff, case_id, act_label, timestamp,
+        suffix_num_cols, window_size, outcome, act_mapping)
 
-    # ── 6. Build raw prefix-suffix pairs per split ────────────────────────
-    raw_train = _df_to_raw(train_df, 'train_val', case_id, act_label, timestamp,
-                           act_to_idx, oov_idx, eos_idx, prefix_dict, mode)
-    raw_val   = _df_to_raw(val_df,   'train_val', case_id, act_label, timestamp,
-                           act_to_idx, oov_idx, eos_idx, prefix_dict, mode)
-    raw_test  = _df_to_raw(test_df,  'test',      case_id, act_label, timestamp,
-                           act_to_idx, oov_idx, eos_idx, prefix_dict, mode)
+    max_prefix_len = window_size
+    print(f"max_prefix_len = {max_prefix_len} (= window_size)  num_activities = {num_activities}")
 
-    # ── 7. dt normalization stats (training data only; exclude EOS zeros) ─
-    all_dt  = [v for s in raw_train
-               for v in s['prefix_dt'] + s['suffix_dt'][:-1]]
-    dt_mean = float(np.mean(all_dt)) if all_dt else 0.0
-    dt_std  = max(float(np.std(all_dt)), 1e-8)
+    print("Padding and stacking tensors...")
+    train_dict = _pad_and_stack(train_raw, max_prefix_len)
+    val_dict   = _pad_and_stack(val_raw,   max_prefix_len)
+    test_dict  = _pad_and_stack(test_raw,  max_prefix_len)
 
-    # ts_start normalization stats (training data only; matches baseline pipeline)
-    ts_start_mean = float(train_df['ts_start'].mean())
-    ts_start_std  = max(float(train_df['ts_start'].std()), 1e-8)
+    # Save cardinality lists (same values as graph pipeline)
+    pref_cat_cars = [cardinality_dict[c] for c in cat_cols_dict['prefix_df']]
+    suff_cat_cars = [cardinality_dict[c] for c in cat_cols_dict['suffix_df']]
+    output_dir = os.path.join('results_per_log', log_name)
+    os.makedirs(output_dir, exist_ok=True)
+    with open(os.path.join(output_dir, log_name + '_cardin_list_prefix.pkl'), 'wb') as f:
+        pickle.dump(pref_cat_cars, f)
+    with open(os.path.join(output_dir, log_name + '_cardin_list_suffix.pkl'), 'wb') as f:
+        pickle.dump(suff_cat_cars, f)
 
-    # ── 8. Convert raw → padded fixed-size tensor dicts ──────────────────
-    W = window_size
-
-    train_data = _to_tensors(raw_train, dt_mean, dt_std, W)
-    val_data   = _to_tensors(raw_val,   dt_mean, dt_std, W)
-    test_data  = _to_tensors(raw_test,  dt_mean, dt_std, W)
-
-    # ── 9. Concurrent-ending-prefix mask for test set ─────────────────────
-    # Uses standardized float32 ts_start comparison to match the baseline pipeline.
-    def _conc_check(s):
-        if len(s['prefix_act']) < 2:
-            return False
-        last = np.float32((s['last_prefix_ts_start'] - ts_start_mean) / ts_start_std)
-        prev = np.float32((s['prev_prefix_ts_start'] - ts_start_mean) / ts_start_std)
-        return bool(last == prev)
-
-    conc_mask = torch.tensor([_conc_check(s) for s in raw_test], dtype=torch.bool)
-
-    stats = {
-        'dt_mean':     dt_mean,
-        'dt_std':      dt_std,
-        'num_classes': num_classes,
-        'num_acts':    num_acts,
-        'oov_idx':     oov_idx,
-        'eos_idx':     eos_idx,
-        'window_size': W,
-        'act_to_idx':  act_to_idx,
-    }
     counts = {
-        'n_train':     train_df[case_id].nunique(),
-        'train_pairs': int(train_df.groupby(case_id, sort=False)[act_label].count().sum()),
-        'n_val':       val_df[case_id].nunique(),
-        'val_pairs':   int(val_df.groupby(case_id, sort=False)[act_label].count().sum()),
-        'n_test':      test_df[case_id].nunique(),
-        'test_pairs':  int(test_df.groupby(case_id, sort=False)[act_label].count().sum()),
+        'n_train': n_train, 'train_pairs': p_train,
+        'n_val':   n_val,   'val_pairs':   p_val,
+        'n_test':  n_test,  'test_pairs':  p_test,
     }
-    return train_data, val_data, test_data, stats, conc_mask, counts
+    return train_dict, val_dict, test_dict, counts, num_activities, max_prefix_len

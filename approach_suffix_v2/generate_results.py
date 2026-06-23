@@ -8,111 +8,295 @@ from baselines.SuffixTransformerNetwork.results_collector import get_suffix_base
 # ── Shared config ─────────────────────────────────────────────────────────────
 
 RESULTS_TXT = "approach_suffix_v2/results.txt"
+RESULTS_DIR = "approach_suffix_v2"
+
+# ── Own-model column map & metrics (used by 'own' mode) ───────────────────────
+
+OWN_COL_MAP = {
+    "dl_similarity":      "DL similarity ↑",
+    "ges_approx":         "GES ↑",
+    "ttne_mae_minutes":   "MAE TTNE (min) ↓",
+    "rrt_mae_minutes":    "MAE RRT (min) ↓",
+    "nb_accuracy":        "NB acc ↑",
+    "nb_f1":              "NB F1 ↑",
+    "next_act_accuracy":  "Next acc ↑",
+    "next_act_f1":        "Next F1 ↑",
+}
+
+METRICS = [
+    ("GES ↑",            "ges",      "↑"),
+    ("DL similarity ↑",  "dl",       "↑"),
+    ("MAE TTNE (min) ↓", "ttne",     "↓"),
+    ("MAE RRT (min) ↓",  "rrt",      "↓"),
+    ("NB acc ↑",         "nb_acc",   "↑"),
+    ("NB F1 ↑",          "nb_f1",    "↑"),
+    ("Next acc ↑",       "next_acc", "↑"),
+    ("Next F1 ↑",        "next_f1",  "↑"),
+]
+METRIC_KEYS = [k for _, k, _ in METRICS]
+METRIC_DIRS = {k: d for _, k, d in METRICS}
+
+# ── Baseline-comparison config (used by 'results' / 'tables' modes) ───────────
 
 METRIC_COLS = [
-    "DL similarity ↑", "MAE TTNE (min) ↓", "MAE RRT (min) ↓",
-    "Conc N", "Conc DL sim ↑", "Conc TTNE (min) ↓", "Conc RRT (min) ↓",
-    "Conc next acc ↑", "Conc next F1 ↑",
+    "DL similarity ↑", "GES ↑", "MAE TTNE (min) ↓", "MAE RRT (min) ↓",
+    "Conc N", "Conc DL sim ↑", "Conc TTNE (min) ↓", "Conc RRT (min) ↓", "Conc GES ↑",
 ]
 
 OWN_CONFIGS = {
-    "GNN_Suffix_time_Stop": {
-        "results_sub": "approach_suffix_v2/results_time_gatv2_gru_stop",
-        "csv_file":    "results_suffix_time_gnn_v2_1.csv",
-        "col_map":     {
-            "dl_similarity":    "DL similarity ↑",
-            "ttne_mae_minutes": "MAE TTNE (min) ↓",
-            "rrt_mae_minutes":  "MAE RRT (min) ↓",
-            "conc_n_samples": "Conc N",
-            "conc_dl_similarity": "Conc DL sim ↑",
-            "conc_ttne_mae_minutes": "Conc TTNE (min) ↓",
-            "conc_rrt_mae_minutes": "Conc RRT (min) ↓",
-            "conc_next_act_accuracy": "Conc next acc ↑",
-            "conc_next_act_f1_weighted": "Conc next F1 ↑",
-        },
-    }
-}
-
-""""
-OWN_CONFIGS = {
-    "GNN_Suffix": {
-        "results_sub": "approach_suffix_v2/results_suffix_gatv2_gru",
-        "csv_file":    "results_suffix_gnn.csv",
-        "col_map":     {
-            "dl_similarity":    "DL similarity ↑",
-            "ttne_mae_minutes": "MAE TTNE (min) ↓",
-            "rrt_mae_minutes":  "MAE RRT (min) ↓",
-        },
-    },
-    "GNN_Suffix_Stop": {
-        "results_sub": "approach_suffix_v2/results_suffix_gatv2_gru_stop",
-        "csv_file":    "results_suffix_gnn.csv",
-        "col_map":     {
-            "dl_similarity":    "DL similarity ↑",
-            "ttne_mae_minutes": "MAE TTNE (min) ↓",
-            "rrt_mae_minutes":  "MAE RRT (min) ↓",
-        },
-    },
-    "GNN_Suffix_time": {
-        "results_sub": "approach_suffix_v2/results_time_gatv2_gru",
+    "GNN_Suffix_new_block": {
+        "results_sub": "approach_suffix_v2/results_time_gatv2_gru_new_block",
         "csv_file":    "results_suffix_time_gnn.csv",
         "col_map":     {
             "dl_similarity":    "DL similarity ↑",
             "ttne_mae_minutes": "MAE TTNE (min) ↓",
             "rrt_mae_minutes":  "MAE RRT (min) ↓",
-        },
-    },
-    "GNN_Suffix_time_Stop": {
-        "results_sub": "approach_suffix_v2/results_time_gatv2_gru_stop",
-        "csv_file":    "results_suffix_time_gnn_v2_1.csv",
-        "col_map":     {
-            "dl_similarity":    "DL similarity ↑",
-            "ttne_mae_minutes": "MAE TTNE (min) ↓",
-            "rrt_mae_minutes":  "MAE RRT (min) ↓",
-            "conc_n_samples": "Conc N",
+            "conc_count": "Conc N",
             "conc_dl_similarity": "Conc DL sim ↑",
             "conc_ttne_mae_minutes": "Conc TTNE (min) ↓",
             "conc_rrt_mae_minutes": "Conc RRT (min) ↓",
             "conc_next_act_accuracy": "Conc next acc ↑",
             "conc_next_act_f1_weighted": "Conc next F1 ↑",
+            "ges_approx":               "GES ↑",
+            "conc_ges_approx":          "Conc GES ↑",
         },
     },
-    "GNN_Suffix_time_Stop_DA": {
-        "results_sub": "approach_suffix_v2/results_time_gatv2_data_aware_gru_stop",
-        "csv_file":    "results_gru_suffix_v2.csv",
+    "GNN_Suffix_only": {
+        "results_sub": "approach_suffix_v2/results_gatv2_gru_activity_block",
+        "csv_file":    "results_suffix_gnn.csv",
         "col_map":     {
             "dl_similarity":    "DL similarity ↑",
             "ttne_mae_minutes": "MAE TTNE (min) ↓",
             "rrt_mae_minutes":  "MAE RRT (min) ↓",
+            "conc_count": "Conc N",
+            "conc_dl_similarity": "Conc DL sim ↑",
+            "conc_ttne_mae_minutes": "Conc TTNE (min) ↓",
+            "conc_rrt_mae_minutes": "Conc RRT (min) ↓",
+            "conc_next_act_accuracy": "Conc next acc ↑",
+            "conc_next_act_f1_weighted": "Conc next F1 ↑",
+            "ges_approx":               "GES ↑",
+            "conc_ges_approx":          "Conc GES ↑",
         },
-    },
-
-    "GNN_Suffix_gru": {
-        "results_sub": "approach_suffix_v2/results_gru_suffix",
-        "csv_file":    "results_gru_suffix.csv",
-        "col_map":     {
-            "dl_similarity":    "DL similarity ↑",
-            "dt_mae_minutes": "MAE TTNE (min) ↓",
-            "rrt_mae_minutes":  "MAE RRT (min) ↓",
-        },
-    },
-
-    "GNN_Suffix_gru_v2": {
-        "results_sub": "approach_suffix_v2/results_gru_suffix_v2",
-        "csv_file":    "results_gru_suffix_v2.csv",
-        "col_map":     {
-            "dl_similarity":    "DL similarity ↑",
-            "dt_mae_minutes": "MAE TTNE (min) ↓",
-            "rrt_mae_minutes":  "MAE RRT (min) ↓"
-        },
-    },
+    }
 }
-"""
 
 GNN_MODELS = set(OWN_CONFIGS)
 GNN_LIST   = list(OWN_CONFIGS)
 
-# ── Endpoint 1 helpers ────────────────────────────────────────────────────────
+# ── Shared formatting helpers ─────────────────────────────────────────────────
+
+SEP = "─"
+
+def fmt_dl(v):  return f"{v:.4f}" if v is not None else "N/A"
+def fmt_int(v): return f"{int(round(v))}" if v is not None else "N/A"
+def fmt_pct(v):
+    if v is None: return "N/A"
+    return f"{'+'if v>0 else ''}{v:.1f}%"
+def avg(lst):   return sum(lst) / len(lst) if lst else None
+
+def fmt_metric(key, v):
+    return fmt_dl(v) if key in ("dl", "ges", "nb_acc", "nb_f1", "next_acc", "next_f1") else fmt_int(v)
+
+def auto_widths(headers, rows, min_w=3):
+    n = len(headers)
+    widths = [max(min_w, len(str(h))) for h in headers]
+    for row in rows:
+        for i, cell in enumerate(row):
+            if i < n:
+                widths[i] = max(widths[i], len(str(cell)))
+    return widths
+
+def fmt_cell(val, w, align):
+    s = str(val)
+    if align == "right":  return s.rjust(w)
+    if align == "center": return s.center(w)
+    return s.ljust(w)
+
+def print_sub_table(title, headers, aligns, rows):
+    widths = auto_widths(headers, rows)
+    sep = " │ "
+    header_line = sep.join(fmt_cell(h, w, a) for h, w, a in zip(headers, widths, aligns))
+    total_w = len(header_line)
+    print(f"  {title}")
+    print("  " + SEP * total_w)
+    print("  " + header_line)
+    print("  " + SEP * total_w)
+    for row in rows:
+        cells = [fmt_cell(row[i] if i < len(row) else "", widths[i], aligns[i])
+                 for i in range(len(headers))]
+        print("  " + sep.join(cells))
+    print("  " + SEP * total_w)
+    print()
+
+# ── 'own' mode: auto-discovery & loading ──────────────────────────────────────
+
+def discover_models():
+    models = []
+    for entry in sorted(os.listdir(RESULTS_DIR)):
+        if not entry.startswith("results_"):
+            continue
+        folder = os.path.join(RESULTS_DIR, entry)
+        if os.path.isdir(folder):
+            models.append((entry[len("results_"):], folder))
+    return models
+
+
+def load_runs(folder):
+    run_id, dfs = 1, []
+    while True:
+        run_dir = os.path.join(folder, f"run_{run_id}")
+        if not os.path.isdir(run_dir):
+            break
+        csv_files = [f for f in os.listdir(run_dir) if f.endswith(".csv")]
+        if csv_files:
+            path = os.path.join(run_dir, csv_files[0])
+            dfs.append(pd.read_csv(path).rename(columns=OWN_COL_MAP))
+        run_id += 1
+    return dfs
+
+
+def load_all_results():
+    models = discover_models()
+    if not models:
+        return {}, []
+
+    all_data, model_list = {}, []
+    for model_name, folder in models:
+        run_dfs = load_runs(folder)
+        if not run_dfs:
+            continue
+        model_list.append(model_name)
+        model_data = {}
+        all_logs = {log for df in run_dfs for log in df["log"].unique()}
+        for log_name in all_logs:
+            entry = {"runs": len(run_dfs)}
+            for col, key, _ in METRICS:
+                vals = [
+                    float(df.loc[df["log"] == log_name, col].iloc[0])
+                    for df in run_dfs
+                    if not df.loc[df["log"] == log_name].empty and col in df.columns
+                ]
+                entry[key] = np.mean(vals) if vals else None
+            params_vals = [
+                int(df.loc[df["log"] == log_name, "num_trainable_params"].iloc[0])
+                for df in run_dfs
+                if not df.loc[df["log"] == log_name].empty
+                and "num_trainable_params" in df.columns
+            ]
+            entry["params"] = params_vals[0] if params_vals else None
+            model_data[log_name] = entry
+        all_data[model_name] = model_data
+
+    return all_data, model_list
+
+
+def print_per_log(all_data, model_list):
+    all_logs = sorted({log for m in all_data.values() for log in m})
+    if not all_logs:
+        print("  No results found.")
+        return
+
+    bar = "═" * 100
+    print(f"\n╔{bar}╗")
+    print(f"║  {'PER-LOG RESULTS':<98}║")
+    print(f"╚{bar}╝\n")
+
+    metric_labels = [col for col, _, _ in METRICS]
+    headers = ["Model", "Runs"] + metric_labels + ["# params"]
+    aligns  = ["left", "right"] + ["right"] * len(METRICS) + ["right"]
+
+    for log_name in all_logs:
+        print(f"  === Log: {log_name} ===\n")
+        rows = []
+        for model_name in model_list:
+            entry = all_data[model_name].get(log_name)
+            if entry is None:
+                continue
+            row = [model_name, str(entry["runs"])]
+            for _, key, _ in METRICS:
+                row.append(fmt_metric(key, entry[key]))
+            row.append(fmt_int(entry["params"]))
+            rows.append(row)
+
+        if not rows:
+            print("  (no data)\n")
+            continue
+        rows.sort(key=lambda r: float(r[2]) if r[2] != "N/A" else -1, reverse=True)
+        print_sub_table("Results (sorted by GES ↑)", headers, aligns, rows)
+
+
+def print_head_to_head(all_data, model_list):
+    all_logs = sorted({log for m in all_data.values() for log in m})
+
+    bar = "═" * 120
+    print(f"\n╔{bar}╗")
+    print(f"║  {'HEAD-TO-HEAD SUMMARY  (rank among own models per log, then averaged)':<118}║")
+    print(f"╚{bar}╝\n")
+
+    ranks_a = {m: {k: [] for k in METRIC_KEYS} for m in model_list}
+    wins_a  = {m: {k: 0  for k in METRIC_KEYS} for m in model_list}
+    vals_a  = {m: {k: [] for k in METRIC_KEYS} for m in model_list}
+
+    for log_name in all_logs:
+        for key, direction in METRIC_DIRS.items():
+            present = [
+                (m, all_data[m][log_name][key])
+                for m in model_list
+                if log_name in all_data[m] and all_data[m][log_name].get(key) is not None
+            ]
+            if len(present) < 2:
+                for m, v in present:
+                    vals_a[m][key].append(v)
+                continue
+            reverse = direction == "↑"
+            sorted_p = sorted(present, key=lambda x: x[1], reverse=reverse)
+            for rank, (m, v) in enumerate(sorted_p, 1):
+                ranks_a[m][key].append(rank)
+                vals_a[m][key].append(v)
+            wins_a[sorted_p[0][0]][key] += 1
+
+    col_headers = ["Model"]
+    col_aligns  = ["left"]
+    for col, key, _ in METRICS:
+        col_headers += [f"{col} Rank", "Wins", "Avg"]
+        col_aligns  += ["right", "right", "right"]
+
+    rows = []
+    for m in model_list:
+        row = [m]
+        for _, key, _ in METRICS:
+            avg_rank = avg(ranks_a[m][key])
+            row.append(f"{avg_rank:.2f}" if avg_rank is not None else "N/A")
+            row.append(str(wins_a[m][key]))
+            row.append(fmt_metric(key, avg(vals_a[m][key])))
+        rows.append(row)
+
+    print_sub_table("Avg rank per metric across logs (1=best). Wins = #logs where this model was best.",
+                    col_headers, col_aligns, rows)
+
+    scores = {
+        m: -3 * (avg(ranks_a[m]["ges"])  or 99)
+           -2 * (avg(ranks_a[m]["dl"])   or 99)
+           -1 * (avg(ranks_a[m]["ttne"]) or 99)
+           -1 * (avg(ranks_a[m]["rrt"])  or 99)
+        for m in model_list
+    }
+    best = max(scores, key=scores.get)
+    print(f"  ★  Best overall: {best}")
+    print()
+
+
+def run_own():
+    all_data, model_list = load_all_results()
+    if not model_list:
+        print(f"No results found under {RESULTS_DIR}/results_*/")
+        return
+    print(f"  Found models: {', '.join(model_list)}")
+    print_per_log(all_data, model_list)
+    if len(model_list) > 1:
+        print_head_to_head(all_data, model_list)
+
+# ── 'results' mode helpers ────────────────────────────────────────────────────
 
 def get_own_suffix_results():
     rows = []
@@ -144,7 +328,6 @@ def get_own_suffix_results():
                 and "num_trainable_params" in df.columns
             ]
             row["# params"] = params_vals[0] if params_vals else float("nan")
-
             rows.append(row)
 
     return pd.DataFrame(rows).set_index(["Log", "Model"])
@@ -173,14 +356,13 @@ def run_results():
             table_str = (
                 group.reset_index()[
                     ["Model",
-                     "DL similarity ↑ mean", #"DL similarity ↑ std",
-                     "MAE TTNE (min) ↓ mean", #"MAE TTNE (min) ↓ std",
-                     "MAE RRT (min) ↓ mean",  #"MAE RRT (min) ↓ std",
-                     'Conc N mean','Conc DL sim ↑ mean','Conc TTNE (min) ↓ mean', 
-                     'Conc RRT (min) ↓ mean', 'Conc next acc ↑ mean', 'Conc next F1 ↑ mean', 
+                     "DL similarity ↑ mean",
+                     "GES ↑ mean",
+                     "MAE TTNE (min) ↓ mean",
+                     "MAE RRT (min) ↓ mean",
                      '# params']
                 ]
-                .sort_values("DL similarity ↑ mean", ascending=False)
+                .sort_values("GES ↑ mean", ascending=False)
                 .to_string(index=False)
             )
             print(header)
@@ -188,7 +370,7 @@ def run_results():
             f.write(header + "\n")
             f.write(table_str + "\n")
 
-# ── Endpoint 2 helpers ────────────────────────────────────────────────────────
+# ── 'tables' mode helpers ─────────────────────────────────────────────────────
 
 def parse_float(s):
     s = s.strip()
@@ -231,48 +413,6 @@ def pct(val, ref):
     if val is None or ref is None:
         return None
     return (val - ref) / abs(ref) * 100
-
-def fmt_dl(v):  return f"{v:.4f}" if v is not None else "N/A"
-def fmt_int(v): return f"{int(round(v))}" if v is not None else "N/A"
-def fmt_pct(v):
-    if v is None: return "N/A"
-    return f"{'+'if v>0 else ''}{v:.1f}%"
-def avg(lst):   return sum(lst) / len(lst) if lst else None
-
-SEP = "─"
-
-
-def auto_widths(headers, rows, min_w=3):
-    n = len(headers)
-    widths = [max(min_w, len(str(h))) for h in headers]
-    for row in rows:
-        for i, cell in enumerate(row):
-            if i < n:
-                widths[i] = max(widths[i], len(str(cell)))
-    return widths
-
-def fmt_cell(val, w, align):
-    s = str(val)
-    if align == "right":  return s.rjust(w)
-    if align == "center": return s.center(w)
-    return s.ljust(w)
-
-def print_sub_table(title, headers, aligns, rows):
-    widths = auto_widths(headers, rows)
-    sep = " │ "
-    header_cells = [fmt_cell(h, w, a) for h, w, a in zip(headers, widths, aligns)]
-    header_line  = sep.join(header_cells)
-    total_w = len(header_line)
-    print(f"  {title}")
-    print("  " + SEP * total_w)
-    print("  " + header_line)
-    print("  " + SEP * total_w)
-    for row in rows:
-        cells = [fmt_cell(row[i] if i < len(row) else "", widths[i], aligns[i])
-                 for i in range(len(headers))]
-        print("  " + sep.join(cells))
-    print("  " + SEP * total_w)
-    print()
 
 
 def make_detail_rows(logs, log_order, gnn_model):
@@ -594,11 +734,15 @@ def run_tables():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=["results", "tables"],
-                        help="'results': collect CSV results and write results.txt  |  'tables': print comparison tables from results.txt")
+    parser.add_argument("mode", choices=["results", "tables", "own"],
+                        help="'results': collect CSV results and write results.txt  |  "
+                             "'tables': print comparison tables from results.txt  |  "
+                             "'own': auto-discover own models and print per-log + head-to-head")
     args = parser.parse_args()
 
     if args.mode == "results":
         run_results()
-    else:
+    elif args.mode == "tables":
         run_tables()
+    else:
+        run_own()

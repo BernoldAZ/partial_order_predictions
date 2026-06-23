@@ -518,19 +518,26 @@ def construct_datasets(
     with open(os.path.join(output_directory, 'tss_index.txt'), 'w') as _f:
         _f.write(str(tss_index))
 
-    # Concurrent-ending-prefix mask for the test set.
-    # A prefix is "concurrent-ending" when its last event shares its timestamp
-    # with the second-to-last event. In the graph format, ts_start is column 0
-    # of data.x (standardisation preserves equality for concurrent events).
+    # Concurrent-trace mask for the test set.
+    # A prefix-suffix pair is flagged if the underlying trace has at least one
+    # pair of events with the same timestamp, anywhere in the prefix or suffix.
+    N = len(test_data)
     conc_flags = []
     for data in test_data:
+        # Prefix side: any adjacent pair of prefix nodes with equal ts_start.
         k = data.x.shape[0]
-        conc_flags.append(k >= 2 and data.x[-1, tss_index] == data.x[-2, tss_index])
+        pref_has_conc = k >= 2 and (data.x[1:, tss_index] == data.x[:-1, tss_index]).any().item()
+
+        # Suffix side: nb_label == 0.0 at a real (non-padding, non-EOS) position.
+        eos_tok = int(data.act_label_seq.max().item())
+        real_suf = (data.act_label_seq > 0) & (data.act_label_seq < eos_tok)
+        suf_has_conc = (real_suf & (data.new_block_label < 0.5)).any().item()
+
+        conc_flags.append(pref_has_conc or suf_has_conc)
     conc_mask = torch.tensor(conc_flags)
-    N = len(test_data)
     torch.save(conc_mask, os.path.join(output_directory, 'test_concurrent_mask.pt'))
     conc_count = conc_mask.sum().item()
-    print(f"Concurrent-ending-prefix test samples: {conc_count} / {N}")
+    print(f"Concurrent-trace test samples: {conc_count} / {N}")
     counts['conc_count'] = conc_count
 
     return counts

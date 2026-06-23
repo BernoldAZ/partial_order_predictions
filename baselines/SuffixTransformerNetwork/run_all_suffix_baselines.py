@@ -17,7 +17,7 @@ Usage:
     python run_all_suffix_baselines.py --run-id 2 --workers 4 --progress-file /path/to/custom.log
 
 Usage with docker:
-    docker run -it --rm -v $(pwd):/app --gpus all ppm-sutran-best python3 run_all_suffix_baselines.py --workers 3 --run-id 1
+    docker run -it --rm -v $(pwd):/app --gpus all ppm-sutran-best python3 run_all_suffix_baselines.py --workers 30 --run-id 1
 """
 
 import argparse
@@ -35,12 +35,12 @@ from datetime import datetime
 # ---------------------------------------------------------------------------
 
 MODELS = [
-    "SuTraN_DA",
+    #"SuTraN_DA",
     "SuTraN_NDA",
-    "CRTP_LSTM_DA",
+    #"CRTP_LSTM_DA",
     "CRTP_LSTM_NDA",
     "ED_LSTM",
-    #"SEP_LSTM",
+    "SEP_LSTM",
     "BEST",
 ]
 

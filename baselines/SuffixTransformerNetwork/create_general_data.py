@@ -518,24 +518,32 @@ def construct_datasets(
     with open(os.path.join(output_directory, 'tss_index.txt'), 'w') as _f:
         _f.write(str(tss_index))
 
-    # Concurrent-ending-prefix mask for the test set.
-    # A prefix is "concurrent-ending" when its last event shares its timestamp
-    # with the second-to-last event (ts_start equality, preserved under
-    # standardization).
+    # Concurrent-trace mask for the test set.
+    # A prefix-suffix pair is flagged if the underlying trace has at least one
+    # pair of events with the same timestamp, anywhere in the prefix or suffix.
     num_pref_cat = 1 + len(cat_casefts) + len(cat_eventfts)  # act_label + cat features
     prefix_num   = test_data[num_pref_cat]            # (N, W, nn_pref)
     padding_mask = test_data[num_pref_cat + 1]        # (N, W) True=padding
-    ts_start     = prefix_num[:, :, tss_index]                # (N, W)
-    N, W         = ts_start.shape
-    pref_len = torch.argmax(padding_mask.to(torch.int64), dim=1)          # (N,)
-    pref_len = torch.where(pref_len == 0, torch.full((N,), W, dtype=torch.int64), pref_len)
-    last_idx = pref_len - 1
-    prev_idx = torch.clamp(last_idx - 1, min=0)
-    idx_N    = torch.arange(N)
-    conc_mask = (pref_len > 1) & (ts_start[idx_N, last_idx] == ts_start[idx_N, prev_idx])
+    ts_start     = prefix_num[:, :, tss_index]        # (N, W)
+    N            = ts_start.shape[0]
+
+    # Suffix side: nb_label == 0.0 at a real (non-padding, non-EOS) position
+    # means that event shares its timestamp with the previous event.
+    _nb = torch.load(os.path.join(output_directory, 'test_new_block_labels.pt'))
+    suf_act_lbl = test_data[-2] if outcome else test_data[-1]  # (N, W), 0=pad
+    eos_tok = int(suf_act_lbl.max().item())
+    real_suf = (suf_act_lbl > 0) & (suf_act_lbl < eos_tok)    # (N, W)
+    suf_has_conc = (real_suf & (_nb < 0.5)).any(dim=1)         # (N,)
+
+    # Prefix side: any adjacent non-padding pair with equal ts_start.
+    non_pad = ~padding_mask                                     # (N, W)
+    adj_both = non_pad[:, 1:] & non_pad[:, :-1]                # (N, W-1)
+    pref_has_conc = (adj_both & (ts_start[:, 1:] == ts_start[:, :-1])).any(dim=1)  # (N,)
+
+    conc_mask = suf_has_conc | pref_has_conc
     torch.save(conc_mask, os.path.join(output_directory, 'test_concurrent_mask.pt'))
     conc_count = conc_mask.sum().item()
-    print(f"Concurrent-ending-prefix test samples: {conc_count} / {N}")
+    print(f"Concurrent-trace test samples: {conc_count} / {N}")
     counts['conc_count'] = conc_count
 
     return counts

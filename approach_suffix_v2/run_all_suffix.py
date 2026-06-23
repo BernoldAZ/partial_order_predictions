@@ -10,24 +10,38 @@ Safe to re-run after an interruption.
 
 Supported models and their output CSVs
 ---------------------------------------
-  suffix_time                 → results_time_gatv2_gru/run_N/results_suffix_time_gnn.csv
-  suffix_time_stop            → results_time_gatv2_gru_stop/run_N/results_suffix_time_gnn.csv
-  suffix_time_stop_v2_1       → results_time_gatv2_gru_stop/run_N/results_suffix_time_gnn_v2_1.csv
-  suffix_time_data_aware      → results_time_gatv2_data_aware_gru_stop/run_N/results_suffix_time_gnn.csv
-  suffix_time_cross_attn      → results_time_gatv2_cross_attn_gru/run_N/results_suffix_time_gnn.csv
-  suffix_time_multilabel      → results_multilabel_gatv2_gru_multilabel/run_N/results_multilabel.csv
-  gru_suffix                  → results_gru_suffix/run_N/results_gru_suffix.csv
-  gru_suffix_v2               → results_gru_suffix_v2/run_N/results_gru_suffix_v2.csv
+  gat_gru_v1         → results_gat_gru_v1/run_N/results_gat_gru_v1.csv
+  gat_gru_v2         → results_gat_gru_v2/run_N/results_gat_gru_v2.csv
+  gat_gru_v3         → results_gat_gru_v3/run_N/results_gat_gru_v3.csv
+  gat_gru_seq_v1     → results_gat_gru_seq_v1/run_N/results_gat_gru_seq_v1.csv
+  gat_gru_seq_v2     → results_gat_gru_seq_v2/run_N/results_gat_gru_seq_v2.csv
+  gat_gru_seq_v3     → results_gat_gru_seq_v3/run_N/results_gat_gru_seq_v3.csv
+  gat_trans_v1       → results_gat_trans_v1/run_N/results_gat_trans_v1.csv
+  gat_trans_seq_v1   → results_gat_trans_seq_v1/run_N/results_gat_trans_seq_v1.csv
+  gat_lstm_v1        → results_gat_lstm_v1/run_N/results_gat_lstm_v1_loss.csv
+  gat_lstm_v2        → results_gat_lstm_v2/run_N/results_gat_lstm_v2_loss.csv
+  gat_lstm_seq_v1    → results_gat_lstm_seq_v1/run_N/results_gat_lstm_seq_v1_loss.csv
+  gat_lstm_seq_v2    → results_gat_lstm_seq_v2/run_N/results_gat_lstm_seq_v2_loss.csv
+  gru_enc_dec        → results_time_gru_enc_dec/run_N/results_gru_enc_dec.csv
+
+  
+  suffix_time_v3     → results_time_gatv2_gru_stop_nb/run_N/results_suffix_time_gnn.csv
+  suffix_time_v3_seq → results_time_gatv2_seq_gru_stop_nb/run_N/results_suffix_time_gnn.csv
+  suffix_time_v4     → results_time_gatv2_gru_stop_nb_v4/run_N/results_suffix_time_gnn.csv
+  suffix_time_v4_seq → results_time_gatv2_seq_gru_stop_nb_v4/run_N/results_suffix_time_gnn.csv
+  suffix_time_v5     → results_time_gatv2_gru_nb_v5/run_N/results_suffix_time_gnn.csv
+  suffix_time_v5_seq → results_time_gatv2_seq_gru_nb_v5/run_N/results_suffix_time_gnn.csv
 
 Usage
 -----
-    python run_all_suffix.py                                                  # suffix_time, run 1, 1 worker
-    python run_all_suffix.py --workers 4                                      # suffix_time, run 1, 4 logs in parallel
-    python run_all_suffix.py --model suffix_time --run-id 2 --workers 4
+    python run_all_suffix.py                                                  # gat_gru_v1, run 1, 1 worker
+    python run_all_suffix.py --workers 4                                      # gat_gru_v1, run 1, 4 logs in parallel
+    python run_all_suffix.py --model gat_gru_v3 --run-id 2 --workers 4
     python run_all_suffix.py --logs-dir /path/to/logs
 
-Usage with docker:
-    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --workers 16 --model gru_suffix_v2
+Docker
+------
+    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --workers 10 --model suffix_time_v5_seq
 """
 
 import argparse
@@ -45,21 +59,21 @@ from datetime import datetime
 # ─────────────────────────────────────────────
 
 EVENT_LOGS = [
-    "RequestForPayment",
+    #"RequestForPayment",
     "Sepsis",
-    "Hospital_Billing",
-    "DomesticDeclarations",
-    "PrepaidTravelCost",
-    "InternationalDeclarations",
+    #"Hospital_Billing",
+    #"DomesticDeclarations",
+    #"PrepaidTravelCost",
+    #"InternationalDeclarations",
     "BPI_Challenge_2012_A",
     "BPI_Challenge_2012_O",
-    "BPI_Challenge_2012_W",
+    #"BPI_Challenge_2012_W",
     "BPIC15_1",
     "BPIC15_2",
     "BPIC15_3",
     "BPIC15_4",
     "BPIC15_5",
-    "Road_Traffic_Fine_Management_Process",
+    #"Road_Traffic_Fine_Management_Process",
     #"BPI Challenge 2017",
 ]
 
@@ -68,60 +82,132 @@ EVENT_LOGS = [
 # ─────────────────────────────────────────────
 
 MODEL_CONFIGS = {
-    'suffix_time': {
-        'module':          'approach_suffix_v2.run_suffix_time_v1',
-        'results_sub':     'results_time',
+    # Merged GRU variants (partial-order prefix graphs)
+    'gat_gru_v1': {
+        'module':          'approach_suffix_v2.models.run_gat_gru',
+        'version':         'v1',
+        'results_subdir':  'results_gat_gru_v1',
+        'csv_file':        'results_gat_gru_v1.csv',
+    },
+    'gat_gru_v2': {
+        'module':          'approach_suffix_v2.models.run_gat_gru',
+        'version':         'v2',
+        'results_subdir':  'results_gat_gru_v2',
+        'csv_file':        'results_gat_gru_v2.csv',
+    },
+    'gat_gru_v3': {
+        'module':          'approach_suffix_v2.models.run_gat_gru',
+        'version':         'v3',
+        'results_subdir':  'results_gat_gru_v3',
+        'csv_file':        'results_gat_gru_v3.csv',
+    },
+    # Merged GRU variants (sequence-as-graph prefix graphs)
+    'gat_gru_seq_v1': {
+        'module':          'approach_suffix_v2.models.run_gat_gru_seq',
+        'version':         'v1',
+        'results_subdir':  'results_gat_gru_seq_v1',
+        'csv_file':        'results_gat_gru_seq_v1.csv',
+    },
+    'gat_gru_seq_v2': {
+        'module':          'approach_suffix_v2.models.run_gat_gru_seq',
+        'version':         'v2',
+        'results_subdir':  'results_gat_gru_seq_v2',
+        'csv_file':        'results_gat_gru_seq_v2.csv',
+    },
+    'gat_gru_seq_v3': {
+        'module':          'approach_suffix_v2.models.run_gat_gru_seq',
+        'version':         'v3',
+        'results_subdir':  'results_gat_gru_seq_v3',
+        'csv_file':        'results_gat_gru_seq_v3.csv',
+    },
+    # Transformer variants
+    'gat_trans_v1': {
+        'module':          'approach_suffix_v2.models.run_gat_trans',
+        'version':         'v1',
+        'results_subdir':  'results_gat_trans_v1',
+        'csv_file':        'results_gat_trans_v1.csv',
+    },
+    'gat_trans_seq_v1': {
+        'module':          'approach_suffix_v2.models.run_gat_trans_seq',
+        'version':         'v1',
+        'results_subdir':  'results_gat_trans_seq_v1',
+        'csv_file':        'results_gat_trans_seq_v1.csv',
+    },
+    # LSTM decoder variants (partial-order prefix graphs)
+    'gat_lstm_v1': {
+        'module':          'approach_suffix_v2.models.run_gat_lstm',
+        'version':         'v1',
+        'results_subdir':  'results_gat_lstm_v1',
+        'csv_file':        'results_gat_lstm_v1_loss.csv',
+    },
+    'gat_lstm_v2': {
+        'module':          'approach_suffix_v2.models.run_gat_lstm',
+        'version':         'v2',
+        'results_subdir':  'results_gat_lstm_v2',
+        'csv_file':        'results_gat_lstm_v2_loss.csv',
+    },
+    # LSTM decoder variants (sequence-as-graph prefix graphs)
+    'gat_lstm_seq_v1': {
+        'module':          'approach_suffix_v2.models.run_gat_lstm_seq',
+        'version':         'v1',
+        'results_subdir':  'results_gat_lstm_seq_v1',
+        'csv_file':        'results_gat_lstm_seq_v1_loss.csv',
+    },
+    'gat_lstm_seq_v2': {
+        'module':          'approach_suffix_v2.models.run_gat_lstm_seq',
+        'version':         'v2',
+        'results_subdir':  'results_gat_lstm_seq_v2',
+        'csv_file':        'results_gat_lstm_seq_v2_loss.csv',
+    },
+    # GRU encoder-decoder (unchanged, kept for reference)
+    'gru_enc_dec': {
+        'module':          'approach_suffix_v2.models.run_gru_enc_dec_v2',
+        'version':         None,
+        'results_subdir':  'results_time_gru_enc_dec',
+        'csv_file':        'results_gru_enc_dec.csv',
+    },
+    # models_v2 variants
+    'suffix_time_v3': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v3',
+        'version':         None,
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_gru_stop_nb',
         'csv_file':        'results_suffix_time_gnn.csv',
-        'default_encoder': 'gatv2_gru',
     },
-    'suffix_time_stop': {
-        'module':          'approach_suffix_v2.run_suffix_time_v2',
-        'results_sub':     'results_time',
+    'suffix_time_v3_seq': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v3_seq',
+        'version':         None,
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_seq_gru_stop_nb',
         'csv_file':        'results_suffix_time_gnn.csv',
-        'default_encoder': 'gatv2_gru_stop',
-        'pass_encoder':    False,
     },
-    'suffix_time_data_aware': {
-        'module':          'approach_suffix_v2.run_suffix_time_v3',
-        'results_sub':     'results_time',
+    'suffix_time_v4': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v4',
+        'version':         None,
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_gru_stop_nb_v4',
         'csv_file':        'results_suffix_time_gnn.csv',
-        'default_encoder': 'gatv2_data_aware_gru_stop',
-        'pass_encoder':    False,
     },
-    'suffix_time_cross_attn': {
-        'module':          'approach_suffix_v2.run_suffix_time_v4',
-        'results_sub':     'results_time',
+    'suffix_time_v4_seq': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v4_seq',
+        'version':         None,
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_seq_gru_stop_nb_v4',
         'csv_file':        'results_suffix_time_gnn.csv',
-        'default_encoder': 'gatv2_cross_attn_gru',
-        'pass_encoder':    False,
     },
-    'suffix_time_stop_v2_1': {
-        'module':          'run_suffix_time_v2_1',
-        'results_sub':     'results_time',
-        'csv_file':        'results_suffix_time_gnn_v2_1.csv',
-        'default_encoder': 'gatv2_gru_stop',
-        'pass_encoder':    False,
+    'suffix_time_v5': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v5',
+        'version':         None,
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_gru_nb_v5',
+        'csv_file':        'results_suffix_time_gnn.csv',
     },
-    'suffix_time_multilabel': {
-        'module':          'run_multilabel_v1',
-        'results_sub':     'results_multilabel',
-        'csv_file':        'results_multilabel.csv',
-        'default_encoder': 'gatv2_gru_multilabel',
-        'pass_encoder':    False,
-    },
-    'gru_suffix': {
-        'module':          'approach_suffix_v2.models.run_gru_suffix',
-        'results_sub':     'results',
-        'csv_file':        'results_gru_suffix.csv',
-        'default_encoder': 'gru_suffix',
-        'pass_encoder':    False,
-    },
-    'gru_suffix_v2': {
-        'module':          'approach_suffix_v2.models.run_gru_suffix_v2',
-        'results_sub':     'results',
-        'csv_file':        'results_gru_suffix_v2.csv',
-        'default_encoder': 'gru_suffix_v2',
-        'pass_encoder':    False,
+    'suffix_time_v5_seq': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v5_seq',
+        'version':         None,
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_seq_gru_nb_v5',
+        'csv_file':        'results_suffix_time_gnn.csv',
     },
 }
 
@@ -133,22 +219,17 @@ _HERE         = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.dirname(_HERE)
 
 _DEFAULT_LOGS_DIR = os.path.join(
-    _PROJECT_ROOT, "baselines", "next_activity_prediction", "event_logs"
+    _PROJECT_ROOT, "baselines", "SuffixTransformerNetwork", "Logs"
 )
 
 
-def _results_dir(model, run_id, gnn_encoder='gine'):
-    base = MODEL_CONFIGS[model]['results_sub']
-    sub  = f'{base}_{gnn_encoder}' if 'default_encoder' in MODEL_CONFIGS[model] else base
+def _results_dir(model, run_id):
+    sub = MODEL_CONFIGS[model]['results_subdir']
     return os.path.join(_HERE, sub, f"run_{run_id}")
 
 
-def _progress_file(model, run_id, gnn_encoder='gine'):
-    if MODEL_CONFIGS.get(model, {}).get('pass_encoder', True):
-        name = f"run_all_{model}_{gnn_encoder}_progress_run{run_id}.log"
-    else:
-        name = f"run_all_{model}_progress_run{run_id}.log"
-    return os.path.join(_HERE, name)
+def _progress_file(model, run_id):
+    return os.path.join(_HERE, f"run_all_{model}_progress_run{run_id}.log")
 
 
 # ─────────────────────────────────────────────
@@ -163,17 +244,14 @@ class _OOMError(Exception):
     pass
 
 
-def result_exists(log_name, model, run_id, gnn_encoder='gine'):
-    csv_path = os.path.join(_results_dir(model, run_id, gnn_encoder), MODEL_CONFIGS[model]['csv_file'])
+def result_exists(log_name, model, run_id):
+    csv_path = os.path.join(_results_dir(model, run_id), MODEL_CONFIGS[model]['csv_file'])
     if not os.path.isfile(csv_path):
         return False
     with open(csv_path, newline='') as f:
         for row in csv.DictReader(f):
-            if row.get('log') != log_name:
-                continue
-            if 'default_encoder' in MODEL_CONFIGS[model] and row.get('method') != gnn_encoder:
-                continue
-            return True
+            if row.get('log') == log_name:
+                return True
     return False
 
 
@@ -194,6 +272,7 @@ import sys, os
 sys.path.insert(0, {_PROJECT_ROOT!r})
 sys.path.insert(0, {_HERE!r})
 sys.path.insert(0, {os.path.join(_HERE, 'models')!r})
+sys.path.insert(0, {os.path.join(_HERE, 'models_v2')!r})
 os.chdir({_PROJECT_ROOT!r})
 """
 
@@ -220,15 +299,16 @@ _CLEANUP = (
 )
 
 
-def _build_code(log_path, log_name, results_dir, model, use_cpu=False, gnn_encoder='gine'):
-    module    = MODEL_CONFIGS[model]['module']
+def _build_code(log_path, log_name, results_dir, model, use_cpu=False):
+    cfg       = MODEL_CONFIGS[model]
+    module    = cfg['module']
+    version   = cfg['version']
     cpu_env   = "import os; os.environ['CUDA_VISIBLE_DEVICES'] = ''\n" if use_cpu else ""
     oom_guard = _OOM_GUARD_CPU if use_cpu else _OOM_GUARD
-    if 'default_encoder' in MODEL_CONFIGS[model]:
-        if MODEL_CONFIGS[model].get('pass_encoder', True):
-            call_args = f"log_name={log_name!r}, results_dir={results_dir!r}, model_type={gnn_encoder!r}"
-        else:
-            call_args = f"log_name={log_name!r}, results_dir={results_dir!r}"
+    if version is not None:
+        call_args = f"log_name={log_name!r}, version={version!r}, results_dir={results_dir!r}"
+    elif cfg.get('no_log_path'):
+        call_args = f"log_name={log_name!r}, results_dir={results_dir!r}"
     else:
         call_args = f"log_path={log_path!r}, log_name={log_name!r}, results_dir={results_dir!r}"
     return (
@@ -279,16 +359,14 @@ def _log_progress(progress_file, status, log_name, detail=None):
 # Per-job runner
 # ─────────────────────────────────────────────
 
-def _run_one(log_file, log_name, results_dir, model, progress_file, gnn_encoder='gine'):
+def _run_one(log_file, log_name, results_dir, model, progress_file):
     _log_progress(progress_file, "RUNNING", log_name)
     try:
         try:
-            _run_subprocess(_build_code(log_file, log_name, results_dir, model,
-                                        use_cpu=False, gnn_encoder=gnn_encoder))
+            _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=False))
         except _OOMError:
             _log_progress(progress_file, "OOM→CPU", log_name)
-            _run_subprocess(_build_code(log_file, log_name, results_dir, model,
-                                        use_cpu=True, gnn_encoder=gnn_encoder))
+            _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=True))
         _log_progress(progress_file, "DONE", log_name)
     except Exception:
         _log_progress(progress_file, "ERROR", log_name, detail=traceback.format_exc())
@@ -298,23 +376,15 @@ def _run_one(log_file, log_name, results_dir, model, progress_file, gnn_encoder=
 # Main runner
 # ─────────────────────────────────────────────
 
-def run_all(model='suffix_time', run_id=1, progress_file=None, logs_dir=None, workers=1,
-            gnn_encoder=None):
+def run_all(model='gat_gru_v1', run_id=1, progress_file=None, logs_dir=None, workers=1):
     if model not in MODEL_CONFIGS:
         raise ValueError(f"Unknown model {model!r}. Choose from: {list(MODEL_CONFIGS)}")
 
-    # Auto-select encoder from config when none is explicitly provided
-    cfg = MODEL_CONFIGS[model]
-    if gnn_encoder is None and 'default_encoder' in cfg:
-        gnn_encoder = cfg['default_encoder']
-
     logs_dir      = logs_dir      or _DEFAULT_LOGS_DIR
-    progress_file = progress_file or _progress_file(model, run_id, gnn_encoder)
-    results_dir   = _results_dir(model, run_id, gnn_encoder)
+    progress_file = progress_file or _progress_file(model, run_id)
+    results_dir   = _results_dir(model, run_id)
 
     print(f"Model              : {model}")
-    if 'default_encoder' in cfg:
-        print(f"GNN encoder        : {gnn_encoder}")
     print(f"Run ID             : {run_id}")
     print(f"Workers (logs)     : {workers}")
     print(f"Total logs         : {len(EVENT_LOGS)}")
@@ -324,7 +394,7 @@ def run_all(model='suffix_time', run_id=1, progress_file=None, logs_dir=None, wo
 
     jobs = []
     for log_name in EVENT_LOGS:
-        if result_exists(log_name, model, run_id, gnn_encoder=gnn_encoder):
+        if result_exists(log_name, model, run_id):
             print(f"[SKIP] log={log_name}", flush=True)
             continue
         log_file = _find_log_file(log_name, logs_dir)
@@ -336,8 +406,7 @@ def run_all(model='suffix_time', run_id=1, progress_file=None, logs_dir=None, wo
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
-            pool.submit(_run_one, lf, ln, results_dir, model, progress_file,
-                        gnn_encoder): ln
+            pool.submit(_run_one, lf, ln, results_dir, model, progress_file): ln
             for lf, ln in jobs
         }
         for fut in concurrent.futures.as_completed(futures):
@@ -358,17 +427,10 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model",
-        default="suffix_time",
-        choices=sorted(MODEL_CONFIGS),
-        help="Which model to run (default: suffix_time)",
+        default="gat_gru_v1",
+        choices=sorted(MODEL_CONFIGS.keys()),
+        help="Which model to run (default: gat_gru_v1)",
     )
-    parser.add_argument(
-        "--encoder",
-        default=None,
-        choices=["gatv2_gru", "gatv2_gru_stop", "gatv2_data_aware_gru_stop", "gatv2_cross_attn_gru", "gatv2_gru_multilabel", "gatv2_gru_stop_v2_1"],
-        help="GNN encoder variant (default: auto-selected from model config)",
-    )
-
     parser.add_argument(
         "--run-id",
         type=int,
@@ -401,5 +463,4 @@ if __name__ == "__main__":
         progress_file=args.progress_file,
         logs_dir=args.logs_dir,
         workers=args.workers,
-        gnn_encoder=args.encoder,
     )

@@ -78,3 +78,170 @@
 [2026-05-12 07:25:13] OOM→CPU | model=SuTraN_DA | log=BPIC15_2
 [2026-05-12 11:22:22] DONE | model=SuTraN_DA | log=BPIC15_3
 [2026-05-12 11:22:22] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_5
+[2026-05-29 20:20:48] RUNNING | model=SuTraN_DA | log=BPIC15_1
+[2026-05-29 20:20:48] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_1
+[2026-05-29 20:20:48] RUNNING | model=SuTraN_NDA | log=BPIC15_1
+[2026-05-29 21:18:27] ERROR | model=SuTraN_NDA | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-05-29 21:18:27] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_1
+[2026-05-29 21:18:28] ERROR | model=SuTraN_DA | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-05-29 21:18:28] RUNNING | model=ED_LSTM | log=BPIC15_1
+[2026-05-29 21:18:28] ERROR | model=ED_LSTM | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-05-29 21:18:28] RUNNING | model=SEP_LSTM | log=BPIC15_1
+[2026-05-29 21:18:28] ERROR | model=CRTP_LSTM_NDA | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-05-29 21:18:28] RUNNING | model=BEST | log=BPIC15_1
+[2026-05-29 21:18:29] ERROR | model=CRTP_LSTM_DA | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 252, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+      File "/app/run_all_suffix_baselines.py", line 238, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-05-29 21:18:29] RUNNING | model=SuTraN_DA | log=BPIC15_2
+[2026-05-29 21:18:32] RUNNING | model=SuTraN_DA | log=BPIC15_1
+[2026-05-29 21:18:32] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_1
+[2026-05-29 21:18:32] RUNNING | model=SuTraN_NDA | log=BPIC15_1
+[2026-05-29 22:13:01] OOM→CPU | model=SuTraN_NDA | log=BPIC15_1
+[2026-05-29 23:18:39] DONE | model=CRTP_LSTM_DA | log=BPIC15_1
+[2026-05-29 23:18:39] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_1
+[2026-05-30 01:04:17] DONE | model=CRTP_LSTM_NDA | log=BPIC15_1
+[2026-05-30 01:04:17] RUNNING | model=ED_LSTM | log=BPIC15_1
+[2026-05-30 01:49:09] DONE | model=SuTraN_DA | log=BPIC15_1
+[2026-05-30 01:49:09] RUNNING | model=SEP_LSTM | log=BPIC15_1
+[2026-05-30 02:12:25] DONE | model=ED_LSTM | log=BPIC15_1
+[2026-05-30 02:12:25] RUNNING | model=BEST | log=BPIC15_1
+[2026-05-30 02:44:06] DONE | model=SEP_LSTM | log=BPIC15_1
+[2026-05-30 02:44:06] RUNNING | model=SuTraN_DA | log=BPIC15_2
+[2026-05-30 03:12:02] DONE | model=BEST | log=BPIC15_1
+[2026-05-30 03:12:02] RUNNING | model=SuTraN_NDA | log=BPIC15_2
+[2026-05-30 07:25:56] DONE | model=SuTraN_DA | log=BPIC15_2
+[2026-05-30 07:25:56] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_2
+[2026-05-30 08:29:24] DONE | model=SuTraN_NDA | log=BPIC15_2
+[2026-05-30 08:29:24] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_2
+[2026-05-30 08:46:35] DONE | model=CRTP_LSTM_DA | log=BPIC15_2
+[2026-05-30 08:46:35] RUNNING | model=ED_LSTM | log=BPIC15_2
+[2026-05-30 09:02:44] RUNNING | model=SuTraN_NDA | log=BPIC15_1
+[2026-05-30 09:02:44] RUNNING | model=ED_LSTM | log=BPIC15_2
+[2026-05-30 09:02:44] RUNNING | model=BEST | log=BPIC15_2
+[2026-05-30 09:02:44] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_2
+[2026-05-30 09:02:44] RUNNING | model=SuTraN_NDA | log=BPIC15_3
+[2026-05-30 09:02:44] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_3
+[2026-05-30 09:02:44] RUNNING | model=BEST | log=BPIC15_3
+[2026-05-30 09:02:44] RUNNING | model=SEP_LSTM | log=BPIC15_2
+[2026-05-30 09:02:44] RUNNING | model=ED_LSTM | log=BPIC15_3
+[2026-05-30 09:02:44] RUNNING | model=SEP_LSTM | log=BPIC15_3
+[2026-05-30 09:02:44] RUNNING | model=SuTraN_NDA | log=BPIC15_4
+[2026-05-30 09:02:44] RUNNING | model=ED_LSTM | log=BPIC15_4
+[2026-05-30 09:02:44] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_4
+[2026-05-30 09:02:44] RUNNING | model=BEST | log=BPIC15_4
+[2026-05-30 09:02:44] RUNNING | model=SEP_LSTM | log=BPIC15_4
+[2026-05-30 09:02:44] RUNNING | model=SuTraN_NDA | log=BPIC15_5
+[2026-05-30 09:02:44] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_5
+[2026-05-30 09:02:44] RUNNING | model=BEST | log=BPIC15_5
+[2026-05-30 09:02:44] RUNNING | model=ED_LSTM | log=BPIC15_5
+[2026-05-30 09:02:44] RUNNING | model=SEP_LSTM | log=BPIC15_5
+[2026-05-30 09:23:28] DONE | model=BEST | log=BPIC15_4
+[2026-05-30 09:23:28] RUNNING | model=SuTraN_NDA | log=RequestForPayment
+[2026-05-30 09:51:24] DONE | model=SEP_LSTM | log=BPIC15_4
+[2026-05-30 09:51:24] RUNNING | model=CRTP_LSTM_NDA | log=RequestForPayment
+[2026-05-30 10:06:01] DONE | model=BEST | log=BPIC15_3
+[2026-05-30 10:06:01] RUNNING | model=ED_LSTM | log=RequestForPayment
+[2026-05-30 10:09:17] DONE | model=SuTraN_NDA | log=RequestForPayment
+[2026-05-30 10:09:17] RUNNING | model=SEP_LSTM | log=RequestForPayment
+[2026-05-30 10:09:31] DONE | model=BEST | log=BPIC15_2
+[2026-05-30 10:09:31] RUNNING | model=BEST | log=RequestForPayment
+[2026-05-30 10:09:43] DONE | model=BEST | log=RequestForPayment
+[2026-05-30 10:09:43] RUNNING | model=SuTraN_NDA | log=Sepsis
+[2026-05-30 10:16:02] DONE | model=CRTP_LSTM_NDA | log=BPIC15_4
+[2026-05-30 10:16:02] RUNNING | model=CRTP_LSTM_NDA | log=Sepsis
+[2026-05-30 10:28:14] DONE | model=CRTP_LSTM_NDA | log=Sepsis
+[2026-05-30 10:28:14] RUNNING | model=ED_LSTM | log=Sepsis
+[2026-05-30 10:32:14] DONE | model=SEP_LSTM | log=RequestForPayment
+[2026-05-30 10:32:14] RUNNING | model=SEP_LSTM | log=Sepsis
+[2026-05-30 10:34:04] DONE | model=SEP_LSTM | log=BPIC15_2
+[2026-05-30 10:34:04] RUNNING | model=BEST | log=Sepsis
+[2026-05-30 10:34:21] DONE | model=BEST | log=Sepsis
+[2026-05-30 10:34:21] RUNNING | model=SuTraN_NDA | log=DomesticDeclarations
+[2026-05-30 10:39:14] DONE | model=SEP_LSTM | log=Sepsis
+[2026-05-30 10:39:14] RUNNING | model=CRTP_LSTM_NDA | log=DomesticDeclarations
+[2026-05-30 10:40:34] DONE | model=ED_LSTM | log=RequestForPayment
+[2026-05-30 10:40:34] RUNNING | model=ED_LSTM | log=DomesticDeclarations
+[2026-05-30 10:43:11] DONE | model=CRTP_LSTM_NDA | log=RequestForPayment
+[2026-05-30 10:43:11] RUNNING | model=SEP_LSTM | log=DomesticDeclarations
+[2026-05-30 10:43:18] DONE | model=ED_LSTM | log=Sepsis
+[2026-05-30 10:43:18] RUNNING | model=BEST | log=DomesticDeclarations
+[2026-05-30 10:43:35] DONE | model=BEST | log=DomesticDeclarations
+[2026-05-30 10:43:35] RUNNING | model=SuTraN_NDA | log=PrepaidTravelCost
+[2026-05-30 10:47:15] DONE | model=ED_LSTM | log=BPIC15_4
+[2026-05-30 10:47:15] RUNNING | model=CRTP_LSTM_NDA | log=PrepaidTravelCost
+[2026-05-30 11:01:15] DONE | model=SuTraN_NDA | log=Sepsis
+[2026-05-30 11:01:15] RUNNING | model=ED_LSTM | log=PrepaidTravelCost
+[2026-05-30 11:05:28] DONE | model=SEP_LSTM | log=BPIC15_3
+[2026-05-30 11:05:28] RUNNING | model=SEP_LSTM | log=PrepaidTravelCost
+[2026-05-30 11:08:57] DONE | model=CRTP_LSTM_NDA | log=BPIC15_3
+[2026-05-30 11:08:57] RUNNING | model=BEST | log=PrepaidTravelCost
+[2026-05-30 11:09:08] DONE | model=BEST | log=PrepaidTravelCost
+[2026-05-30 11:09:08] RUNNING | model=SuTraN_NDA | log=InternationalDeclarations
+[2026-05-30 11:10:34] DONE | model=SEP_LSTM | log=DomesticDeclarations
+[2026-05-30 11:10:34] RUNNING | model=CRTP_LSTM_NDA | log=InternationalDeclarations
+[2026-05-30 11:13:07] DONE | model=CRTP_LSTM_NDA | log=BPIC15_2
+[2026-05-30 11:13:07] RUNNING | model=ED_LSTM | log=InternationalDeclarations
+[2026-05-30 11:14:00] DONE | model=CRTP_LSTM_NDA | log=PrepaidTravelCost
+[2026-05-30 11:14:00] RUNNING | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-30 11:14:28] DONE | model=SEP_LSTM | log=PrepaidTravelCost
+[2026-05-30 11:14:28] RUNNING | model=BEST | log=InternationalDeclarations
+[2026-05-30 11:15:10] DONE | model=BEST | log=InternationalDeclarations
+[2026-05-30 11:15:10] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_A
+[2026-05-30 11:18:01] DONE | model=SuTraN_NDA | log=PrepaidTravelCost
+[2026-05-30 11:18:01] RUNNING | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_A
+[2026-05-30 11:21:15] DONE | model=CRTP_LSTM_NDA | log=DomesticDeclarations
+[2026-05-30 11:21:15] RUNNING | model=ED_LSTM | log=BPI_Challenge_2012_A
+[2026-05-30 11:25:32] DONE | model=ED_LSTM | log=DomesticDeclarations
+[2026-05-30 11:25:32] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_A
+[2026-05-30 11:34:19] DONE | model=ED_LSTM | log=PrepaidTravelCost
+[2026-05-30 11:34:19] RUNNING | model=BEST | log=BPI_Challenge_2012_A
+[2026-05-30 11:34:28] DONE | model=SEP_LSTM | log=BPIC15_5
+[2026-05-30 11:34:28] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_O
+[2026-05-30 11:34:39] DONE | model=BEST | log=BPI_Challenge_2012_A
+[2026-05-30 11:34:39] RUNNING | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_O
+[2026-05-30 11:40:56] DONE | model=ED_LSTM | log=BPIC15_2
+[2026-05-30 11:40:56] RUNNING | model=ED_LSTM | log=BPI_Challenge_2012_O
+[2026-05-30 11:43:28] DONE | model=SuTraN_NDA | log=DomesticDeclarations
+[2026-05-30 11:43:28] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_O
+[2026-05-30 11:47:05] DONE | model=SEP_LSTM | log=InternationalDeclarations
+[2026-05-30 11:47:05] RUNNING | model=BEST | log=BPI_Challenge_2012_O
+[2026-05-30 11:47:07] DONE | model=BEST | log=BPIC15_5
+[2026-05-30 11:47:07] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_W
+[2026-05-30 11:47:18] DONE | model=BEST | log=BPI_Challenge_2012_O
+[2026-05-30 11:47:18] RUNNING | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_W
+[2026-05-30 11:53:36] DONE | model=ED_LSTM | log=BPI_Challenge_2012_A
+[2026-05-30 11:53:36] RUNNING | model=ED_LSTM | log=BPI_Challenge_2012_W
+[2026-05-30 11:56:18] DONE | model=CRTP_LSTM_NDA | log=BPIC15_5
+[2026-05-30 11:56:18] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_W
+[2026-05-30 11:58:10] DONE | model=ED_LSTM | log=BPIC15_3
+[2026-05-30 11:58:10] RUNNING | model=BEST | log=BPI_Challenge_2012_W
+[2026-05-30 11:59:25] DONE | model=SEP_LSTM | log=BPI_Challenge_2012_A
+[2026-05-30 11:59:25] RUNNING | model=SuTraN_NDA | log=Hospital_Billing

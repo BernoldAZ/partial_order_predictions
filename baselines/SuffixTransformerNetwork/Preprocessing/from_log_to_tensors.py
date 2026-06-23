@@ -4,9 +4,10 @@ dataframes for both the train and test sets and then transforms
 these into tensors. 
 """
 
-import os 
-import numpy as np 
-import pandas as pd 
+import os
+import numpy as np
+import pandas as pd
+import torch
 from Preprocessing.dataframes_pipeline import main_dataframe_pipeline
 from Preprocessing.tensor_creation import generate_tensordata_train_test
 
@@ -146,6 +147,29 @@ def log_to_tensors(log,
                                                                                                                                                             cat_eventfts,
                                                                                                                                                             num_eventfts,
                                                                                                                                                             outcome)
+
+    # New-block labels: 1.0 if suffix event starts a new block (timestamp differs
+    # from the previous event), 0.0 if concurrent (same block) or padding.
+    # Mirrors the computation in from_log_to_tensors_graph.py lines 198-203.
+    output_dir = os.path.join('results_per_log', log_name)
+    os.makedirs(output_dir, exist_ok=True)
+    for split_name, ps in [('train', train_pref_suff), ('val', val_pref_suff), ('test', test_pref_suff)]:
+        prefix_df  = ps[0]
+        suffix_df  = ps[1]
+        prefix_ids = list(prefix_df.drop_duplicates(subset=case_id)[case_id])
+        pref_grp   = dict(list(prefix_df.groupby(case_id, sort=False)))
+        suff_grp   = dict(list(suffix_df.groupby(case_id, sort=False)))
+        all_nb = []
+        for pid in prefix_ids:
+            suff_ts = suff_grp[pid][timestamp].to_numpy()
+            prev_ts = np.concatenate([[pref_grp[pid][timestamp].iloc[-1]], suff_ts[:-1]])
+            nb_arr  = (suff_ts != prev_ts).astype(np.float32)
+            nb_buf  = np.zeros(window_size, dtype=np.float32)
+            nb_buf[:len(nb_arr)] = nb_arr
+            all_nb.append(nb_buf)
+        nb_tensor = torch.tensor(np.stack(all_nb), dtype=torch.float32)
+        torch.save(nb_tensor, os.path.join(output_dir, f'{split_name}_new_block_labels.pt'))
+    print(f"New-block labels saved to '{output_dir}/'.")
 
     n_train_cases = train_pref_suff[0]['orig_case_id'].nunique()
     n_val_cases   = val_pref_suff[0]['orig_case_id'].nunique()

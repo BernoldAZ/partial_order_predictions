@@ -21,13 +21,17 @@ Graph construction (per prefix):
       Inter-block  every node in block_i -> every node in block_{i+1}.
                    edge_attr = standardised ts_prev of the first node in block_{i+1},
                    which holds the actual inter-block elapsed time.
+  - last_block_mask : bool [k]  True for nodes in the last concurrent block of the prefix.
   - Suffix (padded to window_size, attached directly to the Data object):
-      suffix_act    (int64,   [W])    activity labels of suffix events (shifted +1, 0=pad)
-      suffix_num    (float32, [W, 2]) [ts_start, ts_prev] of suffix events (-1=pad)
-      ttnext_label  (float32, [W, 1]) time-till-next-event targets (-100=pad)
-      rtime_label   (float32, [W, 1]) remaining-runtime targets (-100=pad)
-      act_label_seq (int64,   [W])    ground-truth activity labels incl. END token (0=pad)
-      outcome_label (float32, [1, 1]) binary outcome (only present if outcome is not None)
+      suffix_act      (int64,   [W])    activity labels of suffix events (shifted +1, 0=pad)
+      suffix_num      (float32, [W, 2]) [ts_start, ts_prev] of suffix events (-1=pad)
+      ttnext_label    (float32, [W, 1]) time-till-next-event targets (-100=pad)
+      rtime_label     (float32, [W, 1]) remaining-runtime targets (-100=pad)
+      act_label_seq   (int64,   [W])    ground-truth activity labels incl. END token (0=pad)
+      new_block_label (float32, [W])    1.0 if suffix event starts a new block (timestamp
+                                        differs from previous event), 0.0 if concurrent
+                                        with previous event (0=pad)
+      outcome_label   (float32, [1, 1]) binary outcome (only present if outcome is not None)
 """
 
 import os
@@ -101,11 +105,16 @@ def _build_prefix_graph(rows, cat_cols, num_node_cols, timestamp_col):
         edge_index = torch.zeros((2, 0), dtype=torch.long)
         edge_attr  = torch.zeros((0, 1), dtype=torch.float32)
 
+    last_block_mask = torch.zeros(k, dtype=torch.bool)
+    for idx in blocks[-1]:
+        last_block_mask[idx] = True
+
     return Data(
         x=torch.from_numpy(num_arr),
         cat_x=torch.from_numpy(cat_arr),
         edge_index=edge_index,
         edge_attr=edge_attr,
+        last_block_mask=last_block_mask,
     )
 
 
@@ -157,6 +166,11 @@ def _generate_graph_dataset(pref_suff, case_id, act_label, timestamp,
 
         # --- Prefix graph ---
         data = _build_prefix_graph(pref_rows, cat_cols, num_node_cols, timestamp)
+        last_num = pref_rows[['ts_start', 'ts_prev']].iloc[-1].to_numpy().astype(np.float32)
+        data.last_prefix_num = torch.from_numpy(last_num).unsqueeze(0)  # (1, 2) → batched: (B, 2)
+        pref_ts = pref_rows[timestamp].to_numpy()
+        last_nb_val = float(len(pref_ts) == 1 or pref_ts[-1] != pref_ts[-2])
+        data.last_prefix_nb = torch.tensor([last_nb_val], dtype=torch.float32)
 
         # --- Suffix activity (int64, shifted +1, padded 0) ---
         s_act = suff_rows[act_label].to_numpy().astype(np.int64) + 1
@@ -188,6 +202,16 @@ def _generate_graph_dataset(pref_suff, case_id, act_label, timestamp,
         act_buf = np.zeros(W, dtype=np.int64)
         act_buf[:len(act_seq)] = act_seq
         data.act_label_seq = torch.from_numpy(act_buf)
+
+        # --- New-block label (float32, padded 0.0) ---
+        # 1.0 = suffix event starts a new block (timestamp differs from previous event)
+        # 0.0 = concurrent with previous event (same block), or padding
+        suff_ts     = suff_rows[timestamp].to_numpy()
+        prev_ts     = np.concatenate([[pref_rows[timestamp].iloc[-1]], suff_ts[:-1]])
+        nb_arr      = (suff_ts != prev_ts).astype(np.float32)
+        nb_buf      = np.zeros(W, dtype=np.float32)
+        nb_buf[:len(nb_arr)] = nb_arr
+        data.new_block_label = torch.from_numpy(nb_buf)
 
         # --- Outcome (optional) ---
         if outcome:

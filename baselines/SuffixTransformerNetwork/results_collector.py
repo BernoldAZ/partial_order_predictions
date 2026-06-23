@@ -26,6 +26,8 @@ METRICS = {
     "Conc RRT (min) ↓":   ("conc_rrt_mae_minutes",      2),
     "Conc next acc ↑":    ("conc_next_act_accuracy",    4),
     "Conc next F1 ↑":     ("conc_next_act_f1_weighted", 4),
+    "GES ↑":              ("ges_approx",                4),
+    "Conc GES ↑":         ("conc_ges_approx",           4),
 }
 
 def _load_runs(log_dir, result_dir_base):
