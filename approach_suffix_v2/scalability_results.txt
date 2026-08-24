@@ -1,0 +1,88 @@
+
+=== Log: BPIC15_1 ===
+          Model  Training time (s)  Testing time (s)    # params
+       Graph_v1         19180.9800          488.9900  88723.0000
+        ED-LSTM          6487.1300           13.4700 295954.0000
+   SuTraN (NDA)         29045.8700          128.7300 149619.0000
+       SEP-LSTM          1550.6300          207.6200 273618.0000
+CRTP-LSTM (NDA)          3729.9400           33.1900 151698.0000
+           BEST             7.3700          129.8700         NaN
+    SuTraN (DA)                NaN               NaN         NaN
+ CRTP-LSTM (DA)                NaN               NaN         NaN
+
+=== Log: BPIC15_2 ===
+          Model  Training time (s)  Testing time (s)    # params
+       Graph_v1         20174.1900         1118.4500  87427.0000
+        ED-LSTM          7240.3200           17.1600 294658.0000
+       SEP-LSTM          1346.8000          238.8900 271890.0000
+           BEST             8.0000          151.2800         NaN
+   SuTraN (NDA)         32762.0900           81.7000 148707.0000
+CRTP-LSTM (NDA)          3882.5300           39.9300 150210.0000
+    SuTraN (DA)                NaN               NaN         NaN
+ CRTP-LSTM (DA)                NaN               NaN         NaN
+
+=== Log: BPIC15_3 ===
+          Model  Training time (s)  Testing time (s)    # params
+       Graph_v1         22397.4800          618.7500  88075.0000
+       SEP-LSTM          2110.8000          192.1000 272754.0000
+        ED-LSTM          8637.9800           13.9300 295306.0000
+   SuTraN (NDA)         30180.6500          105.8200 149163.0000
+CRTP-LSTM (NDA)          4003.6700           33.8500 150954.0000
+           BEST             8.2200          131.5400         NaN
+    SuTraN (DA)                NaN               NaN         NaN
+ CRTP-LSTM (DA)                NaN               NaN         NaN
+
+=== Log: BPIC15_4 ===
+          Model  Training time (s)  Testing time (s)    # params
+       Graph_v1         19091.2000          268.3700  83301.0000
+       SEP-LSTM          1548.5900          165.2800 267688.0000
+           BEST             7.0300           87.2000         NaN
+   SuTraN (NDA)         13940.8300          143.1100 146469.0000
+        ED-LSTM          5779.9100           11.8500 290916.0000
+CRTP-LSTM (NDA)          3154.5600           26.5100 146548.0000
+    SuTraN (DA)                NaN               NaN         NaN
+ CRTP-LSTM (DA)                NaN               NaN         NaN
+
+=== Log: BPIC15_5 ===
+          Model  Training time (s)  Testing time (s)    # params
+       Graph_v1         23250.6200         3899.4100  85836.0000
+       SEP-LSTM          1965.0300          212.3600 270423.0000
+           BEST             6.0800          152.3600         NaN
+        ED-LSTM          6989.6400           15.8800 293259.0000
+   SuTraN (NDA)         26894.4500          150.6300 147916.0000
+CRTP-LSTM (NDA)          4480.7000           37.4400 148923.0000
+    SuTraN (DA)                NaN               NaN         NaN
+ CRTP-LSTM (DA)                NaN               NaN         NaN
+
+=== Log: BPI_Challenge_2012_A ===
+          Model  Training time (s)  Testing time (s)    # params
+       Graph_v1          5856.1100           29.1000  24144.0000
+       SEP-LSTM          3010.8100            6.0800 207579.0000
+CRTP-LSTM (NDA)          3632.4100            2.3600  95679.0000
+           BEST             0.7100            4.7800         NaN
+   SuTraN (NDA)          3817.5000            2.4300 120016.0000
+        ED-LSTM          3161.7700            1.2300 238479.0000
+    SuTraN (DA)                NaN               NaN         NaN
+ CRTP-LSTM (DA)                NaN               NaN         NaN
+
+=== Log: BPI_Challenge_2012_O ===
+          Model  Training time (s)  Testing time (s)    # params
+       Graph_v1          6225.6900           17.1200  23219.0000
+        ED-LSTM          2601.0700            0.9300 237746.0000
+   SuTraN (NDA)          3030.5100            7.6100 119827.0000
+       SEP-LSTM          1909.1700            8.3900 206850.0000
+CRTP-LSTM (NDA)          2215.6500            1.9900  95090.0000
+           BEST             0.5200            4.3200         NaN
+    SuTraN (DA)                NaN               NaN         NaN
+ CRTP-LSTM (DA)                NaN               NaN         NaN
+
+=== Log: Sepsis ===
+          Model  Training time (s)  Testing time (s)    # params
+       Graph_v1          2001.5300           10.7800  26012.0000
+       SEP-LSTM           548.8300           18.3900 209055.0000
+           BEST             0.5700            6.7800         NaN
+CRTP-LSTM (NDA)           967.4400            2.8100  96875.0000
+   SuTraN (NDA)          4540.9100           17.7700 120412.0000
+        ED-LSTM           990.8500            1.1600 239963.0000
+    SuTraN (DA)                NaN               NaN         NaN
+ CRTP-LSTM (DA)                NaN               NaN         NaN

@@ -1,98 +1,172 @@
-import pandas as pd 
-import numpy as np 
+import os
+import pickle
+
+import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import torch
 
+# ---------------------------------------------------------------------------
+# Baseline result-directory names (mirrors _RESULT_DIRS in run_all_suffix_baselines.py)
+# ---------------------------------------------------------------------------
+
+_BASELINE_PATHS = {
+    'SEP_LSTM':     'SEP_LSTM_results',
+    'CRTP_LSTM':    'CRTP_LSTM_NDA_results',
+    'CRTP_LSTM_DA': 'CRTP_LSTM_DA_results',
+    'ED_LSTM':      'ED_LSTM_results',
+    'SuTraN':       'SUTRAN_NDA_results',
+    'SuTraN_DA':    'SUTRAN_DA_results',
+    'BEST':         'BEST_results',
+}
+
+
+def _load_and_average_runs(pkl_paths):
+    """Load per-length result dicts from available run paths and average them.
+
+    Handles both 3-element [DLS, MAE, count] and 4-element [DLS, MAE, count, GES]
+    dicts so that old results (without GES) can be mixed with new ones.
+    Returns None if no path exists.
+    """
+    run_dicts = []
+    for p in pkl_paths:
+        if os.path.isfile(p):
+            with open(p, 'rb') as f:
+                run_dicts.append(pickle.load(f))
+    if not run_dicts:
+        return None
+    all_keys = set()
+    for d in run_dicts:
+        all_keys.update(d.keys())
+    averaged = {}
+    for k in all_keys:
+        vals = [d[k] for d in run_dicts if k in d]
+        n = max(len(v) for v in vals)
+        row = []
+        for i in range(n):
+            if i == 2:  # instance count is identical across runs (same test set)
+                row.append(vals[0][2])
+            else:
+                col = [v[i] for v in vals if len(v) > i and v[i] is not None]
+                row.append(sum(col) / len(col) if col else None)
+        averaged[k] = row
+    return averaged
+
 def create_dataframes(prefix_dicts, suffix_dicts, string_list_models):
     """
-    Create dataframes for average Damerau-Levenshtein similarity (DLS) 
-    and Mean Absolute Error (MAE) based on prefix and suffix lengths from 
-    N models (N being the number of models for which the results should 
-    be analyzed, and hence also the number of dictionaries in the 
-    `prefix_dicts` and `suffix_dicts` lists, as well as the number of 
-    strings in the `string_list_models` list. 
+    Create dataframes for average Damerau-Levenshtein similarity (DLS),
+    Mean Absolute Error (MAE), and Graph Edit Similarity (GES) based on
+    prefix and suffix lengths from N models (N being the number of models
+    for which the results should be analyzed, and hence also the number of
+    dictionaries in the `prefix_dicts` and `suffix_dicts` lists, as well
+    as the number of strings in the `string_list_models` list.
 
-    The order of the prefix and suffix dictionaries contained within the 
-    `prefix_dicts` and `suffix_dicts` lists respectively, as well as the 
-    order of the strings in the `string_list_models`, should match. 
+    The order of the prefix and suffix dictionaries contained within the
+    `prefix_dicts` and `suffix_dicts` lists respectively, as well as the
+    order of the strings in the `string_list_models`, should match.
 
     Parameters
     ----------
     prefix_dicts : list of dict
-        List of dictionaries containing results aggregated over prefix 
-        lengths for different models. Each dictionary should have keys as 
-        integer prefix lengths and values as lists of three elements: 
-        [average DLS, average MAE in minutes, total instance count].
+        List of dictionaries containing results aggregated over prefix
+        lengths for different models. Each dictionary should have keys as
+        integer prefix lengths and values as lists of three or four
+        elements: [average DLS, average MAE in minutes, total instance
+        count] or [average DLS, average MAE in minutes, total instance
+        count, average GES].
     suffix_dicts : list of dict
-        List of dictionaries containing results aggregated over suffix 
-        lengths for different models. Each dictionary should have keys as 
-        integer suffix lengths and values as lists of three elements: 
-        [average DLS, average MAE in minutes, total instance count].
-    string_list_models : list of str 
-        List of N model names, with the order of the model names 
-        corresponding to the order in which the prefix and suffix 
-        dictionaries (`prefix_dicts` and `suffix_dicts`) are sorted. 
+        List of dictionaries containing results aggregated over suffix
+        lengths for different models. Each dictionary should have keys as
+        integer suffix lengths and values as lists of three or four
+        elements: [average DLS, average MAE in minutes, total instance
+        count] or [average DLS, average MAE in minutes, total instance
+        count, average GES].
+    string_list_models : list of str
+        List of N model names, with the order of the model names
+        corresponding to the order in which the prefix and suffix
+        dictionaries (`prefix_dicts` and `suffix_dicts`) are sorted.
 
     Returns
     -------
     df_prefix_dls : pd.DataFrame
-        DataFrame containing prefix lengths, instance counts, and average 
+        DataFrame containing prefix lengths, instance counts, and average
         DLS for each model.
     df_prefix_mae : pd.DataFrame
-        DataFrame containing prefix lengths, instance counts, and average 
+        DataFrame containing prefix lengths, instance counts, and average
         MAE for each model.
     df_suffix_dls : pd.DataFrame
-        DataFrame containing suffix lengths, instance counts, and average 
+        DataFrame containing suffix lengths, instance counts, and average
         DLS for each model.
     df_suffix_mae : pd.DataFrame
-        DataFrame containing suffix lengths, instance counts, and average 
+        DataFrame containing suffix lengths, instance counts, and average
         MAE for each model.
+    df_prefix_ges : pd.DataFrame
+        DataFrame containing prefix lengths, instance counts, and average
+        GES for each model (None if GES was not computed).
+    df_suffix_ges : pd.DataFrame
+        DataFrame containing suffix lengths, instance counts, and average
+        GES for each model (None if GES was not computed).
     """
-    prefix_lengths = sorted(prefix_dicts[0].keys())
-    suffix_lengths = sorted(suffix_dicts[0].keys())
-    
+    prefix_lengths = sorted(set.intersection(*[set(d.keys()) for d in prefix_dicts]))
+    suffix_lengths = sorted(set.intersection(*[set(d.keys()) for d in suffix_dicts]))
+
     prefix_instance_counts = [prefix_dicts[0][k][2] for k in prefix_lengths]
     suffix_instance_counts = [suffix_dicts[0][k][2] for k in suffix_lengths]
-    
+
     prefix_dls = {f'{string_list_models[i]}_dls': [d[k][0] for k in prefix_lengths] for i, d in enumerate(prefix_dicts)}
     prefix_mae = {f'{string_list_models[i]}_mae': [d[k][1] for k in prefix_lengths] for i, d in enumerate(prefix_dicts)}
-    
+    prefix_ges = {f'{string_list_models[i]}_ges': [d[k][3] if len(d[k]) > 3 else None for k in prefix_lengths] for i, d in enumerate(prefix_dicts)}
+
     suffix_dls = {f'{string_list_models[i]}_dls': [d[k][0] for k in suffix_lengths] for i, d in enumerate(suffix_dicts)}
     suffix_mae = {f'{string_list_models[i]}_mae': [d[k][1] for k in suffix_lengths] for i, d in enumerate(suffix_dicts)}
-    
+    suffix_ges = {f'{string_list_models[i]}_ges': [d[k][3] if len(d[k]) > 3 else None for k in suffix_lengths] for i, d in enumerate(suffix_dicts)}
+
     df_prefix_dls = pd.DataFrame({
         'prefix_length': prefix_lengths,
         'instance_count': prefix_instance_counts,
         **prefix_dls
     })
-    
+
     df_prefix_mae = pd.DataFrame({
         'prefix_length': prefix_lengths,
         'instance_count': prefix_instance_counts,
         **prefix_mae
     })
-    
+
     df_suffix_dls = pd.DataFrame({
         'suffix_length': suffix_lengths,
         'instance_count': suffix_instance_counts,
         **suffix_dls
     })
-    
+
     df_suffix_mae = pd.DataFrame({
         'suffix_length': suffix_lengths,
         'instance_count': suffix_instance_counts,
         **suffix_mae
     })
-    
-    return df_prefix_dls, df_prefix_mae, df_suffix_dls, df_suffix_mae
+
+    df_prefix_ges = pd.DataFrame({
+        'prefix_length': prefix_lengths,
+        'instance_count': prefix_instance_counts,
+        **prefix_ges
+    })
+
+    df_suffix_ges = pd.DataFrame({
+        'suffix_length': suffix_lengths,
+        'instance_count': suffix_instance_counts,
+        **suffix_ges
+    })
+
+    return df_prefix_dls, df_prefix_mae, df_suffix_dls, df_suffix_mae, df_prefix_ges, df_suffix_ges
 
 
 
-def create_plots_log(pref_suf_dfs, 
-                     configs, 
-                     log_name, 
+def create_plots_log(pref_suf_dfs,
+                     configs,
+                     log_name,
                      include_legend,
-                     time_unit='minutes'):
+                     time_unit='minutes',
+                     skip_mae=None):
     """Create four plots:
 
     #. Average Damerau-Levenstein similarity over the prefix lengths for 
@@ -139,12 +213,14 @@ def create_plots_log(pref_suf_dfs,
     time_unit : str 
         The time unit in which the MAE is displayed. 
     """
-    config_string = {'SEP_LSTM' : 'SEP-LSTM', 
-                    'CRTP_LSTM' : 'CRTP-LSTM (NDA)', 
-                    'CRTP_LSTM_DA' : 'CRTP-LSTM', 
-                    'ED_LSTM' : 'ED-LSTM', 
-                    'SuTraN' : 'SuTraN (NDA)', 
-                    'SuTraN_DA' : 'SuTraN'}
+    config_string = {'SEP_LSTM' : 'SEP-LSTM',
+                    'CRTP_LSTM' : 'CRTP-LSTM (NDA)',
+                    'CRTP_LSTM_DA' : 'CRTP-LSTM',
+                    'ED_LSTM' : 'ED-LSTM',
+                    'SuTraN' : 'SuTraN (NDA)',
+                    'SuTraN_DA' : 'SuTraN',
+                    'BEST' : 'BEST',
+                    'GATv2_GRU' : 'GATv2+GRU (Ours)'}
     config_styles = {
         'CRTP_LSTM': ('#9467bd', '--'),
         'CRTP_LSTM_DA': ('#9467bd', '-'),
@@ -154,78 +230,80 @@ def create_plots_log(pref_suf_dfs,
         'SuTraN_DA': ('#2ca02c', '-'),
         'SEP_LSTM': ('#d62728', '--'),
         'ED_LSTM': ('#ff7f0e', '--'),
+        'BEST': ('#8c564b', ':'),
+        'GATv2_GRU': ('#1f77b4', '-'),
     }
+    _skip_mae = skip_mae or set()
 
     fontsize = 22
     labelsize = 16
     fig, ax = plt.subplots(2, 2, figsize=(20, 14))
-    fig.subplots_adjust(hspace=0.6, wspace=0.4, top=0.85)
+    fig.subplots_adjust(hspace=0.6, wspace=0.4, top=0.88)
+    fig.suptitle(log_name, fontsize=fontsize)
 
-    print(log_name)
-    
-    # Looping over the models / configurations 
+    # Looping over the models / configurations
     for config in configs:
-        # Retrieving column names for DLS and RRT for that config 
-        dls_col = config + '_dls'
+        # Retrieving column names for DLS, MAE and GES for that config
         mae_col = config + '_mae'
+        ges_col = config + '_ges'
 
-        df_1 = pref_suf_dfs[0]
         df_2 = pref_suf_dfs[1]
-        df_3 = pref_suf_dfs[2]
         df_4 = pref_suf_dfs[3]
+        df_5 = pref_suf_dfs[4]
+        df_6 = pref_suf_dfs[5]
         color, linestyle = config_styles[config]
         label = config_string[config]
-        # marker = marker_mappings[config]
-        ax[0, 0].plot(df_1['prefix_length'], df_1[dls_col], label=label, color=color, linestyle=linestyle)
-        ax[0, 0].set_title('Average DLS over the prefix lengths', fontsize=fontsize)
+        if ges_col in df_5.columns and df_5[ges_col].notna().any():
+            ax[0, 0].plot(df_5['prefix_length'], df_5[ges_col], label=label, color=color, linestyle=linestyle)
+        ax[0, 0].set_title('Average GES over the prefix lengths', fontsize=fontsize)
 
-        ax[0, 1].plot(df_2['prefix_length'], df_2[mae_col], label=label, color=color, linestyle=linestyle)
+        if config not in _skip_mae:
+            ax[0, 1].plot(df_2['prefix_length'], df_2[mae_col], label=label, color=color, linestyle=linestyle)
         ax[0, 1].set_title('Average MAE ({}) over the prefix lengths'.format(time_unit), fontsize=fontsize)
 
-        ax[1, 0].plot(df_3['suffix_length'], df_3[dls_col], label=label, color=color, linestyle=linestyle)
-        ax[1, 0].set_title('Average DLS over the suffix lengths', fontsize=fontsize)
+        if ges_col in df_6.columns and df_6[ges_col].notna().any():
+            ax[1, 0].plot(df_6['suffix_length'], df_6[ges_col], label=label, color=color, linestyle=linestyle)
+        ax[1, 0].set_title('Average GES over the suffix lengths', fontsize=fontsize)
 
-        ax[1, 1].plot(df_4['suffix_length'], df_4[mae_col], label=label, color=color, linestyle=linestyle)
+        if config not in _skip_mae:
+            ax[1, 1].plot(df_4['suffix_length'], df_4[mae_col], label=label, color=color, linestyle=linestyle)
         ax[1, 1].set_title('Average MAE ({}) over the suffix lengths'.format(time_unit), fontsize=fontsize)
-    ax_1 = ax[0, 0].twinx()
-    # ax[0, 0].set_title(title)
-    ax[0, 0].set_ylabel('DLS', fontsize=fontsize)
-    ax[0, 0].set_xlabel('Prefix Length', fontsize=fontsize)
-    ax_1.plot(df_1['prefix_length'], df_1['instance_count'], label='Number of Instances', color='grey', linestyle='--')
-    ax_1.fill_between(df_1['prefix_length'], 0, df_1['instance_count'], color='grey', alpha=0.3, zorder=0)
-    ax_1.set_ylabel("Instances", color='grey', fontsize=fontsize)
-    ax_1.tick_params('y', colors='grey', labelsize=labelsize)
 
-    ax_2 = ax[0, 1].twinx()
-    # ax[0, 1].set_title(title)
+    ax_ges_pref = ax[0, 0].twinx()
+    ax[0, 0].set_ylabel('GES', fontsize=fontsize)
+    ax[0, 0].set_xlabel('Prefix Length', fontsize=fontsize)
+    ax_ges_pref.plot(df_5['prefix_length'], df_5['instance_count'], label='Number of Instances', color='grey', linestyle='--')
+    ax_ges_pref.fill_between(df_5['prefix_length'], 0, df_5['instance_count'], color='grey', alpha=0.3, zorder=0)
+    ax_ges_pref.set_ylabel("Instances", color='grey', fontsize=fontsize)
+    ax_ges_pref.tick_params('y', colors='grey', labelsize=labelsize)
+
+    ax_mae_pref = ax[0, 1].twinx()
     ax[0, 1].set_ylabel('MAE Remaining Time ({})'.format(time_unit), fontsize=fontsize)
     ax[0, 1].set_xlabel('Prefix Length', fontsize=fontsize)
-    ax_2.plot(df_2['prefix_length'], df_2['instance_count'], label='Number of Instances', color='grey', linestyle='--')
-    ax_2.fill_between(df_2['prefix_length'], 0, df_2['instance_count'], color='grey', alpha=0.3, zorder=0)
-    ax_2.set_ylabel("Instances", color='grey', fontsize=fontsize)
-    ax_2.tick_params('y', colors='grey', labelsize=labelsize)
+    ax_mae_pref.plot(df_2['prefix_length'], df_2['instance_count'], label='Number of Instances', color='grey', linestyle='--')
+    ax_mae_pref.fill_between(df_2['prefix_length'], 0, df_2['instance_count'], color='grey', alpha=0.3, zorder=0)
+    ax_mae_pref.set_ylabel("Instances", color='grey', fontsize=fontsize)
+    ax_mae_pref.tick_params('y', colors='grey', labelsize=labelsize)
 
-    ax_3 = ax[1, 0].twinx()
-    # ax[1, 0].set_title(title)
-    ax[1, 0].set_ylabel('DLS', fontsize=fontsize)
+    ax_ges_suf = ax[1, 0].twinx()
+    ax[1, 0].set_ylabel('GES', fontsize=fontsize)
     ax[1, 0].set_xlabel('Suffix Length', fontsize=fontsize)
-    ax_3.plot(df_3['suffix_length'], df_3['instance_count'], label='Number of Instances', color='grey', linestyle='--')
-    ax_3.fill_between(df_3['suffix_length'], 0, df_3['instance_count'], color='grey', alpha=0.3, zorder=0)
-    ax_3.set_ylabel("Instances", color='grey', fontsize=fontsize)
-    ax_3.tick_params('y', colors='grey', labelsize=labelsize)
+    ax_ges_suf.plot(df_6['suffix_length'], df_6['instance_count'], label='Number of Instances', color='grey', linestyle='--')
+    ax_ges_suf.fill_between(df_6['suffix_length'], 0, df_6['instance_count'], color='grey', alpha=0.3, zorder=0)
+    ax_ges_suf.set_ylabel("Instances", color='grey', fontsize=fontsize)
+    ax_ges_suf.tick_params('y', colors='grey', labelsize=labelsize)
 
-    ax_4 = ax[1, 1].twinx()
-    # ax[1, 1].set_title(title)
+    ax_mae_suf = ax[1, 1].twinx()
     ax[1, 1].set_ylabel('MAE Remaining Time ({})'.format(time_unit), fontsize=fontsize)
     ax[1, 1].set_xlabel('Suffix Length', fontsize=fontsize)
-    ax_4.plot(df_4['suffix_length'], df_4['instance_count'], label='Number of Instances', color='grey', linestyle='--')
-    ax_4.fill_between(df_4['suffix_length'], 0, df_4['instance_count'], color='grey', alpha=0.3, zorder=0)
-    ax_4.set_ylabel("Instances", color='grey', fontsize=fontsize)
-    ax_4.tick_params('y', colors='grey', labelsize=labelsize)
+    ax_mae_suf.plot(df_4['suffix_length'], df_4['instance_count'], label='Number of Instances', color='grey', linestyle='--')
+    ax_mae_suf.fill_between(df_4['suffix_length'], 0, df_4['instance_count'], color='grey', alpha=0.3, zorder=0)
+    ax_mae_suf.set_ylabel("Instances", color='grey', fontsize=fontsize)
+    ax_mae_suf.tick_params('y', colors='grey', labelsize=labelsize)
 
     for ax_row in ax:
         for axis in ax_row:
-            axis.tick_params(axis='both', which='major', labelsize=labelsize) 
+            axis.tick_params(axis='both', which='major', labelsize=labelsize)
 
     if include_legend:
         # Collect handles and labels for the figure's legend
@@ -241,58 +319,62 @@ def create_plots_log(pref_suf_dfs,
 # Functionality for Case Length De-noising
 ################################################################################
 
-def create_pref_suf_dicts(pref_len_tensor, 
-                          suf_len_tensor, 
-                          window_size, 
-                          dam_lev_similarity, 
-                          MAE_rrt_minutes):
-    """Create the prefix and suffix dictionary. This function can be used 
-    for generating the two dictionaries for a certain model after 
-    having it evaluated on a test set, or generating the new prefix and 
-    suffix dictionaries after having performed Case Length De-noising. 
-    In the latter case, the four input tensors should have been subsetted 
-    by the de-noising procedure contained within the 
-    `discard_noisy_cases()` function. 
+def create_pref_suf_dicts(pref_len_tensor,
+                          suf_len_tensor,
+                          window_size,
+                          dam_lev_similarity,
+                          MAE_rrt_minutes,
+                          ges_tensor=None):
+    """Create the prefix and suffix dictionary. This function can be used
+    for generating the two dictionaries for a certain model after
+    having it evaluated on a test set, or generating the new prefix and
+    suffix dictionaries after having performed Case Length De-noising.
+    In the latter case, the four input tensors should have been subsetted
+    by the de-noising procedure contained within the
+    `discard_noisy_cases()` function.
 
     Parameters
     ----------
     pref_len_tensor : torch.Tensor
-        torch.int64 tensor of shape (T,) containing for each of the T 
-        test set instances (i.e. prefix-suffix pairs) the prefix length 
-        (in terms of number of events contained within the sequence of 
-        prefix events). 
+        torch.int64 tensor of shape (T,) containing for each of the T
+        test set instances (i.e. prefix-suffix pairs) the prefix length
+        (in terms of number of events contained within the sequence of
+        prefix events).
     suf_len_tensor : torch.Tensor
-        torch.int64 tensor of shape (T,) containing for each of the T 
-        test set instances (i.e. prefix-suffix pairs) the suffix length 
-        of the ground truth suffix (in terms of number of events 
-        contained within the sequence of suffix events). 
+        torch.int64 tensor of shape (T,) containing for each of the T
+        test set instances (i.e. prefix-suffix pairs) the suffix length
+        of the ground truth suffix (in terms of number of events
+        contained within the sequence of suffix events).
     window_size : int
-        The maximum sequence length (both for the prefixes and suffixes) 
-        corresponding to the event log at hand. Can be found by querying 
-        the maximum integer value contained within the `pref_len_tensor` 
-        if needed. 
+        The maximum sequence length (both for the prefixes and suffixes)
+        corresponding to the event log at hand. Can be found by querying
+        the maximum integer value contained within the `pref_len_tensor`
+        if needed.
     dam_lev_similarity : torch.Tensor
-        torch.float32 tensor of shape (T,) containing the normalized 
-        Damerau-Levenshtein Similarity score for each of the T test set 
-        predictions. 
+        torch.float32 tensor of shape (T,) containing the normalized
+        Damerau-Levenshtein Similarity score for each of the T test set
+        predictions.
     MAE_rrt_minutes : torch.Tensor
-        torch.float32 tensor of shape (T,) containing the Mean Absolute 
-        Error in minutes for each of the T test set predictions. 
+        torch.float32 tensor of shape (T,) containing the Mean Absolute
+        Error in minutes for each of the T test set predictions.
+    ges_tensor : torch.Tensor or None
+        torch.float32 tensor of shape (T,) containing the Graph Edit
+        Similarity score for each of the T test set predictions. If None,
+        the GES entry in each result list will be None.
 
     Returns
     -------
     results_dict_pref : dict of list
-        Dictionary containing the results aggregated over prefix 
-        lengths. Should have keys as integer prefix lengths and values as 
-        lists of three elements: 
-        [average DLS, average MAE in minutes, total instance count].
+        Dictionary containing the results aggregated over prefix
+        lengths. Keys are integer prefix lengths and values are lists of
+        four elements:
+        [average DLS, average MAE in minutes, total instance count, average GES].
     results_dict_suf : dict of list
-        Dictionary containing the results aggregated over suffix 
-        lengths. Should have keys as integer suffix lengths and values as 
-        lists of three elements: 
-        [average DLS, average MAE in minutes, total instance count].
+        Dictionary containing the results aggregated over suffix
+        lengths. Keys are integer suffix lengths and values are lists of
+        four elements:
+        [average DLS, average MAE in minutes, total instance count, average GES].
     """
-    # Making dictionaries of the results for over both prefix and suff length. 
     results_dict_pref = {}
     for i in range(1, window_size+1):
         bool_idx = pref_len_tensor==i
@@ -302,8 +384,8 @@ def create_pref_suf_dicts(pref_len_tensor,
         if num_inst > 0:
             avg_dl = (torch.sum(dam_levs) / num_inst).item()
             avg_mae = (torch.sum(MAE_rrt_i) / num_inst).item()
-            results_i = [avg_dl, avg_mae, num_inst]
-            results_dict_pref[i] = results_i
+            avg_ges = (torch.sum(ges_tensor[bool_idx]) / num_inst).item() if ges_tensor is not None else None
+            results_dict_pref[i] = [avg_dl, avg_mae, num_inst, avg_ges]
     results_dict_suf = {}
     for i in range(1, window_size+1):
         bool_idx = suf_len_tensor==i
@@ -313,9 +395,9 @@ def create_pref_suf_dicts(pref_len_tensor,
         if num_inst > 0:
             avg_dl = (torch.sum(dam_levs) / num_inst).item()
             avg_mae = (torch.sum(MAE_rrt_i) / num_inst).item()
-            results_i = [avg_dl, avg_mae, num_inst]
-            results_dict_suf[i] = results_i
-    
+            avg_ges = (torch.sum(ges_tensor[bool_idx]) / num_inst).item() if ges_tensor is not None else None
+            results_dict_suf[i] = [avg_dl, avg_mae, num_inst, avg_ges]
+
     return results_dict_pref, results_dict_suf
 
 
@@ -463,3 +545,90 @@ def get_subset_bool(pref_len_tensor,
         return retain_bool, lb_case_length, ub_case_length
     else:
         return retain_bool
+
+
+# ---------------------------------------------------------------------------
+# Combined loading and plotting
+# ---------------------------------------------------------------------------
+
+def load_and_plot(
+    log_name,
+    baselines_root,
+    approach_results_base,
+    approach_key='GATv2_GRU',
+    run_ids=(1, 2, 3, 4, 5),
+    include_legend=True,
+    baselines_to_include=None,
+):
+    """Load per-length result dicts for all baselines and one approach model,
+    average across available runs, and produce the 2×3 comparison plot.
+
+    Parameters
+    ----------
+    log_name : str
+        Event log name (e.g. 'Sepsis').
+    baselines_root : str
+        Absolute path to the baselines/SuffixTransformerNetwork/ directory.
+        Per-length pickles are expected at:
+        {baselines_root}/results_per_log/{log_name}/{MODEL}_results_run{N}/
+            TEST_SET_RESULTS/prefix_length_results_dict.pkl
+    approach_results_base : str
+        Absolute path to the approach results directory (e.g.
+        .../results_time_gatv2_gru_nb_v5/). Per-length pickles are expected at:
+        {approach_results_base}/run_{N}/{log_name}_prefix_length_results_dict.pkl
+    approach_key : str
+        Config key for the approach model. Must match an entry in
+        config_string/config_styles inside create_plots_log (default 'GATv2_GRU').
+    run_ids : tuple of int
+        Run IDs to look for. Missing runs are silently skipped.
+    include_legend : bool
+        Passed to create_plots_log.
+    baselines_to_include : list of str or None
+        Subset of _BASELINE_PATHS keys to include. None = all seven.
+    """
+    if baselines_to_include is None:
+        baselines_to_include = list(_BASELINE_PATHS.keys())
+
+    prefix_dicts, suffix_dicts, model_keys = [], [], []
+
+    for key in baselines_to_include:
+        result_dir = _BASELINE_PATHS[key]
+        pref_paths = [
+            os.path.join(baselines_root, 'results_per_log', log_name,
+                         f'{result_dir}_run{r}', 'TEST_SET_RESULTS',
+                         'prefix_length_results_dict.pkl')
+            for r in run_ids
+        ]
+        suf_paths = [p.replace('prefix_length', 'suffix_length') for p in pref_paths]
+        pref_avg = _load_and_average_runs(pref_paths)
+        suf_avg  = _load_and_average_runs(suf_paths)
+        if pref_avg is None or suf_avg is None:
+            print(f"[SKIP] {key}: no runs found for {log_name}")
+            continue
+        prefix_dicts.append(pref_avg)
+        suffix_dicts.append(suf_avg)
+        model_keys.append(key)
+
+    pref_paths = [
+        os.path.join(approach_results_base, f'run_{r}',
+                     f'{log_name}_prefix_length_results_dict.pkl')
+        for r in run_ids
+    ]
+    suf_paths = [p.replace('prefix_length', 'suffix_length') for p in pref_paths]
+    pref_avg = _load_and_average_runs(pref_paths)
+    suf_avg  = _load_and_average_runs(suf_paths)
+    if pref_avg is not None and suf_avg is not None:
+        prefix_dicts.append(pref_avg)
+        suffix_dicts.append(suf_avg)
+        model_keys.append(approach_key)
+    else:
+        print(f"[SKIP] {approach_key}: no runs found for {log_name}")
+
+    if not model_keys:
+        print(f"No results found for {log_name}.")
+        return
+
+    pref_suf_dfs = create_dataframes(prefix_dicts, suffix_dicts, model_keys)
+    skip_mae = {'BEST'} & set(model_keys)
+    create_plots_log(pref_suf_dfs, model_keys, log_name, include_legend,
+                     skip_mae=skip_mae)

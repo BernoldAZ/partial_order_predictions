@@ -271,25 +271,38 @@ def remove_overlapping_testPrefs(test_pref_suff,
         return prefix_df_test, suffix_df_test, timeLabel_df_test, actLabel_df_test
 
 
+def _flip_parallel_blocks(df, case_id, timestamp):
+    """Reverse the row order within each (case_id, timestamp) group.
+
+    Events sharing the same timestamp are concurrent (parallel block).
+    This function reverses their order within each block while keeping
+    the block sequence intact.
+    """
+    return (df.groupby([case_id, timestamp], sort=False, group_keys=False)
+              .apply(lambda g: g.iloc[::-1])
+              .reset_index(drop=True))
+
+
 def main_dataframe_pipeline(log,
-                            log_name, 
-                            start_date, 
+                            log_name,
+                            start_date,
                             start_before_date,
-                            end_date, 
+                            end_date,
                             max_days,
-                            test_len_share, 
-                            val_len_share, 
-                            window_size, 
-                            log_transformed, 
+                            test_len_share,
+                            val_len_share,
+                            window_size,
+                            log_transformed,
                             mode,
-                            case_id = 'case:concept:name', 
-                            act_label = 'concept:name', 
-                            timestamp = 'time:timestamp', 
-                            cat_casefts = [], 
-                            num_casefts = [], 
-                            cat_eventfts = [], 
-                            num_eventfts = [], 
-                            outcome=None):
+                            case_id = 'case:concept:name',
+                            act_label = 'concept:name',
+                            timestamp = 'time:timestamp',
+                            cat_casefts = [],
+                            num_casefts = [],
+                            cat_eventfts = [],
+                            num_eventfts = [],
+                            outcome=None,
+                            flip_test=False):
     """_summary_
 
     Parameters
@@ -420,6 +433,9 @@ def main_dataframe_pipeline(log,
                                        case_id,
                                        timestamp)
 
+
+    if flip_test:
+        test_df = _flip_parallel_blocks(test_df, case_id, timestamp)
 
     # Add 4 numeric time columns ( and 'case_length' to both the train and test df
     train_df = create_numeric_timeCols(train_df, case_id, timestamp, act_label)

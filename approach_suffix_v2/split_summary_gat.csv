@@ -1,4 +1,4 @@
-log,n_train,train_pairs,n_val,val_pairs,n_test,test_pairs,error
+log,n_train,train_pairs,n_val,val_pairs,n_test,test_pairs
 Sepsis,599,8025,150,1904,285,4057,
 BPI_Challenge_2012_O,2635,15852,659,3999,1667,10235,
 BPIC15_2,480,24702,121,6958,218,11243,

@@ -349,3 +349,29 @@ def traces_to_pyg_loaders(traces, activities, truncation_level):
     print("Test ", len(test_data))
 
     return train_loader, val_loader, test_loader, activity_to_idx, trace_graph_ranges
+
+
+def make_concurrent_trace_iterator(traces):
+    """
+    Returns a callable. Each call returns (trace_index, trace) for the
+    next trace in `traces` that has >=2 events sharing the same timestamp
+    (i.e., concurrent activities). Cycles through the list; skips traces
+    without concurrency.
+    """
+    state = {"idx": 0}
+
+    def has_concurrency(trace):
+        timestamps = [e["time:timestamp"] for e in trace["events"]]
+        return len(timestamps) != len(set(timestamps))
+
+    def next_concurrent_trace():
+        n = len(traces)
+        for _ in range(n):
+            i = state["idx"]
+            trace = traces[i]
+            state["idx"] = (i + 1) % n
+            if has_concurrency(trace):
+                return i, trace
+        return None  # no trace in the list has concurrent activities
+
+    return next_concurrent_trace

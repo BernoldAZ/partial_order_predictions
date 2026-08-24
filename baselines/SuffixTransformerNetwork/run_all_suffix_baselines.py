@@ -17,7 +17,7 @@ Usage:
     python run_all_suffix_baselines.py --run-id 2 --workers 4 --progress-file /path/to/custom.log
 
 Usage with docker:
-    docker run -it --rm -v $(pwd):/app --gpus all ppm-sutran-best python3 run_all_suffix_baselines.py --workers 30 --run-id 1
+    docker run -it --rm -v $(pwd):/app --gpus all ppm-sutran-best python3 run_all_suffix_baselines.py --workers 20 --run-id 1
 """
 
 import argparse
@@ -53,18 +53,9 @@ EVENT_LOGS = [
     "BPIC15_3",
     "BPIC15_4",
     "BPIC15_5",
-    "RequestForPayment",
     "Sepsis",
-    "DomesticDeclarations",
-    "PrepaidTravelCost",
-    "InternationalDeclarations",
-    #"BPI_Challenge_2012", # It have been splitted in 3 files A,O,W. Many papers do this.
     "BPI_Challenge_2012_A",
-    "BPI_Challenge_2012_O",
-    "BPI_Challenge_2012_W",
-    "Hospital_Billing",
-    "Road_Traffic_Fine_Management_Process",
-    #"BPI Challenge 2017"
+    "BPI_Challenge_2012_O"
 ]
 
 # Maps model name → the directory name train_eval writes results into.
@@ -196,12 +187,12 @@ class _OOMError(Exception):
     pass
 
 
-def _build_model_code(model, log_name, tss_index, use_cpu=False):
+def _build_model_code(model, log_name, tss_index, run_id, use_cpu=False):
     module = _MODULE_MAP[model]
     if model in _NDA_MODELS:
-        call = f"m.train_eval(log_name={log_name!r}, tss_index={tss_index})"
+        call = f"m.train_eval(log_name={log_name!r}, tss_index={tss_index}, run_id={run_id})"
     else:
-        call = f"m.train_eval(log_name={log_name!r})"
+        call = f"m.train_eval(log_name={log_name!r}, run_id={run_id})"
 
     cpu_env = "import os; os.environ['CUDA_VISIBLE_DEVICES'] = ''\n" if use_cpu else ""
 
@@ -249,10 +240,10 @@ def _train_one(model, log_name, tss, run_id, progress_file):
     log_progress(progress_file, "RUNNING", model, log_name)
     try:
         try:
-            _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=False))
+            _run_subprocess(_build_model_code(model, log_name, tss, run_id, use_cpu=False))
         except _OOMError:
             log_progress(progress_file, "OOM→CPU", model, log_name)
-            _run_subprocess(_build_model_code(model, log_name, tss, use_cpu=True))
+            _run_subprocess(_build_model_code(model, log_name, tss, run_id, use_cpu=True))
 
         src = os.path.join(_RESULTS_BASE, log_name, _RESULT_DIRS[model])
         dst = _run_result_dir(model, log_name, run_id)

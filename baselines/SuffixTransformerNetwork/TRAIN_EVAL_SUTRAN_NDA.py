@@ -129,25 +129,29 @@ def _graph_edit_similarity(G_pred, G_true):
 
 
 def train_eval(log_name,
-               tss_index):
+               tss_index,
+               run_id=1):
     """Training and automatically evaluating the NDA version of SuTraN
-    with the parameters used in the SuTraN paper. 
+    with the parameters used in the SuTraN paper.
 
     Parameters
     ----------
     log_name : str
-        Name of the event log on which the model is trained. Should be 
-        the same string as the one specified for the `log_name` parameter 
-        of the `log_to_tensors()` function in the 
-        `Preprocessing\from_log_to_tensors.py` module. 
-    tss_index : int 
-        Zero-based index at which the time since start (tss) prefix 
-        event feature was stored in the original, fully data-aware 
-        datasets. The time since previous event (tsp) prefix event 
-        feature is stored at index `tss_index+1`. These two time related 
-        features are the only numerical prefix event features retained 
-        in the non data-aware benchmark models, and their indices are 
-        therefore needed to retrieve these two features. 
+        Name of the event log on which the model is trained. Should be
+        the same string as the one specified for the `log_name` parameter
+        of the `log_to_tensors()` function in the
+        `Preprocessing\from_log_to_tensors.py` module.
+    tss_index : int
+        Zero-based index at which the time since start (tss) prefix
+        event feature was stored in the original, fully data-aware
+        datasets. The time since previous event (tsp) prefix event
+        feature is stored at index `tss_index+1`. These two time related
+        features are the only numerical prefix event features retained
+        in the non data-aware benchmark models, and their indices are
+        therefore needed to retrieve these two features.
+    run_id : int
+        Run identifier used to set the random seed, ensuring each
+        repetition trains with a different initialization. (default: 1)
     """
     def load_dict(path_name):
         with open(path_name, 'rb') as file:
@@ -263,7 +267,7 @@ def train_eval(log_name,
     # Initializing model 
     import random
     # Set a seed value
-    seed_value = 24
+    seed_value = run_id
 
     # Set Python random seed
     random.seed(seed_value)
@@ -483,58 +487,37 @@ def train_eval(log_name,
     from sklearn.metrics import accuracy_score, f1_score as _f1_score
     _acts    = torch.load(os.path.join(results_path, 'suffix_acts_decoded.pt'))
     _labels  = torch.load(os.path.join(results_path, 'labels.pt'))
-    _dl      = torch.load(os.path.join(results_path, 'dam_lev_similarity.pt'))
-    _rrt     = torch.load(os.path.join(results_path, 'MAE_rrt_minutes.pt'))
-    _ttne    = torch.load(os.path.join(results_path, 'MAE_ttne_minutes.pt'))
-    _conc    = torch.load(os.path.join('results_per_log', log_name, 'test_concurrent_mask.pt'))
     _act_lbl = _labels[-1]
     def _nap(pred, gt):
         p, g = pred.numpy(), gt.numpy()
         return (float(accuracy_score(g, p)),
                 float(_f1_score(g, p, average='weighted', zero_division=0)))
     next_acc, next_f1 = _nap(_acts[:, 0], _act_lbl[:, 0])
-    n_conc = int(_conc.sum().item())
-    if n_conc > 0:
-        conc_dl, conc_ttne, conc_rrt = (float(_dl[_conc].mean()),
-                                         float(_ttne[_conc].mean()),
-                                         float(_rrt[_conc].mean()))
-        conc_acc, conc_f1 = _nap(_acts[_conc, 0], _act_lbl[_conc, 0])
-    else:
-        conc_dl = conc_ttne = conc_rrt = conc_acc = conc_f1 = None
     avg_results_dict.update({
-        'next_act_accuracy':         round(next_acc, 6),
-        'next_act_f1_weighted':      round(next_f1,  6),
-        'conc_n_samples':            n_conc,
-        'conc_dl_similarity':        (round(conc_dl,   6) if conc_dl   is not None else ''),
-        'conc_ttne_mae_minutes':     (round(conc_ttne, 6) if conc_ttne is not None else ''),
-        'conc_rrt_mae_minutes':      (round(conc_rrt,  6) if conc_rrt  is not None else ''),
-        'conc_next_act_accuracy':    (round(conc_acc,  6) if conc_acc  is not None else ''),
-        'conc_next_act_f1_weighted': (round(conc_f1,   6) if conc_f1   is not None else ''),
+        'next_act_accuracy':   round(next_acc, 6),
+        'next_act_f1_weighted': round(next_f1,  6),
     })
     _nb_labels = torch.load(
         os.path.join('results_per_log', log_name, 'test_new_block_labels.pt'))
     end_tok = num_activities - 1
     _W = _acts.shape[1]
     _ges_vals = []
-    _conc_ges_vals = []
+    _suf_lens = []
     for _i in range(len(_acts)):
         _end_pos = (_acts[_i] == end_tok).nonzero(as_tuple=True)[0]
         _pl = int(_end_pos[0]) if len(_end_pos) > 0 else _W
         _end_lbl_pos = (_act_lbl[_i] == end_tok).nonzero(as_tuple=True)[0]
         _al = int(_end_lbl_pos[0])
+        _suf_lens.append(_al)
         _G_pred = _build_suffix_graph(_acts[_i, :_pl].tolist(), [True] * _pl)
         _G_true = _build_suffix_graph(
             _act_lbl[_i, :_al].tolist(),
             (_nb_labels[_i, :_al] > 0.5).tolist())
         _sim = _graph_edit_similarity(_G_pred, _G_true)
         _ges_vals.append(_sim)
-        if bool(_conc[_i]):
-            _conc_ges_vals.append(_sim)
     ges = sum(_ges_vals) / len(_ges_vals) if _ges_vals else 1.0
-    conc_ges = sum(_conc_ges_vals) / len(_conc_ges_vals) if _conc_ges_vals else None
     avg_results_dict.update({
-        'ges_approx':      round(ges, 6),
-        'conc_ges_approx': (round(conc_ges, 6) if conc_ges is not None else ''),
+        'ges_approx': round(ges, 6),
     })
     path_name_average_results = os.path.join(results_path, 'averaged_results.pkl')
 
@@ -543,6 +526,20 @@ def train_eval(log_name,
     # averaged results per prefix and suffix length
     results_dict_pref = inf_results[-2]
     results_dict_suf = inf_results[-1]
+
+    _raw_test = torch.load(os.path.join('results_per_log', log_name, 'test_tensordataset.pt'))
+    _pref_lens = (_raw_test[num_categoricals_pref - 1] != 0).sum(dim=1).tolist()
+    _ges_by_pref = {}
+    _ges_by_suf = {}
+    for _plen, _slen, _gval in zip(_pref_lens, _suf_lens, _ges_vals):
+        _ges_by_pref.setdefault(int(_plen), []).append(_gval)
+        _ges_by_suf.setdefault(_slen, []).append(_gval)
+    for _plen, _gvals in _ges_by_pref.items():
+        if _plen in results_dict_pref:
+            results_dict_pref[_plen].append(sum(_gvals) / len(_gvals))
+    for _slen, _gvals in _ges_by_suf.items():
+        if _slen in results_dict_suf:
+            results_dict_suf[_slen].append(sum(_gvals) / len(_gvals))
 
     path_name_prefix = os.path.join(results_path, 'prefix_length_results_dict.pkl')
     path_name_suffix = os.path.join(results_path, 'suffix_length_results_dict.pkl')

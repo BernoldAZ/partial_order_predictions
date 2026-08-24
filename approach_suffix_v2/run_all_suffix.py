@@ -10,38 +10,21 @@ Safe to re-run after an interruption.
 
 Supported models and their output CSVs
 ---------------------------------------
-  gat_gru_v1         → results_gat_gru_v1/run_N/results_gat_gru_v1.csv
-  gat_gru_v2         → results_gat_gru_v2/run_N/results_gat_gru_v2.csv
-  gat_gru_v3         → results_gat_gru_v3/run_N/results_gat_gru_v3.csv
-  gat_gru_seq_v1     → results_gat_gru_seq_v1/run_N/results_gat_gru_seq_v1.csv
-  gat_gru_seq_v2     → results_gat_gru_seq_v2/run_N/results_gat_gru_seq_v2.csv
-  gat_gru_seq_v3     → results_gat_gru_seq_v3/run_N/results_gat_gru_seq_v3.csv
-  gat_trans_v1       → results_gat_trans_v1/run_N/results_gat_trans_v1.csv
-  gat_trans_seq_v1   → results_gat_trans_seq_v1/run_N/results_gat_trans_seq_v1.csv
-  gat_lstm_v1        → results_gat_lstm_v1/run_N/results_gat_lstm_v1_loss.csv
-  gat_lstm_v2        → results_gat_lstm_v2/run_N/results_gat_lstm_v2_loss.csv
-  gat_lstm_seq_v1    → results_gat_lstm_seq_v1/run_N/results_gat_lstm_seq_v1_loss.csv
-  gat_lstm_seq_v2    → results_gat_lstm_seq_v2/run_N/results_gat_lstm_seq_v2_loss.csv
-  gru_enc_dec        → results_time_gru_enc_dec/run_N/results_gru_enc_dec.csv
-
-  
-  suffix_time_v3     → results_time_gatv2_gru_stop_nb/run_N/results_suffix_time_gnn.csv
-  suffix_time_v3_seq → results_time_gatv2_seq_gru_stop_nb/run_N/results_suffix_time_gnn.csv
-  suffix_time_v4     → results_time_gatv2_gru_stop_nb_v4/run_N/results_suffix_time_gnn.csv
-  suffix_time_v4_seq → results_time_gatv2_seq_gru_stop_nb_v4/run_N/results_suffix_time_gnn.csv
-  suffix_time_v5     → results_time_gatv2_gru_nb_v5/run_N/results_suffix_time_gnn.csv
-  suffix_time_v5_seq → results_time_gatv2_seq_gru_nb_v5/run_N/results_suffix_time_gnn.csv
+  suffix_time_v1     → results_time_gatv2_gru_nb_v1/run_N/results_suffix_time_gnn.csv
+  suffix_time_v1_seq → results_time_gatv2_seq_gru_nb_v1/run_N/results_suffix_time_gnn.csv
+  suffix_time_v2     → results_time_gatv2_gru_nb_v2/run_N/results_suffix_time_gnn.csv
+  suffix_time_v3     → results_time_gatv2_gru_nb_v3/run_N/results_suffix_time_gnn.csv
 
 Usage
 -----
-    python run_all_suffix.py                                                  # gat_gru_v1, run 1, 1 worker
-    python run_all_suffix.py --workers 4                                      # gat_gru_v1, run 1, 4 logs in parallel
-    python run_all_suffix.py --model gat_gru_v3 --run-id 2 --workers 4
+    python run_all_suffix.py                                                  # suffix_time_v1, run 1, 1 worker
+    python run_all_suffix.py --workers 4                                      # suffix_time_v1, run 1, 4 logs in parallel
+    python run_all_suffix.py --model suffix_time_v1_seq --run-id 2 --workers 4
     python run_all_suffix.py --logs-dir /path/to/logs
 
 Docker
 ------
-    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --workers 10 --model suffix_time_v5_seq
+    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --workers 16 --model suffix_time_v3 --run-id 5
 """
 
 import argparse
@@ -82,131 +65,32 @@ EVENT_LOGS = [
 # ─────────────────────────────────────────────
 
 MODEL_CONFIGS = {
-    # Merged GRU variants (partial-order prefix graphs)
-    'gat_gru_v1': {
-        'module':          'approach_suffix_v2.models.run_gat_gru',
-        'version':         'v1',
-        'results_subdir':  'results_gat_gru_v1',
-        'csv_file':        'results_gat_gru_v1.csv',
-    },
-    'gat_gru_v2': {
-        'module':          'approach_suffix_v2.models.run_gat_gru',
-        'version':         'v2',
-        'results_subdir':  'results_gat_gru_v2',
-        'csv_file':        'results_gat_gru_v2.csv',
-    },
-    'gat_gru_v3': {
-        'module':          'approach_suffix_v2.models.run_gat_gru',
-        'version':         'v3',
-        'results_subdir':  'results_gat_gru_v3',
-        'csv_file':        'results_gat_gru_v3.csv',
-    },
-    # Merged GRU variants (sequence-as-graph prefix graphs)
-    'gat_gru_seq_v1': {
-        'module':          'approach_suffix_v2.models.run_gat_gru_seq',
-        'version':         'v1',
-        'results_subdir':  'results_gat_gru_seq_v1',
-        'csv_file':        'results_gat_gru_seq_v1.csv',
-    },
-    'gat_gru_seq_v2': {
-        'module':          'approach_suffix_v2.models.run_gat_gru_seq',
-        'version':         'v2',
-        'results_subdir':  'results_gat_gru_seq_v2',
-        'csv_file':        'results_gat_gru_seq_v2.csv',
-    },
-    'gat_gru_seq_v3': {
-        'module':          'approach_suffix_v2.models.run_gat_gru_seq',
-        'version':         'v3',
-        'results_subdir':  'results_gat_gru_seq_v3',
-        'csv_file':        'results_gat_gru_seq_v3.csv',
-    },
-    # Transformer variants
-    'gat_trans_v1': {
-        'module':          'approach_suffix_v2.models.run_gat_trans',
-        'version':         'v1',
-        'results_subdir':  'results_gat_trans_v1',
-        'csv_file':        'results_gat_trans_v1.csv',
-    },
-    'gat_trans_seq_v1': {
-        'module':          'approach_suffix_v2.models.run_gat_trans_seq',
-        'version':         'v1',
-        'results_subdir':  'results_gat_trans_seq_v1',
-        'csv_file':        'results_gat_trans_seq_v1.csv',
-    },
-    # LSTM decoder variants (partial-order prefix graphs)
-    'gat_lstm_v1': {
-        'module':          'approach_suffix_v2.models.run_gat_lstm',
-        'version':         'v1',
-        'results_subdir':  'results_gat_lstm_v1',
-        'csv_file':        'results_gat_lstm_v1_loss.csv',
-    },
-    'gat_lstm_v2': {
-        'module':          'approach_suffix_v2.models.run_gat_lstm',
-        'version':         'v2',
-        'results_subdir':  'results_gat_lstm_v2',
-        'csv_file':        'results_gat_lstm_v2_loss.csv',
-    },
-    # LSTM decoder variants (sequence-as-graph prefix graphs)
-    'gat_lstm_seq_v1': {
-        'module':          'approach_suffix_v2.models.run_gat_lstm_seq',
-        'version':         'v1',
-        'results_subdir':  'results_gat_lstm_seq_v1',
-        'csv_file':        'results_gat_lstm_seq_v1_loss.csv',
-    },
-    'gat_lstm_seq_v2': {
-        'module':          'approach_suffix_v2.models.run_gat_lstm_seq',
-        'version':         'v2',
-        'results_subdir':  'results_gat_lstm_seq_v2',
-        'csv_file':        'results_gat_lstm_seq_v2_loss.csv',
-    },
-    # GRU encoder-decoder (unchanged, kept for reference)
-    'gru_enc_dec': {
-        'module':          'approach_suffix_v2.models.run_gru_enc_dec_v2',
+    'suffix_time_v1': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v1',
         'version':         None,
-        'results_subdir':  'results_time_gru_enc_dec',
-        'csv_file':        'results_gru_enc_dec.csv',
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_gru_nb_v1',
+        'csv_file':        'results_suffix_time_gnn.csv',
     },
-    # models_v2 variants
+    'suffix_time_v1_seq': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v1_seq',
+        'version':         None,
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_seq_gru_nb_v1',
+        'csv_file':        'results_suffix_time_gnn.csv',
+    },
+    'suffix_time_v2': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v2',
+        'version':         None,
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_gru_nb_v2',
+        'csv_file':        'results_suffix_time_gnn.csv',
+    },
     'suffix_time_v3': {
         'module':          'approach_suffix_v2.models_v2.run_suffix_time_v3',
         'version':         None,
         'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_gru_stop_nb',
-        'csv_file':        'results_suffix_time_gnn.csv',
-    },
-    'suffix_time_v3_seq': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v3_seq',
-        'version':         None,
-        'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_seq_gru_stop_nb',
-        'csv_file':        'results_suffix_time_gnn.csv',
-    },
-    'suffix_time_v4': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v4',
-        'version':         None,
-        'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_gru_stop_nb_v4',
-        'csv_file':        'results_suffix_time_gnn.csv',
-    },
-    'suffix_time_v4_seq': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v4_seq',
-        'version':         None,
-        'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_seq_gru_stop_nb_v4',
-        'csv_file':        'results_suffix_time_gnn.csv',
-    },
-    'suffix_time_v5': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v5',
-        'version':         None,
-        'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_gru_nb_v5',
-        'csv_file':        'results_suffix_time_gnn.csv',
-    },
-    'suffix_time_v5_seq': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v5_seq',
-        'version':         None,
-        'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_seq_gru_nb_v5',
+        'results_subdir':  'results_time_gatv2_gru_nb_v3',
         'csv_file':        'results_suffix_time_gnn.csv',
     },
 }
@@ -376,7 +260,7 @@ def _run_one(log_file, log_name, results_dir, model, progress_file):
 # Main runner
 # ─────────────────────────────────────────────
 
-def run_all(model='gat_gru_v1', run_id=1, progress_file=None, logs_dir=None, workers=1):
+def run_all(model='suffix_time_v1', run_id=1, progress_file=None, logs_dir=None, workers=1):
     if model not in MODEL_CONFIGS:
         raise ValueError(f"Unknown model {model!r}. Choose from: {list(MODEL_CONFIGS)}")
 
@@ -427,9 +311,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model",
-        default="gat_gru_v1",
+        default="suffix_time_v1",
         choices=sorted(MODEL_CONFIGS.keys()),
-        help="Which model to run (default: gat_gru_v1)",
+        help="Which model to run (default: suffix_time_v1)",
     )
     parser.add_argument(
         "--run-id",
