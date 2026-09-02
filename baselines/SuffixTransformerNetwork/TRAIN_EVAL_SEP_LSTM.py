@@ -130,7 +130,10 @@ def _graph_edit_similarity(G_pred, G_true):
 
 def train_eval(log_name,
                tss_index,
-               run_id=1):
+               run_id=1,
+               results_dir=None,
+               do_train=True,
+               do_eval=True):
     """Training and automatically evaluating the SEP-LSTM benchmark
     model with the parameters used in the SuTraN paper.
 
@@ -213,7 +216,7 @@ def train_eval(log_name,
 
 
     # specifying path results and callbacks 
-    backup_path = os.path.join('results_per_log', log_name, "SEP_LSTM_results")
+    backup_path = results_dir or os.path.join('results_per_log', log_name, "SEP_LSTM_results")
     os.makedirs(backup_path, exist_ok=True)
 
 
@@ -316,56 +319,68 @@ def train_eval(log_name,
 
     from OneStepAheadBenchmarks.train_procedure import train_model
 
-    _train_start = time.time()
-    train_model(model=model,
-                optimizer=optimizer,
-                train_dataset=train_dataset,
-                val_dataset=val_dataset,
-                start_epoch=0,
-                num_epochs=num_epochs,
-                num_classes=num_activities,
-                batch_interval=1600,
-                path_name=backup_path,
-                mean_std_ttne=mean_std_ttne,
-                batch_size=128,
-                lr_scheduler_present=True,
-                lstm_scheduler=True,
-                lr_scheduler=lr_scheduler)
-    training_time = time.time() - _train_start
+    if do_train:
+        _train_start = time.time()
+        train_model(model=model,
+                    optimizer=optimizer,
+                    train_dataset=train_dataset,
+                    val_dataset=val_dataset,
+                    start_epoch=0,
+                    num_epochs=num_epochs,
+                    num_classes=num_activities,
+                    batch_interval=1600,
+                    path_name=backup_path,
+                    mean_std_ttne=mean_std_ttne,
+                    batch_size=128,
+                    lr_scheduler_present=True,
+                    lstm_scheduler=True,
+                    lr_scheduler=lr_scheduler)
+        training_time = time.time() - _train_start
 
 
-    
-    # Re-initializing new model after training to load best callback
-    model = SEP_Benchmarks_time(d_model=100,
-                                num_activities=num_activities, 
-                                dropout=0.2, 
-                                num_shared_layers=1, 
-                                num_specialized_layers=1)
-    # Assign to GPU 
-    model.to(device)
+        # Re-initializing new model after training to load best callback
+        model = SEP_Benchmarks_time(d_model=100,
+                                    num_activities=num_activities,
+                                    dropout=0.2,
+                                    num_shared_layers=1,
+                                    num_specialized_layers=1)
+        # Assign to GPU
+        model.to(device)
 
-    # Specifying path of csv in which the training and validation results 
-    # of every epoch are stored. 
-    final_results_path = os.path.join(backup_path, 'backup_results.csv')
+        # Specifying path of csv in which the training and validation results
+        # of every epoch are stored.
+        final_results_path = os.path.join(backup_path, 'backup_results.csv')
 
-    # Reading in the final results csv 
-    import pandas as pd 
-    df = pd.read_csv(final_results_path)
+        # Reading in the final results csv
+        import pandas as pd
+        df = pd.read_csv(final_results_path)
 
-    # Retrieving the row with the best validation loss 
-    row_with_lowest_loss = df.loc[df['composite validation loss'].idxmin()]
+        # Retrieving the row with the best validation loss
+        row_with_lowest_loss = df.loc[df['composite validation loss'].idxmin()]
 
-    # Retrieve the value of the 'epoch' column for that row
-    epoch_value = row_with_lowest_loss['epoch']
+        # Retrieve the value of the 'epoch' column for that row
+        epoch_value = row_with_lowest_loss['epoch']
 
-    # The models are stored with the string underneath (but not an LSTM)
-    best_epoch_string = 'model_epoch_{}.pt'.format(int(epoch_value))
-    best_epoch_path = os.path.join(backup_path, best_epoch_string)
+        # The models are stored with the string underneath (but not an LSTM)
+        best_epoch_string = 'model_epoch_{}.pt'.format(int(epoch_value))
+        best_epoch_path = os.path.join(backup_path, best_epoch_string)
 
-    # Loadd best model into memory again 
-    model, _, _, _ = load_checkpoint(model, path_to_checkpoint=best_epoch_path, train_or_eval='eval', lr=0.002)
-    model.to(device)
-    model.eval()
+        # Loadd best model into memory again
+        model, _, _, _ = load_checkpoint(model, path_to_checkpoint=best_epoch_path, train_or_eval='eval', lr=0.002)
+        model.to(device)
+        model.eval()
+
+        # Persist a stable copy of the trained model for later do_train=False runs
+        torch.save(model.state_dict(), os.path.join(backup_path, 'trained_model.pt'))
+    else:
+        training_time = 0.0
+        _ckpt = os.path.join(backup_path, 'trained_model.pt')
+        if not os.path.isfile(_ckpt):
+            raise FileNotFoundError(
+                f"do_train=False but no saved model at {_ckpt}")
+        model.load_state_dict(torch.load(_ckpt, map_location=device))
+        model.to(device)
+        model.eval()
 
     # Running final inference on test set 
     from OneStepAheadBenchmarks.inference_procedure_suffix_gen import inference_loop
@@ -375,7 +390,7 @@ def train_eval(log_name,
     os.makedirs(results_path, exist_ok=True)
 
     _test_start = time.time()
-    inf_results = inference_loop(model,
+    inf_results, inference_time, evaluation_time = inference_loop(model,
                                 test_dataset,
                                 mean_std_ttne,
                                 mean_std_tss_pref,
@@ -384,9 +399,19 @@ def train_eval(log_name,
                                 1, # num_categoricals_pref
                                 2, # num_numericals_pref
                                 results_path=results_path,
-                                val_batch_size=2048)
+                                val_batch_size=2048,
+                                do_eval=do_eval,
+                                return_timing=True)
     testing_time = time.time() - _test_start
-    
+
+    if not do_eval:
+        with open(os.path.join(results_path, 'inference_time.pkl'), 'wb') as _f:
+            pickle.dump({"log": log_name, "model": "SEP_LSTM", "run_id": run_id,
+                         "training_time": training_time,
+                         "inference_time": inference_time}, _f)
+        print("Inference time (s): {} -- written to {}".format(inference_time, results_path))
+        return
+
     avg_MAE1_stand, avg_MAE1_seconds, avg_MAE1_minutes, avg_MAE2_stand = inf_results[:4]
     avg_MAE2_seconds, avg_MAE2_minutes, avg_dam_lev, percentage_too_early = inf_results[4:8] 
     percentage_too_late, percentage_correct, mean_absolute_length_diff, mean_too_early =  inf_results[8:12]
@@ -409,6 +434,8 @@ def train_eval(log_name,
                         "MAE RRT minutes" : avg_MAE_rrt_sum_minutes,
                         "training_time" : training_time,
                         "testing_time" : testing_time,
+                        "inference_time" : inference_time,
+                        "evaluation_time" : evaluation_time,
                         "num_trainable_params" : sum(p.numel() for p in model.parameters() if p.requires_grad)}
     # ── Next-act and concurrent-subset metrics ──────────────────────────────
     from sklearn.metrics import accuracy_score, f1_score as _f1_score
@@ -476,9 +503,10 @@ def train_eval(log_name,
         pickle.dump(results_dict_suf, file)
     with open(path_name_average_results, 'wb') as file:
         pickle.dump(avg_results_dict, file)
-    for _f in os.listdir(backup_path):
-        if _f.startswith('model_epoch_') and _f.endswith('.pt'):
-            os.remove(os.path.join(backup_path, _f))
+    if do_train:
+        for _f in os.listdir(backup_path):
+            if _f.startswith('model_epoch_') and _f.endswith('.pt'):
+                os.remove(os.path.join(backup_path, _f))
 
 
 

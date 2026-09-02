@@ -4,6 +4,7 @@ activity label and timestamp (Time Till Next Event aka TTNE), for suffix
 generation. This includes the computation of remaining runtime as the sum 
 of time till next event predictions."""
 
+import time
 import torch
 # import torch.nn as nn
 from tqdm import tqdm
@@ -23,10 +24,12 @@ def inference_loop(model,
                    mean_std_tss_pref, 
                    mean_std_tsp_pref,
                    mean_std_rrt, 
-                   num_categoricals_pref, 
-                   num_numericals_pref, 
-                   results_path=None, 
-                   val_batch_size=8192):
+                   num_categoricals_pref,
+                   num_numericals_pref,
+                   results_path=None,
+                   val_batch_size=8192,
+                   do_eval=True,
+                   return_timing=False):
     """Inference loop, both for validition set and ultimate test set. 
     Facilitates external validation loop needed for SEP-LSTM to generate 
     suffixes, by, for each batch, iterating over the `window_size` 
@@ -144,6 +147,8 @@ def inference_loop(model,
 
         dam_lev_global = torch.tensor(data=[], dtype=torch.int64).to(device)
 
+        inference_time = 0.0
+        _loop_start = time.time()
         for valbatch_num, vdata in tqdm(enumerate(inference_dataloader), desc="Validation batch calculation"):
                 vinputs = vdata[:-3]
                 vlabels = vdata[-3:]
@@ -175,20 +180,27 @@ def inference_loop(model,
                                            mean_std_tss=mean_std_tss_pref, 
                                            mean_std_rrt=mean_std_rrt)
 
-                # Iterative feedback loop. If model has not predicted 
-                # end token after window_size decoding steps, the end 
-                # token is enforced automatically. 
+                # Iterative feedback loop. If model has not predicted
+                # end token after window_size decoding steps, the end
+                # token is enforced automatically.
+                _fwd_start = time.time()
                 for i in range(window_size):
                     # Model predictions NEXT activity and timestamp
-                    voutputs = model(infer_env.inputs) 
+                    voutputs = model(infer_env.inputs)
                     act_preds, ttne_preds = voutputs[0], voutputs[1] # (batch_size, num_classes) and (bs, 1)
 
-                    # Instructing inference object to process predictions 
-                    infer_env.decode_step(act_preds=act_preds, 
-                                          ttne_preds=ttne_preds, 
+                    # Instructing inference object to process predictions
+                    infer_env.decode_step(act_preds=act_preds,
+                                          ttne_preds=ttne_preds,
                                           dec_step=i)
-                
-                # Retrieving the predicted activity and ttne suffixes 
+                if torch.cuda.is_available():
+                    torch.cuda.synchronize()
+                inference_time += time.time() - _fwd_start
+
+                if not do_eval:
+                    continue
+
+                # Retrieving the predicted activity and ttne suffixes
                 suffix_acts_decoded = infer_env.suffix_acts_decoded.clone() # (batch_size, window_size)
                 suffix_acts_decoded_global = torch.cat((suffix_acts_decoded_global, suffix_acts_decoded.cpu()), dim=0) 
 
@@ -219,8 +231,11 @@ def inference_loop(model,
                 length_diff_too_late_global = torch.cat(tensors=(length_diff_too_late_global, length_diff_too_late), dim=-1)
                 amount_right_global += amount_right
 
-        # Correction pref len 
-        # replacing 0s with max_pref_len 
+        if not do_eval:
+            return None, inference_time, 0.0
+
+        # Correction pref len
+        # replacing 0s with max_pref_len
         pref_len_global = torch.where(pref_len_global == 0, window_size, pref_len_global) # (num_prefs,)
         # Write away results for final test set inference if specified 
         if results_path: 
@@ -332,4 +347,8 @@ def inference_loop(model,
             results_dict_suf[i] = results_i
     
     return_list += [results_dict_pref, results_dict_suf]
+
+    evaluation_time = (time.time() - _loop_start) - inference_time
+    if return_timing:
+        return return_list, inference_time, evaluation_time
     return return_list

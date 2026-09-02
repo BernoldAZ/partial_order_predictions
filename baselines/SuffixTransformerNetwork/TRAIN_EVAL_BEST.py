@@ -81,7 +81,7 @@ def _graph_edit_similarity(G_pred, G_true):
     return 1.0 - ged / denom
 
 
-def train_eval(log_name, run_id=1):
+def train_eval(log_name, run_id=1, results_dir=None, do_train=True, do_eval=True):
     """Fit and evaluate the BEST baseline with the parameters used in the
     SuTraN paper.
 
@@ -150,7 +150,7 @@ def train_eval(log_name, run_id=1):
     # -----------------------------------------------------------------------
     # Create output directory
     # -----------------------------------------------------------------------
-    backup_path = os.path.join('results_per_log', log_name, "BEST_results")
+    backup_path = results_dir or os.path.join('results_per_log', log_name, "BEST_results")
     os.makedirs(backup_path, exist_ok=True)
 
     # -----------------------------------------------------------------------
@@ -166,27 +166,37 @@ def train_eval(log_name, run_id=1):
     # and the activity suffix label tensor -- all present in the original
     # dataset without any conversion.
     # -----------------------------------------------------------------------
-    from BEST.best_model import BESTModel
-
-    best_model = BESTModel(
-        num_activities=num_activities,
-        max_context_length=10
-    )
-
-    print("Fitting BEST model on training data ...")
-    _train_start = time.time()
-    best_model.fit(
-        train_dataset=train_dataset,
-        num_categoricals_pref=num_categoricals_pref
-    )
-    print("BEST model fitted successfully.")
-    training_time = time.time() - _train_start
-
-    # Optionally persist the fitted model to disk for later reuse
     model_save_path = os.path.join(backup_path, 'best_model.pkl')
-    with open(model_save_path, 'wb') as f:
-        pickle.dump(best_model, f)
-    print("BEST model saved to:", model_save_path)
+
+    if do_train:
+        from BEST.best_model import BESTModel
+
+        best_model = BESTModel(
+            num_activities=num_activities,
+            max_context_length=10
+        )
+
+        print("Fitting BEST model on training data ...")
+        _train_start = time.time()
+        best_model.fit(
+            train_dataset=train_dataset,
+            num_categoricals_pref=num_categoricals_pref
+        )
+        print("BEST model fitted successfully.")
+        training_time = time.time() - _train_start
+
+        # Persist the fitted model to disk for later do_train=False runs
+        with open(model_save_path, 'wb') as f:
+            pickle.dump(best_model, f)
+        print("BEST model saved to:", model_save_path)
+    else:
+        training_time = 0.0
+        if not os.path.isfile(model_save_path):
+            raise FileNotFoundError(
+                f"do_train=False but no saved model at {model_save_path}")
+        with open(model_save_path, 'rb') as f:
+            best_model = pickle.load(f)
+        print("BEST model loaded from:", model_save_path)
 
     # -----------------------------------------------------------------------
     # Run inference on the test set
@@ -197,16 +207,26 @@ def train_eval(log_name, run_id=1):
     os.makedirs(results_path, exist_ok=True)
 
     _test_start = time.time()
-    inf_results = inference_loop(
+    inf_results, inference_time, evaluation_time = inference_loop(
         best_model=best_model,
         inference_dataset=test_dataset,
         num_categoricals_pref=num_categoricals_pref,
         mean_std_ttne=mean_std_ttne,
         mean_std_rrt=mean_std_rrt,
         results_path=results_path,
-        dl_batch_size=512
+        dl_batch_size=512,
+        do_eval=do_eval,
+        return_timing=True
     )
     testing_time = time.time() - _test_start
+
+    if not do_eval:
+        with open(os.path.join(results_path, 'inference_time.pkl'), 'wb') as _f:
+            pickle.dump({"log": log_name, "model": "BEST", "run_id": run_id,
+                         "training_time": training_time,
+                         "inference_time": inference_time}, _f)
+        print("Inference time (s): {} -- written to {}".format(inference_time, results_path))
+        return
 
     # -----------------------------------------------------------------------
     # Unpack and print results
@@ -255,6 +275,8 @@ def train_eval(log_name, run_id=1):
         "MAE RRT minutes"      : avg_MAE_minutes_RRT,
         "training_time"        : training_time,
         "testing_time"         : testing_time,
+        "inference_time"       : inference_time,
+        "evaluation_time"      : evaluation_time,
         "num_trainable_params" : None,
     }
     # ── Next-act and concurrent-subset metrics ──────────────────────────────

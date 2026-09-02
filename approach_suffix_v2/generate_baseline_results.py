@@ -37,12 +37,14 @@ def fmt_mean_std(mean, std):
 def get_own_results():
     rows = []
     for model_name, cfg in OWN_CONFIGS.items():
-        run_id, run_dfs = 1, []
+        run_id, run_dfs, inf_dfs = 1, [], []
         while True:
             path = os.path.join(cfg["results_sub"], f"run_{run_id}", cfg["csv_file"])
             if not os.path.isfile(path):
                 break
             run_dfs.append(pd.read_csv(path).rename(columns=COL_MAP))
+            inf_path = os.path.join(cfg["results_sub"], f"run_{run_id}", "inference_times.csv")
+            inf_dfs.append(pd.read_csv(inf_path) if os.path.isfile(inf_path) else None)
             run_id += 1
         if not run_dfs:
             continue
@@ -78,6 +80,13 @@ def get_own_results():
                 if not df.loc[df["log"] == log_name].empty and "testing_time_seconds" in df.columns
             ]
             row["testing_time"] = round(np.mean(test_time_vals), 2) if test_time_vals else float("nan")
+
+            infer_time_vals = [
+                float(idf.loc[idf["log"] == log_name, "inference_time_seconds"].iloc[0])
+                for idf in inf_dfs
+                if idf is not None and not idf.loc[idf["log"] == log_name].empty
+            ]
+            row["inference_time"] = round(np.mean(infer_time_vals), 2) if infer_time_vals else float("nan")
 
             rows.append(row)
 
@@ -117,6 +126,7 @@ def run():
                 group.reset_index()
                 .sort_values("GES ↑ mean", ascending=False)
                 [["Model",
+                  "Runs",
                   "GES ↑",
                   "DL similarity ↑",
                   "MAE TTNE (min) ↓",
@@ -137,9 +147,10 @@ def run():
             table_str = (
                 group.reset_index()
                 .sort_values("GES ↑ mean", ascending=False)
-                .rename(columns={"training_time": "Training time (s)",
-                                  "testing_time":  "Testing time (s)"})
-                [["Model", "Training time (s)", "Testing time (s)", "# params"]]
+                .rename(columns={"training_time":  "Training time (s)",
+                                  "inference_time": "Inference time (s)",
+                                  "testing_time":   "Testing time (s)"})
+                [["Model", "Training time (s)", "Inference time (s)", "Testing time (s)", "# params"]]
                 .to_string(index=False)
             )
             print(header)

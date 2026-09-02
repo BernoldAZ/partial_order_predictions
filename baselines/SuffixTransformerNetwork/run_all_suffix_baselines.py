@@ -7,17 +7,31 @@ between runs (process exit guarantees CUDA context cleanup).
 Results from run N are stored in <model>_results_runN/ so all repetitions
 are kept on disk — intended for later mean/std computation across 5 runs.
 
-Skips combinations where the run-N result already exists on disk.
+Skips combinations where the run-N result already exists on disk (with
+--no-eval it instead looks for the inference_time.pkl marker).
 Safe to re-run after an interruption.
 
 Usage:
     python run_all_suffix_baselines.py                          # run 1, 1 worker (default)
-    python run_all_suffix_baselines.py --workers 12             # run 1, 4 logs in parallel
+    python run_all_suffix_baselines.py --workers 12             # run 1, 12 combinations in parallel
     python run_all_suffix_baselines.py --run-id 2               # run 2
     python run_all_suffix_baselines.py --run-id 2 --workers 4 --progress-file /path/to/custom.log
 
+Multiple repetitions with one shared worker pool (exactly --workers
+subprocesses stay busy across the whole set, no draining between run ids):
+    python run_all_suffix_baselines.py --run-ids 1 2 3 4 5 --workers 8
+
+Train / eval control (mirrors approach_suffix_v2/run_all_suffix.py):
+    python run_all_suffix_baselines.py --run-ids 1 2 3 4 5 --workers 8 --no-eval
+        # train (or reuse) each model, then only run inference and write
+        # <model>_results_runN/TEST_SET_RESULTS/inference_time.pkl
+    python run_all_suffix_baselines.py --run-ids 1 2 3 4 5 --workers 8 --no-train
+        # skip training, load the saved trained_model.pt / best_model.pkl,
+        # then evaluate (fails if no saved model exists for that run id)
+
 Usage with docker:
-    docker run -it --rm -v $(pwd):/app --gpus all ppm-sutran-best python3 run_all_suffix_baselines.py --workers 20 --run-id 1
+    docker run -it --rm -v $(pwd):/app --gpus all ppm-sutran-best python3 run_all_suffix_baselines.py --workers 3 --run-id 1
+    docker run -it --rm -v $(pwd):/app --gpus all ppm-sutran-best python3 run_all_suffix_baselines.py --workers 10 --run-ids 1 2 3 4 5
 """
 
 import argparse
@@ -53,9 +67,18 @@ EVENT_LOGS = [
     "BPIC15_3",
     "BPIC15_4",
     "BPIC15_5",
+    #"RequestForPayment",
     "Sepsis",
+    #"DomesticDeclarations",
+    #"PrepaidTravelCost",
+    #"InternationalDeclarations",
+    #"BPI_Challenge_2012", # It have been splitted in 3 files A,O,W. Many papers do this.
     "BPI_Challenge_2012_A",
-    "BPI_Challenge_2012_O"
+    "BPI_Challenge_2012_O",
+    #"BPI_Challenge_2012_W",
+    #"Hospital_Billing",
+    #"Road_Traffic_Fine_Management_Process",
+    #"BPI Challenge 2017"
 ]
 
 # Maps model name → the directory name train_eval writes results into.
@@ -92,9 +115,10 @@ def _run_result_dir(model, log_name, run_id):
     return os.path.join(_RESULTS_BASE, log_name, f"{_RESULT_DIRS[model]}_run{run_id}")
 
 
-def result_exists(model, log_name, run_id):
+def result_exists(model, log_name, run_id, do_eval=True):
+    marker = "averaged_results.pkl" if do_eval else "inference_time.pkl"
     path = os.path.join(_run_result_dir(model, log_name, run_id),
-                        "TEST_SET_RESULTS", "averaged_results.pkl")
+                        "TEST_SET_RESULTS", marker)
     return os.path.isfile(path)
 
 
@@ -187,12 +211,18 @@ class _OOMError(Exception):
     pass
 
 
-def _build_model_code(model, log_name, tss_index, run_id, use_cpu=False):
+def _build_model_code(model, log_name, tss_index, run_id, results_dir,
+                      use_cpu=False, do_train=True, do_eval=True):
     module = _MODULE_MAP[model]
     if model in _NDA_MODELS:
-        call = f"m.train_eval(log_name={log_name!r}, tss_index={tss_index}, run_id={run_id})"
+        call_args = f"log_name={log_name!r}, tss_index={tss_index}, run_id={run_id}, results_dir={results_dir!r}"
     else:
-        call = f"m.train_eval(log_name={log_name!r}, run_id={run_id})"
+        call_args = f"log_name={log_name!r}, run_id={run_id}, results_dir={results_dir!r}"
+    if not do_train:
+        call_args += ", do_train=False"
+    if not do_eval:
+        call_args += ", do_eval=False"
+    call = f"m.train_eval({call_args})"
 
     cpu_env = "import os; os.environ['CUDA_VISIBLE_DEVICES'] = ''\n" if use_cpu else ""
 
@@ -236,18 +266,22 @@ def _run_subprocess(code):
 # Per-job runner (one model × one log)
 # ---------------------------------------------------------------------------
 
-def _train_one(model, log_name, tss, run_id, progress_file):
+def _train_one(model, log_name, tss, run_id, progress_file, do_train=True, do_eval=True):
     log_progress(progress_file, "RUNNING", model, log_name)
     try:
+        dst = _run_result_dir(model, log_name, run_id)
         try:
-            _run_subprocess(_build_model_code(model, log_name, tss, run_id, use_cpu=False))
+            _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+                                              use_cpu=False, do_train=do_train, do_eval=do_eval))
         except _OOMError:
             log_progress(progress_file, "OOM→CPU", model, log_name)
-            _run_subprocess(_build_model_code(model, log_name, tss, run_id, use_cpu=True))
+            _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+                                              use_cpu=True, do_train=do_train, do_eval=do_eval))
 
+        # train_eval now writes straight into the run dir; this move only fires
+        # for legacy output left in the fixed <MODEL>_results directory.
         src = os.path.join(_RESULTS_BASE, log_name, _RESULT_DIRS[model])
-        dst = _run_result_dir(model, log_name, run_id)
-        if os.path.isdir(src):
+        if os.path.isdir(src) and not os.path.isdir(dst):
             shutil.move(src, dst)
 
         log_progress(progress_file, "DONE", model, log_name)
@@ -256,12 +290,12 @@ def _train_one(model, log_name, tss, run_id, progress_file):
                      detail=traceback.format_exc())
 
 
-def _run_combination(model, log_name, run_id, progress_file):
+def _run_combination(model, log_name, run_id, progress_file, do_train=True, do_eval=True):
     """Run one model × log combination. Called from thread pool."""
     if not data_exists(log_name):
         print(f"[SKIP-NO-DATA] model={model} | log={log_name}", flush=True)
         return
-    if result_exists(model, log_name, run_id):
+    if result_exists(model, log_name, run_id, do_eval):
         print(f"[SKIP] model={model} | log={log_name}", flush=True)
         return
     tss = None
@@ -271,23 +305,16 @@ def _run_combination(model, log_name, run_id, progress_file):
             print(f"[SKIP-NO-TSS] model={model} | log={log_name} "
                   f"— tss_index.txt missing, re-run preprocessing", flush=True)
             return
-    _train_one(model, log_name, tss, run_id, progress_file)
+    _train_one(model, log_name, tss, run_id, progress_file, do_train, do_eval)
 
 
 # ---------------------------------------------------------------------------
 # Main runner
 # ---------------------------------------------------------------------------
 
-def run_all_suffix(run_id=1, progress_file=None, workers=1):
-    progress_file = progress_file or _progress_file_for_run(run_id)
-    os.makedirs(_RESULTS_BASE, exist_ok=True)
-
-    print(f"Run ID             : {run_id}")
-    print(f"Workers (combinations) : {workers}")
-    print(f"Total combinations     : {len(EVENT_LOGS) * len(MODELS)}")
-    print(f"Progress file      : {progress_file}\n", flush=True)
-
-    # ── Step 1: preprocessing (sequential — typically already cached) ──────
+def _run_preprocessing():
+    """Build the tensor datasets for every event log that does not have them
+    yet. Sequential — typically already cached."""
     for log_name in EVENT_LOGS:
         if data_exists(log_name):
             print(f"[DATA-SKIP] {log_name}", flush=True)
@@ -303,10 +330,25 @@ def run_all_suffix(run_id=1, progress_file=None, workers=1):
         except Exception:
             print(f"[DATA-ERROR] {log_name}\n{traceback.format_exc()}", flush=True)
 
+
+def run_all_suffix(run_id=1, progress_file=None, workers=1, do_train=True, do_eval=True):
+    progress_file = progress_file or _progress_file_for_run(run_id)
+    os.makedirs(_RESULTS_BASE, exist_ok=True)
+
+    print(f"Run ID             : {run_id}")
+    print(f"Train / Eval       : {do_train} / {do_eval}")
+    print(f"Workers (combinations) : {workers}")
+    print(f"Total combinations     : {len(EVENT_LOGS) * len(MODELS)}")
+    print(f"Progress file      : {progress_file}\n", flush=True)
+
+    # ── Step 1: preprocessing ────────────────────────────────────────────────
+    _run_preprocessing()
+
     # ── Step 2: model training — parallelised at the combination level ────────
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
-            pool.submit(_run_combination, model, log_name, run_id, progress_file): (model, log_name)
+            pool.submit(_run_combination, model, log_name, run_id, progress_file,
+                        do_train, do_eval): (model, log_name)
             for log_name in EVENT_LOGS
             for model in MODELS
         }
@@ -317,6 +359,45 @@ def run_all_suffix(run_id=1, progress_file=None, workers=1):
             except Exception:
                 print(f"[COMBO-FATAL] model={model} | log={log_name}\n{traceback.format_exc()}",
                       flush=True)
+
+
+def run_all_suffix_repeats(run_ids=(1, 2, 3, 4, 5), workers=1, progress_file=None,
+                           do_train=True, do_eval=True):
+    """Run the full model × log grid for every run_id in `run_ids` using a
+    single shared thread pool, so exactly `workers` subprocesses stay busy
+    across the whole job set (the pool is never drained between run_ids).
+
+    Each run_id keeps its own progress log (``_progress_file_for_run``) unless
+    `progress_file` is given, in which case all jobs log to that one file.
+    """
+    run_ids = list(run_ids)
+    os.makedirs(_RESULTS_BASE, exist_ok=True)
+
+    print(f"Run IDs            : {run_ids}")
+    print(f"Train / Eval       : {do_train} / {do_eval}")
+    print(f"Workers (global)   : {workers}")
+    print(f"Total combinations : {len(run_ids) * len(EVENT_LOGS) * len(MODELS)}\n", flush=True)
+
+    # ── Step 1: preprocessing (once) ────────────────────────────────────────
+    _run_preprocessing()
+
+    # ── Step 2: one global pool over all (run_id, log, model) jobs ──────────
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {}
+        for run_id in run_ids:
+            pf = progress_file or _progress_file_for_run(run_id)
+            for log_name in EVENT_LOGS:
+                for model in MODELS:
+                    fut = pool.submit(_run_combination, model, log_name, run_id, pf,
+                                      do_train, do_eval)
+                    futures[fut] = (run_id, model, log_name)
+        for fut in concurrent.futures.as_completed(futures):
+            run_id, model, log_name = futures[fut]
+            try:
+                fut.result()
+            except Exception:
+                print(f"[COMBO-FATAL] run={run_id} | model={model} | log={log_name}\n"
+                      f"{traceback.format_exc()}", flush=True)
 
 
 # ---------------------------------------------------------------------------
@@ -335,6 +416,15 @@ if __name__ == "__main__":
              "<model>_results_runN/ so all runs are kept. (default: 1)",
     )
     parser.add_argument(
+        "--run-ids",
+        type=int,
+        nargs="+",
+        default=None,
+        help="Run several repetitions with ONE shared worker pool so exactly "
+             "--workers subprocesses stay busy across the whole set (e.g. "
+             "--run-ids 1 2 3 4 5). Overrides --run-id.",
+    )
+    parser.add_argument(
         "--workers",
         type=int,
         default=1,
@@ -347,6 +437,22 @@ if __name__ == "__main__":
         default=None,
         help="Override the progress log file path (default: auto-derived from --run-id)",
     )
+    parser.add_argument(
+        "--no-train",
+        action="store_true",
+        help="Skip training; load the saved model for each model / log / run_id",
+    )
+    parser.add_argument(
+        "--no-eval",
+        action="store_true",
+        help="Skip evaluation; only run inference and record its time",
+    )
     args = parser.parse_args()
-    run_all_suffix(run_id=args.run_id, progress_file=args.progress_file,
-                   workers=args.workers)
+    if args.run_ids:
+        run_all_suffix_repeats(run_ids=args.run_ids, workers=args.workers,
+                               progress_file=args.progress_file,
+                               do_train=not args.no_train, do_eval=not args.no_eval)
+    else:
+        run_all_suffix(run_id=args.run_id, progress_file=args.progress_file,
+                       workers=args.workers,
+                       do_train=not args.no_train, do_eval=not args.no_eval)

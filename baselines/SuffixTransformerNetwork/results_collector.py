@@ -5,9 +5,9 @@ import pandas as pd
 import glob
 
 RESULT_DIRS = {
-    "SuTraN (DA)":       "SUTRAN_DA_results",
+    #"SuTraN (DA)":       "SUTRAN_DA_results",
     "SuTraN (NDA)":      "SUTRAN_NDA_results",
-    "CRTP-LSTM (DA)":    "CRTP_LSTM_DA_results",
+    #"CRTP-LSTM (DA)":    "CRTP_LSTM_DA_results",
     "CRTP-LSTM (NDA)":   "CRTP_LSTM_NDA_results",
     "ED-LSTM":           "ED_LSTM_results",
     "SEP-LSTM":          "SEP_LSTM_results",
@@ -73,7 +73,7 @@ def get_suffix_baseline_results(LOGS, base_dir="baselines/SuffixTransformerNetwo
                 None
             )
 
-            for time_col in ("training_time", "testing_time"):
+            for time_col in ("training_time", "testing_time", "inference_time", "evaluation_time"):
                 values = [r[time_col] for r in runs if time_col in r]
                 row[time_col] = round(float(np.mean(values)), 2) if values else float("nan")
 

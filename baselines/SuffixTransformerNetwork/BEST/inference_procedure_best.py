@@ -23,6 +23,7 @@ Returned metric format (matching the CRTP-LSTM convention):
 """
 
 import os
+import time
 import torch
 from tqdm import tqdm
 
@@ -40,7 +41,9 @@ def inference_loop(best_model,
                    mean_std_ttne,
                    mean_std_rrt,
                    results_path=None,
-                   dl_batch_size=512):
+                   dl_batch_size=512,
+                   do_eval=True,
+                   return_timing=False):
     """Run BEST inference on *inference_dataset* and compute all standard
     evaluation metrics used in the SuTraN benchmark paper.
 
@@ -104,6 +107,7 @@ def inference_loop(best_model,
     # -----------------------------------------------------------------------
     suffix_acts_pred = torch.zeros(N, W, dtype=torch.int64)
 
+    inference_start = time.time()
     for i in tqdm(range(N), desc="BEST suffix prediction"):
         pref_len = pref_lengths[i]
         prefix   = pref_act_tensor[i, :pref_len].tolist()
@@ -118,6 +122,12 @@ def inference_loop(best_model,
     # If END was never predicted, treat the last position as the END step
     no_end_pred = ~pred_end_mask.any(dim=1)                  # (N,)
     pred_lengths[no_end_pred] = W - 1
+    inference_time = time.time() - inference_start
+
+    if not do_eval:
+        return None, inference_time, 0.0
+
+    evaluation_start = time.time()
 
     # -----------------------------------------------------------------------
     # 3.  Time predictions: constant predictor = training mean TTNE
@@ -302,6 +312,9 @@ def inference_loop(best_model,
         results_dict_pref,          # [-2]
         results_dict_suf,           # [-1]
     ]
+    evaluation_time = time.time() - evaluation_start
+    if return_timing:
+        return return_list, inference_time, evaluation_time
     return return_list
 
 

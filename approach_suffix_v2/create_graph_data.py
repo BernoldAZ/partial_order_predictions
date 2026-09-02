@@ -148,6 +148,7 @@ def plot_split(
     case_id='case:concept:name',
     timestamp='time:timestamp',
     test_len_share=0.20,
+    val_len_share=0.20,
     mode='preferred',
     start_date=None,
     start_before_date=None,
@@ -156,15 +157,18 @@ def plot_split(
     max_cases_shown=60,
     save_path=None,
 ):
-    """Visualise the train/test split like the PreferredSplit / WorkaroundSplit
+    """Visualise the train/val/test split like the PreferredSplit / WorkaroundSplit
     reference figures.  Each case is drawn as a horizontal bar from its first
     to its last event.  Bar colors encode how the case is partitioned relative
-    to the separation time:
+    to the separation times:
 
     Both modes
     ----------
-    Blue  : case fully ends before separation time  → pure training case
-    Grey  : case fully starts at/after sep. time    → pure test case
+    Blue   : case fully ends before separation time, starts before val
+             separation time → training case
+    Orange : case fully ends before separation time, starts at/after val
+             separation time → validation case
+    Grey   : case starts at/after sep. time → pure test case
 
     mode='preferred'
     ----------------
@@ -184,6 +188,10 @@ def plot_split(
         Used for the plot title and default file name.
     case_id, timestamp : str
     test_len_share : float
+    val_len_share : float
+        Fraction of the cases starting before the test separation time that
+        are further split off into validation, mirroring `split_train_val`
+        in dataframes_pipeline.py.
     mode : {'preferred', 'workaround'}
     start_date, start_before_date, end_date : str or None
         Same filtering options as construct_datasets; needed to reproduce the
@@ -232,17 +240,30 @@ def plot_split(
     sep_time = case_starts.iloc[first_test_idx]
 
     # ------------------------------------------------------------------
-    # 3. Classify every case
+    # 3. Compute the validation separation time (mirrors split_train_val,
+    #    applied to the pool of cases starting before the test separation
+    #    time; see baselines/next_activity_prediction/evaluation/
+    #    generate_new_event_log_splits.py::plot_split for the reference)
     # ------------------------------------------------------------------
-    def classify(cid):
-        if case_ends[cid] < sep_time:
-            return 'train'
-        if case_starts[cid] >= sep_time:
-            return 'test'
-        return 'overlap'
+    tv_starts = case_starts[case_starts < sep_time]  # case_starts already sorted
+    n_tv = len(tv_starts)
+    first_val_idx = int(n_tv * (1 - val_len_share))
+    val_sep_time = tv_starts.iloc[first_val_idx]
 
     # ------------------------------------------------------------------
-    # 4. Sample cases uniformly across the chronologically sorted list
+    # 4. Classify every case
+    # ------------------------------------------------------------------
+    def classify(cid):
+        if case_starts[cid] >= sep_time:
+            return 'test'
+        if case_ends[cid] >= sep_time:
+            return 'overlap'
+        if case_starts[cid] >= val_sep_time:
+            return 'val'
+        return 'train'
+
+    # ------------------------------------------------------------------
+    # 5. Sample cases uniformly across the chronologically sorted list
     # ------------------------------------------------------------------
     all_cases = list(case_starts.index)
     if len(all_cases) > max_cases_shown:
@@ -252,7 +273,7 @@ def plot_split(
         sampled = all_cases
 
     # ------------------------------------------------------------------
-    # 5. Convert timestamps to naive datetimes for matplotlib
+    # 6. Convert timestamps to naive datetimes for matplotlib
     # ------------------------------------------------------------------
     def to_naive(ts):
         ts = pd.Timestamp(ts)
@@ -261,14 +282,16 @@ def plot_split(
         return ts.to_pydatetime()
 
     sep_dt = to_naive(sep_time)
+    val_sep_dt = to_naive(val_sep_time)
 
     # ------------------------------------------------------------------
-    # 6. Draw the figure
+    # 7. Draw the figure
     # ------------------------------------------------------------------
-    BLUE  = '#5BC0DE'
-    GREY  = '#808080'
-    RED   = '#D9534F'
-    GREEN = '#5CB85C'
+    BLUE   = '#5BC0DE'
+    ORANGE = '#F0AD4E'
+    GREY   = '#808080'
+    RED    = '#D9534F'
+    GREEN  = '#5CB85C'
 
     if mode == 'preferred':
         before_color, after_color = RED,   GREEN
@@ -294,6 +317,9 @@ def plot_split(
         if cat == 'train':
             ax.barh(y, e_num - s_num, left=s_num, height=BAR_H,
                     color=BLUE, linewidth=0)
+        elif cat == 'val':
+            ax.barh(y, e_num - s_num, left=s_num, height=BAR_H,
+                    color=ORANGE, linewidth=0)
         elif cat == 'test':
             ax.barh(y, e_num - s_num, left=s_num, height=BAR_H,
                     color=GREY, linewidth=0)
@@ -303,29 +329,30 @@ def plot_split(
             ax.barh(y, e_num - sep_num, left=sep_num, height=BAR_H,
                     color=after_color,  linewidth=0)
 
-    # Vertical dashed separation line
+    # Vertical dashed separation lines
     ax.axvline(mdates.date2num(sep_dt), color='black', linestyle='--', linewidth=1.5)
+    ax.axvline(mdates.date2num(val_sep_dt), color='dimgrey', linestyle=':', linewidth=1.2)
 
     # Axis formatting
     ax.xaxis_date()
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
-    plt.xticks(rotation=30, ha='right', fontsize=9)
+    plt.xticks(rotation=30, ha='right', fontsize=16)
     ax.set_yticks([])
-    ax.set_ylabel('Cases', fontsize=12)
-    ax.set_xlabel('Time', fontsize=12)
-    mode_title = 'Preferred' if mode == 'preferred' else 'Workaround'
-    ax.set_title(f'{mode_title} Train-Test Split — {log_name}',
-                 fontsize=14, fontweight='bold')
+    ax.set_ylabel('Cases', fontsize=20)
+    ax.set_xlabel('Time', fontsize=20)
+    ax.set_title(log_name, fontsize=18, fontweight='bold')
 
     # Legend
     handles = [
         mpatches.Patch(color=BLUE,         label='Train'),
+        mpatches.Patch(color=ORANGE,       label='Validation'),
         mpatches.Patch(color=GREY,         label='Test'),
         mpatches.Patch(color=before_color, label=before_label),
         mpatches.Patch(color=after_color,  label=after_label),
-        plt.Line2D([0], [0], color='black', linestyle='--', label='Separation time'),
+        plt.Line2D([0], [0], color='black',   linestyle='--', label='Test separation time'),
+        plt.Line2D([0], [0], color='dimgrey', linestyle=':',  label='Val separation time'),
     ]
-    ax.legend(handles=handles, loc='upper left', fontsize=9)
+    ax.legend(handles=handles, loc='upper left', fontsize=14)
     plt.tight_layout()
 
     if save_path is None:
@@ -440,6 +467,7 @@ def construct_datasets(
             case_id=case_id,
             timestamp=timestamp,
             test_len_share=test_len_share,
+            val_len_share=val_len_share,
             mode=mode,
             start_date=start_date,
             start_before_date=start_before_date,

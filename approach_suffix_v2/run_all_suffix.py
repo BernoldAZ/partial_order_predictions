@@ -15,6 +15,16 @@ Supported models and their output CSVs
   suffix_time_v2     → results_time_gatv2_gru_nb_v2/run_N/results_suffix_time_gnn.csv
   suffix_time_v3     → results_time_gatv2_gru_nb_v3/run_N/results_suffix_time_gnn.csv
 
+Arguments
+-----
+   --model {suffix_time_v1, suffix_time_v1_seq, suffix_time_v2, suffix_time_v3}
+   --run-id N            repetition index (1-5)
+   --workers N           event logs trained in parallel
+   --logs-dir PATH       override the XES logs directory
+   --progress-file PATH  override the progress log path
+   --no-train            skip training, load the saved model
+   --no-eval             skip evaluation, only time inference
+
 Usage
 -----
     python run_all_suffix.py                                                  # suffix_time_v1, run 1, 1 worker
@@ -24,7 +34,7 @@ Usage
 
 Docker
 ------
-    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --workers 16 --model suffix_time_v3 --run-id 5
+    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --workers 10 --model suffix_time_v1 --run-id 1 --no-train --no-eval
 """
 
 import argparse
@@ -128,8 +138,9 @@ class _OOMError(Exception):
     pass
 
 
-def result_exists(log_name, model, run_id):
-    csv_path = os.path.join(_results_dir(model, run_id), MODEL_CONFIGS[model]['csv_file'])
+def result_exists(log_name, model, run_id, do_eval=True):
+    csv_name = MODEL_CONFIGS[model]['csv_file'] if do_eval else 'inference_times.csv'
+    csv_path = os.path.join(_results_dir(model, run_id), csv_name)
     if not os.path.isfile(csv_path):
         return False
     with open(csv_path, newline='') as f:
@@ -183,7 +194,8 @@ _CLEANUP = (
 )
 
 
-def _build_code(log_path, log_name, results_dir, model, use_cpu=False):
+def _build_code(log_path, log_name, results_dir, model, use_cpu=False,
+                do_train=True, do_eval=True):
     cfg       = MODEL_CONFIGS[model]
     module    = cfg['module']
     version   = cfg['version']
@@ -195,6 +207,10 @@ def _build_code(log_path, log_name, results_dir, model, use_cpu=False):
         call_args = f"log_name={log_name!r}, results_dir={results_dir!r}"
     else:
         call_args = f"log_path={log_path!r}, log_name={log_name!r}, results_dir={results_dir!r}"
+    if not do_train:
+        call_args += ", do_train=False"
+    if not do_eval:
+        call_args += ", do_eval=False"
     return (
         _PREAMBLE
         + cpu_env
@@ -243,14 +259,17 @@ def _log_progress(progress_file, status, log_name, detail=None):
 # Per-job runner
 # ─────────────────────────────────────────────
 
-def _run_one(log_file, log_name, results_dir, model, progress_file):
+def _run_one(log_file, log_name, results_dir, model, progress_file,
+             do_train=True, do_eval=True):
     _log_progress(progress_file, "RUNNING", log_name)
     try:
         try:
-            _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=False))
+            _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=False,
+                                        do_train=do_train, do_eval=do_eval))
         except _OOMError:
             _log_progress(progress_file, "OOM→CPU", log_name)
-            _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=True))
+            _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=True,
+                                        do_train=do_train, do_eval=do_eval))
         _log_progress(progress_file, "DONE", log_name)
     except Exception:
         _log_progress(progress_file, "ERROR", log_name, detail=traceback.format_exc())
@@ -260,7 +279,8 @@ def _run_one(log_file, log_name, results_dir, model, progress_file):
 # Main runner
 # ─────────────────────────────────────────────
 
-def run_all(model='suffix_time_v1', run_id=1, progress_file=None, logs_dir=None, workers=1):
+def run_all(model='suffix_time_v1', run_id=1, progress_file=None, logs_dir=None, workers=1,
+            do_train=True, do_eval=True):
     if model not in MODEL_CONFIGS:
         raise ValueError(f"Unknown model {model!r}. Choose from: {list(MODEL_CONFIGS)}")
 
@@ -270,6 +290,7 @@ def run_all(model='suffix_time_v1', run_id=1, progress_file=None, logs_dir=None,
 
     print(f"Model              : {model}")
     print(f"Run ID             : {run_id}")
+    print(f"Train / Eval       : {do_train} / {do_eval}")
     print(f"Workers (logs)     : {workers}")
     print(f"Total logs         : {len(EVENT_LOGS)}")
     print(f"Logs directory     : {logs_dir}")
@@ -278,7 +299,7 @@ def run_all(model='suffix_time_v1', run_id=1, progress_file=None, logs_dir=None,
 
     jobs = []
     for log_name in EVENT_LOGS:
-        if result_exists(log_name, model, run_id):
+        if result_exists(log_name, model, run_id, do_eval):
             print(f"[SKIP] log={log_name}", flush=True)
             continue
         log_file = _find_log_file(log_name, logs_dir)
@@ -290,7 +311,8 @@ def run_all(model='suffix_time_v1', run_id=1, progress_file=None, logs_dir=None,
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
-            pool.submit(_run_one, lf, ln, results_dir, model, progress_file): ln
+            pool.submit(_run_one, lf, ln, results_dir, model, progress_file,
+                        do_train, do_eval): ln
             for lf, ln in jobs
         }
         for fut in concurrent.futures.as_completed(futures):
@@ -340,6 +362,16 @@ if __name__ == "__main__":
         help="Override the progress log file path (default: auto-derived "
              "from --model and --run-id)",
     )
+    parser.add_argument(
+        "--no-train",
+        action="store_true",
+        help="Skip training; load the saved model for each log / run_id",
+    )
+    parser.add_argument(
+        "--no-eval",
+        action="store_true",
+        help="Skip evaluation; only run inference and report its time",
+    )
     args = parser.parse_args()
     run_all(
         model=args.model,
@@ -347,4 +379,6 @@ if __name__ == "__main__":
         progress_file=args.progress_file,
         logs_dir=args.logs_dir,
         workers=args.workers,
+        do_train=not args.no_train,
+        do_eval=not args.no_eval,
     )

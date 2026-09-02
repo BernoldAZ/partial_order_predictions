@@ -240,11 +240,7 @@ def log_to_seq_graphs(log,
     n_train = train_pref_suff[0]['orig_case_id'].nunique()
     n_val   = val_pref_suff[0]['orig_case_id'].nunique()
     n_test  = test_pref_suff[0]['orig_case_id'].nunique()
-    p_train = int(train_pref_suff[0].drop_duplicates('orig_case_id')['case_length'].sum())
-    p_val   = int(val_pref_suff[0].drop_duplicates('orig_case_id')['case_length'].sum())
-    p_test  = int(test_pref_suff[0].drop_duplicates('orig_case_id')['case_length'].sum())
     print(f"Cases – train: {n_train}  val: {n_val}  test: {n_test}")
-    print(f"Pairs – train: {p_train}  val: {p_val}  test: {p_test}")
 
     print("Generating Seq-Graph Datasets...")
     train_data, val_data, test_data, *_ = _graph_data_train_test(
@@ -252,6 +248,10 @@ def log_to_seq_graphs(log,
         case_id, act_label, timestamp,
         cardinality_dict, num_cols_dict, cat_cols_dict,
         window_size, outcome, log_name)
+
+    # Prefix-suffix pairs actually retained (after out-of-time split debiasing).
+    p_train, p_val, p_test = len(train_data), len(val_data), len(test_data)
+    print(f"Pairs – train: {p_train}  val: {p_val}  test: {p_test}")
 
     counts = {
         'n_train': n_train, 'train_pairs': p_train,

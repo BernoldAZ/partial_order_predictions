@@ -7,6 +7,7 @@ within the forward method of the initialized model itself when set to
 eval mode.
 """
 
+import time
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -29,9 +30,11 @@ def inference_loop(model,
                    mean_std_ttne, 
                    mean_std_tsp, 
                    mean_std_tss,
-                   mean_std_rrt, 
-                   results_path=None, 
-                   val_batch_size=8192):
+                   mean_std_rrt,
+                   results_path=None,
+                   val_batch_size=8192,
+                   do_eval=True,
+                   return_timing=False):
     """Inference loop, both for validition set and ultimate test set.
 
     Parameters
@@ -219,7 +222,8 @@ def inference_loop(model,
         # Derive ground-truth suffix length of each instance 
         suf_len_global = torch.argmax((act_labels_global == (num_classes-1)).to(torch.int64), dim=-1) + 1 # (num_prefs,)
 
-        # Iterating over the inference batches 
+        # Iterating over the inference batches
+        inference_start = time.time()
         for valbatch_num, vdata in tqdm(enumerate(inference_dataloader), desc="Validation batch calculation"):
                 vinputs = vdata[:-num_target_tens]
                 # Assign all input tensors to GPU
@@ -272,8 +276,17 @@ def inference_loop(model,
                     # - (binary) outcome prediction
                     out_pred = voutputs[-1] # (B, ) torch.float32
                     out_pred_global = torch.cat((out_pred_global, out_pred.cpu()), dim=-1)
-        
-        # Consolidating all predictions 
+
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+        inference_time = time.time() - inference_start
+
+        if not do_eval:
+            return None, inference_time, 0.0
+
+        evaluation_start = time.time()
+
+        # Consolidating all predictions
         outputs_global = (suffix_acts_decoded_global, suffix_ttne_preds_global)
 
         if remaining_runtime_head:
@@ -472,4 +485,7 @@ def inference_loop(model,
         with open(suflen_results_path, 'wb') as file:
             pickle.dump(results_dict_suf, file)
 
+    evaluation_time = time.time() - evaluation_start
+    if return_timing:
+        return return_list, inference_time, evaluation_time
     return return_list

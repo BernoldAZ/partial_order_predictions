@@ -6,6 +6,7 @@ The CRTP-LSTM, unlike SuTraN and ED-LSTM, does not generate suffixes in
 an autoregressive (AR) manner. 
 """
 
+import time
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -28,9 +29,11 @@ def inference_loop(model,
                    mean_std_tsp, 
                    mean_std_tss, 
                    mean_std_rrt, 
-                   masking=True, 
-                   results_path=None, 
-                   val_batch_size=8192):
+                   masking=True,
+                   results_path=None,
+                   val_batch_size=8192,
+                   do_eval=True,
+                   return_timing=False):
     """Inference loop, both for validition set and ultimate test set.
 
     Parameters
@@ -129,6 +132,8 @@ def inference_loop(model,
         else:
             vloss_metric = MultiOutputMetric(num_classes)
 
+        inference_time = 0.0
+        _loop_start = time.time()
         for valbatch_num, vdata in tqdm(enumerate(inference_dataloader), desc="Validation batch calculation"):
                 vinputs = vdata[:-3]
                 vlabels = vdata[-3:]
@@ -151,8 +156,15 @@ def inference_loop(model,
                 padding_idx = torch.argmax(pad_mask.to(torch.int64), dim=-1) # (batch_size,)
                 pref_len_global = torch.cat(tensors=(pref_len_global, padding_idx.cpu()), dim=-1)
 
-                # Model predictions for activity and rrt suffix 
-                voutputs = model(vinputs) 
+                # Model predictions for activity and rrt suffix
+                _fwd_start = time.time()
+                voutputs = model(vinputs)
+                if torch.cuda.is_available():
+                    torch.cuda.synchronize()
+                inference_time += time.time() - _fwd_start
+
+                if not do_eval:
+                    continue
 
                 # Compute val loss
                 vloss_batch = vloss_metric(voutputs, vlabels) # (batch_size*window_size,)
@@ -197,8 +209,11 @@ def inference_loop(model,
                 length_diff_too_late_global = torch.cat(tensors=(length_diff_too_late_global, length_diff_too_late.cpu()), dim=-1)
                 amount_right_global += amount_right.cpu()
 
-        # Correction pref len 
-        # replacing 0s with max_pref_len 
+        if not do_eval:
+            return None, inference_time, 0.0
+
+        # Correction pref len
+        # replacing 0s with max_pref_len
         pref_len_global = torch.where(pref_len_global == 0, window_size, pref_len_global) # (num_prefs,)
         # Write away results for final test set inference if specified 
         if results_path: 
@@ -309,4 +324,7 @@ def inference_loop(model,
     
     return_list += [results_dict_pref, results_dict_suf]
 
+    evaluation_time = (time.time() - _loop_start) - inference_time
+    if return_timing:
+        return return_list, inference_time, evaluation_time
     return return_list

@@ -130,7 +130,10 @@ def _graph_edit_similarity(G_pred, G_true):
 
 def train_eval(log_name,
                tss_index,
-               run_id=1):
+               run_id=1,
+               results_dir=None,
+               do_train=True,
+               do_eval=True):
     """Training and automatically evaluating the NDA version of SuTraN
     with the parameters used in the SuTraN paper.
 
@@ -229,7 +232,7 @@ def train_eval(log_name,
 
 
     # specifying path results and callbacks 
-    backup_path = os.path.join('results_per_log', log_name, "SUTRAN_NDA_results")
+    backup_path = results_dir or os.path.join('results_per_log', log_name, "SUTRAN_NDA_results")
     os.makedirs(backup_path, exist_ok=True)
 
 
@@ -315,70 +318,83 @@ def train_eval(log_name,
     num_epochs = 200 
     num_classes = num_activities 
     batch_interval = 800
-    _train_start = time.time()
-    train_model(model,
-                optimizer,
-                train_dataset,
-                val_dataset,
-                start_epoch,
-                num_epochs,
-                remaining_runtime_head,
-                outcome_bool,
-                num_classes,
-                batch_interval,
-                backup_path,
-                1, # num_categoricals_pref,
-                mean_std_ttne,
-                mean_std_tsp,
-                mean_std_tss,
-                mean_std_rrt,
-                batch_size,
-                patience=24,
-                lr_scheduler_present=True,
-                lr_scheduler=lr_scheduler)
-    training_time = time.time() - _train_start
+    if do_train:
+        _train_start = time.time()
+        train_model(model,
+                    optimizer,
+                    train_dataset,
+                    val_dataset,
+                    start_epoch,
+                    num_epochs,
+                    remaining_runtime_head,
+                    outcome_bool,
+                    num_classes,
+                    batch_interval,
+                    backup_path,
+                    1, # num_categoricals_pref,
+                    mean_std_ttne,
+                    mean_std_tsp,
+                    mean_std_tss,
+                    mean_std_rrt,
+                    batch_size,
+                    patience=24,
+                    lr_scheduler_present=True,
+                    lr_scheduler=lr_scheduler)
+        training_time = time.time() - _train_start
 
-    # Re-initializing new model after training to load best callback
-    model = SuTraN_no_context(num_activities=num_activities, 
-                        d_model=d_model, 
-                        num_prefix_encoder_layers=num_prefix_encoder_layers, 
-                        num_decoder_layers=num_decoder_layers, 
-                        num_heads= num_heads, 
-                        d_ff = 4*d_model, 
-                        dropout=dropout, 
-                        remaining_runtime_head=True, # Always included. 
-                        layernorm_embeds=layernorm_embeds, 
-                        outcome_bool=outcome_bool)
+        # Re-initializing new model after training to load best callback
+        model = SuTraN_no_context(num_activities=num_activities,
+                            d_model=d_model,
+                            num_prefix_encoder_layers=num_prefix_encoder_layers,
+                            num_decoder_layers=num_decoder_layers,
+                            num_heads= num_heads,
+                            d_ff = 4*d_model,
+                            dropout=dropout,
+                            remaining_runtime_head=True, # Always included.
+                            layernorm_embeds=layernorm_embeds,
+                            outcome_bool=outcome_bool)
 
-    # Assign to GPU 
-    model.to(device)
+        # Assign to GPU
+        model.to(device)
 
-    # Specifying path of csv in which the training and validation results 
-    # of every epoch are stored. 
-    final_results_path = os.path.join(backup_path, 'backup_results.csv')
+        # Specifying path of csv in which the training and validation results
+        # of every epoch are stored.
+        final_results_path = os.path.join(backup_path, 'backup_results.csv')
 
-    # Determining best epoch based on the validation 
-    # scores for RRT and Activity Suffix prediction
-    df = pd.read_csv(final_results_path)
-    dl_col = 'Activity suffix: 1-DL (validation)'
-    rrt_col = 'RRT - mintues MAE validation'
-    df['rrt_rank_val'] = df[rrt_col].rank(method='min').astype(int)
-    df['dl_rank_val'] = df[dl_col].rank(method='min', ascending=False).astype(int)
-    df['summed_rank_val'] = df['rrt_rank_val'] + df['dl_rank_val']
+        # Determining best epoch based on the validation
+        # scores for RRT and Activity Suffix prediction
+        df = pd.read_csv(final_results_path)
+        dl_col = 'Activity suffix: 1-DL (validation)'
+        rrt_col = 'RRT - mintues MAE validation'
+        df['rrt_rank_val'] = df[rrt_col].rank(method='min').astype(int)
+        df['dl_rank_val'] = df[dl_col].rank(method='min', ascending=False).astype(int)
+        df['summed_rank_val'] = df['rrt_rank_val'] + df['dl_rank_val']
 
-    # Retrieving the row with the best general performance 
-    row_with_lowest_loss = df.loc[df['summed_rank_val'].idxmin()]
-    # Retrieve the value of the 'epoch' column for that row
-    epoch_value = row_with_lowest_loss['epoch']
+        # Retrieving the row with the best general performance
+        row_with_lowest_loss = df.loc[df['summed_rank_val'].idxmin()]
+        # Retrieve the value of the 'epoch' column for that row
+        epoch_value = row_with_lowest_loss['epoch']
 
-    # The models are stored with the string underneath
-    best_epoch_string = 'model_epoch_{}.pt'.format(int(epoch_value))
-    best_epoch_path = os.path.join(backup_path, best_epoch_string)
+        # The models are stored with the string underneath
+        best_epoch_string = 'model_epoch_{}.pt'.format(int(epoch_value))
+        best_epoch_path = os.path.join(backup_path, best_epoch_string)
 
-    # Loadd best model into memory again 
-    model, _, _, _ = load_checkpoint(model, path_to_checkpoint=best_epoch_path, train_or_eval='eval', lr=0.002)
-    model.to(device)
-    model.eval()
+        # Loadd best model into memory again
+        model, _, _, _ = load_checkpoint(model, path_to_checkpoint=best_epoch_path, train_or_eval='eval', lr=0.002)
+        model.to(device)
+        model.eval()
+
+        # Persist a stable copy of the trained model for later do_train=False runs
+        torch.save(model.state_dict(), os.path.join(backup_path, 'trained_model.pt'))
+    else:
+        training_time = 0.0
+        _ckpt = os.path.join(backup_path, 'trained_model.pt')
+        if not os.path.isfile(_ckpt):
+            raise FileNotFoundError(
+                f"do_train=False but no saved model at {_ckpt}")
+        model.load_state_dict(torch.load(_ckpt, map_location=device))
+        model.to(device)
+        model.eval()
 
     # Running final inference on test set 
     from SuTraN.inference_procedure import inference_loop
@@ -388,7 +404,7 @@ def train_eval(log_name,
     os.makedirs(results_path, exist_ok=True)
 
     _test_start = time.time()
-    inf_results = inference_loop(model,
+    inf_results, inference_time, evaluation_time = inference_loop(model,
                                  test_dataset,
                                  remaining_runtime_head,
                                  outcome_bool,
@@ -398,9 +414,19 @@ def train_eval(log_name,
                                  mean_std_tss,
                                  mean_std_rrt,
                                  results_path=results_path,
-                                 val_batch_size=4096)
+                                 val_batch_size=4096,
+                                 do_eval=do_eval,
+                                 return_timing=True)
     testing_time = time.time() - _test_start
-    
+
+    if not do_eval:
+        with open(os.path.join(results_path, 'inference_time.pkl'), 'wb') as _f:
+            pickle.dump({"log": log_name, "model": "SuTraN_NDA", "run_id": run_id,
+                         "training_time": training_time,
+                         "inference_time": inference_time}, _f)
+        print("Inference time (s): {} -- written to {}".format(inference_time, results_path))
+        return
+
 
     # Retrieving the different metrics 
     # TTNE MAE metrics
@@ -482,6 +508,8 @@ def train_eval(log_name,
                         "MAE RRT minutes" : avg_MAE_minutes_RRT,
                         "training_time" : training_time,
                         "testing_time" : testing_time,
+                        "inference_time" : inference_time,
+                        "evaluation_time" : evaluation_time,
                         "num_trainable_params" : sum(p.numel() for p in model.parameters() if p.requires_grad)}
     # ── Next-act and concurrent-subset metrics ──────────────────────────────
     from sklearn.metrics import accuracy_score, f1_score as _f1_score
@@ -549,8 +577,9 @@ def train_eval(log_name,
         pickle.dump(results_dict_suf, file)
     with open(path_name_average_results, 'wb') as file:
         pickle.dump(avg_results_dict, file)
-    for _f in os.listdir(backup_path):
-        if _f.startswith('model_epoch_') and _f.endswith('.pt'):
-            os.remove(os.path.join(backup_path, _f))
+    if do_train:
+        for _f in os.listdir(backup_path):
+            if _f.startswith('model_epoch_') and _f.endswith('.pt'):
+                os.remove(os.path.join(backup_path, _f))
 
 

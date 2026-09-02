@@ -1,0 +1,9 @@
+log,method,training_time_seconds,inference_time_seconds
+Sepsis,gatv2_gru_nb_v1,0.0,1.12
+BPI_Challenge_2012_O,gatv2_gru_nb_v1,0.0,1.33
+BPIC15_4,gatv2_gru_nb_v1,0.0,3.91
+BPIC15_2,gatv2_gru_nb_v1,0.0,5.13
+BPI_Challenge_2012_A,gatv2_gru_nb_v1,0.0,3.83
+BPIC15_1,gatv2_gru_nb_v1,0.0,5.99
+BPIC15_5,gatv2_gru_nb_v1,0.0,6.15
+BPIC15_3,gatv2_gru_nb_v1,0.0,6.04

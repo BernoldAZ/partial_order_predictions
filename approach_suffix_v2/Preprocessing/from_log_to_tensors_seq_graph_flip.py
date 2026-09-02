@@ -69,14 +69,16 @@ def log_to_seq_graphs_flip(log,
         flip_test=True)
 
     n_test = test_pref_suff[0]['orig_case_id'].nunique()
-    p_test = int(test_pref_suff[0].drop_duplicates('orig_case_id')['case_length'].sum())
-    print(f"Cases – test: {n_test}  pairs: {p_test}")
 
     print("Generating Seq-Graph Dataset (flipped) ...")
     test_data = _graph_data_test_flip(
         test_pref_suff, case_id, act_label, timestamp,
         cardinality_dict, num_cols_dict, cat_cols_dict,
         window_size, outcome)
+
+    # Prefix-suffix pairs actually retained (after out-of-time split debiasing).
+    p_test = len(test_data)
+    print(f"Cases – test: {n_test}  pairs: {p_test}")
 
     output_dir = os.path.join('results_per_log', log_name)
     os.makedirs(output_dir, exist_ok=True)

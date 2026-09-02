@@ -174,25 +174,26 @@ def log_to_tensors(log,
     n_train_cases = train_pref_suff[0]['orig_case_id'].nunique()
     n_val_cases   = val_pref_suff[0]['orig_case_id'].nunique()
     n_test_cases  = test_pref_suff[0]['orig_case_id'].nunique()
-    # Each case of length L produces L pairs (prefix lengths 1..L).
-    # len(prefix_df) = sum(L*(L+1)/2), so use case_length instead.
-    n_train_pairs = int(train_pref_suff[0].drop_duplicates('orig_case_id')['case_length'].sum())
-    n_val_pairs   = int(val_pref_suff[0].drop_duplicates('orig_case_id')['case_length'].sum())
-    n_test_pairs  = int(test_pref_suff[0].drop_duplicates('orig_case_id')['case_length'].sum())
     print(f"Cases – train: {n_train_cases}  val: {n_val_cases}  test: {n_test_cases}")
-    print(f"Pairs – train: {n_train_pairs}  val: {n_val_pairs}  test: {n_test_pairs}")
 
     print("Generating Tensors...")
     train_data, val_data, test_data, num_pref_cat, num_suff_cat, pref_cat_cars, suff_cat_cars, num_activities = generate_tensordata_train_test(train_pref_suff,
-                                                                                                                                     val_pref_suff, 
-                                                                                                                                     test_pref_suff, 
-                                                                                                                                     case_id, act_label, 
-                                                                                                                                     cardinality_dict, 
-                                                                                                                                     num_cols_dict, 
-                                                                                                                                     cat_cols_dict, 
-                                                                                                                                     window_size, 
+                                                                                                                                     val_pref_suff,
+                                                                                                                                     test_pref_suff,
+                                                                                                                                     case_id, act_label,
+                                                                                                                                     cardinality_dict,
+                                                                                                                                     num_cols_dict,
+                                                                                                                                     cat_cols_dict,
+                                                                                                                                     window_size,
                                                                                                                                      outcome,
                                                                                                                                      log_name)
+
+    # Prefix-suffix pairs actually retained (after out-of-time split debiasing).
+    # Each tensor in the tuple has dim 0 = number of pairs.
+    n_train_pairs = int(train_data[0].shape[0])
+    n_val_pairs   = int(val_data[0].shape[0])
+    n_test_pairs  = int(test_data[0].shape[0])
+    print(f"Pairs – train: {n_train_pairs}  val: {n_val_pairs}  test: {n_test_pairs}")
 
     counts = {
         'n_train': n_train_cases, 'train_pairs': n_train_pairs,
