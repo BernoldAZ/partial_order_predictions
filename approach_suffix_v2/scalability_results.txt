@@ -1,80 +1,88 @@
 
-=== Log: .ipynb_checkpoints ===
-          Model  Training time (s)  Inference time (s)  Testing time (s)  # params
-   SuTraN (NDA)                NaN                 NaN               NaN       NaN
-CRTP-LSTM (NDA)                NaN                 NaN               NaN       NaN
-        ED-LSTM                NaN                 NaN               NaN       NaN
-       SEP-LSTM                NaN                 NaN               NaN       NaN
-           BEST                NaN                 NaN               NaN       NaN
-
 === Log: BPIC15_1 ===
-          Model  Training time (s)  Inference time (s)  Testing time (s)    # params
-       Graph_v1         19180.9800              5.7100          488.9900  88723.0000
-        ED-LSTM          4618.8000              5.1400           11.0800 295954.0000
-   SuTraN (NDA)         43848.6900            396.1500          401.2300 149619.0000
-       SEP-LSTM          1180.5000            118.7300          149.5800 273618.0000
-           BEST             3.9300              0.9000           81.2100         NaN
-CRTP-LSTM (NDA)          2358.7600              0.4600           24.0100 151698.0000
+          Model  Runs  Training time (s)  Inference time (s)  Testing time (s)    # params
+       SEP-LSTM     1           787.1200             14.4700           24.4800 273618.0000
+        ED-LSTM     1          3097.0300              0.8100            1.9600 295954.0000
+CRTP-LSTM (NDA)     1          1134.6700              0.0500            2.8800 151698.0000
+   SuTraN (NDA)     1         12806.7600             32.7000           34.0400 149619.0000
+           BEST     1             3.5400              0.1400            7.9700         NaN
+       Graph_v1     1          4192.0300              5.5100           19.3900 122644.0000
+    SuTraN (DA)     0                NaN                 NaN               NaN         NaN
+ CRTP-LSTM (DA)     0                NaN                 NaN               NaN         NaN
 
 === Log: BPIC15_2 ===
-          Model  Training time (s)  Inference time (s)  Testing time (s)    # params
-       Graph_v1         20174.1900              4.8600         1118.4500  87427.0000
-       SEP-LSTM           939.9100            130.5400          167.3400 271890.0000
-        ED-LSTM          4942.9100              5.0200           11.8200 294658.0000
-           BEST             4.4200              0.9500           67.9800         NaN
-CRTP-LSTM (NDA)          2529.8200              0.3500           25.0100 150210.0000
-   SuTraN (NDA)         66765.1500            362.9600          373.5400 148707.0000
+          Model  Runs  Training time (s)  Inference time (s)  Testing time (s)    # params
+       SEP-LSTM     1          1592.8100             65.5600           67.0300 271890.0000
+        ED-LSTM     1          2063.7300              0.6600            2.1700 294658.0000
+           BEST     1             2.7900              0.1600           17.0900         NaN
+       Graph_v1     1          4132.6400              4.5900           18.2200 121348.0000
+CRTP-LSTM (NDA)     1          1162.1200              0.0500            4.2800 150210.0000
+   SuTraN (NDA)     1         12595.7900             37.5600           40.1300 148707.0000
+    SuTraN (DA)     0                NaN                 NaN               NaN         NaN
+ CRTP-LSTM (DA)     0                NaN                 NaN               NaN         NaN
 
 === Log: BPIC15_3 ===
-          Model  Training time (s)  Inference time (s)  Testing time (s)    # params
-       Graph_v1         22397.4800              5.9000          618.7500  88075.0000
-        ED-LSTM          6257.5300              6.2600           11.6500 295306.0000
-       SEP-LSTM          1488.0500            127.3300          163.2500 272754.0000
-   SuTraN (NDA)         49305.0600            323.1500          331.5400 149163.0000
-CRTP-LSTM (NDA)          2685.1300              0.5200           26.8000 150954.0000
-           BEST             4.4500              1.0000           83.8700         NaN
+          Model  Runs  Training time (s)  Inference time (s)  Testing time (s)    # params
+       SEP-LSTM     1           705.1300             15.7500           26.0000 272754.0000
+           BEST     1             3.9100              0.2500           11.2000         NaN
+        ED-LSTM     1          2612.3000              0.8400            2.5000 295306.0000
+       Graph_v1     1         13584.9200              5.4200           22.0000 121996.0000
+CRTP-LSTM (NDA)     1          1162.1800              0.0900            5.2300 150954.0000
+    SuTraN (DA)     0                NaN                 NaN               NaN         NaN
+   SuTraN (NDA)     0                NaN                 NaN               NaN         NaN
+ CRTP-LSTM (DA)     0                NaN                 NaN               NaN         NaN
 
 === Log: BPIC15_4 ===
-          Model  Training time (s)  Inference time (s)  Testing time (s)    # params
-       Graph_v1         19091.2000              4.1100          268.3700  83301.0000
-       SEP-LSTM          1305.8300            111.1700          143.7900 267688.0000
-           BEST             3.4400              0.6900           59.5500         NaN
-   SuTraN (NDA)         22823.4300            276.1900          279.8200 146469.0000
-        ED-LSTM          4637.6900              4.4200            8.0500 290916.0000
-CRTP-LSTM (NDA)          2299.6200              0.4100           19.9600 146548.0000
+          Model  Runs  Training time (s)  Inference time (s)  Testing time (s)    # params
+       Graph_v1     1          3169.7800              4.0600           12.9800 117222.0000
+       SEP-LSTM     1           534.0300             10.8600           19.2000 267688.0000
+   SuTraN (NDA)     1          4421.1600             25.2700           26.3400 146469.0000
+           BEST     1             2.4100              0.1500            9.4000         NaN
+        ED-LSTM     1          1779.4700              0.5100            1.6800 290916.0000
+CRTP-LSTM (NDA)     1           782.8500              0.0400            2.5900 146548.0000
+    SuTraN (DA)     0                NaN                 NaN               NaN         NaN
+ CRTP-LSTM (DA)     0                NaN                 NaN               NaN         NaN
 
 === Log: BPIC15_5 ===
-          Model  Training time (s)  Inference time (s)  Testing time (s)    # params
-       Graph_v1         23250.6200              5.8100         3899.4100  85836.0000
-       SEP-LSTM          1734.9700            161.9300          204.5900 270423.0000
-           BEST             5.1700              1.0600           97.8400         NaN
-   SuTraN (NDA)         45713.9200            470.6400          477.5000 147916.0000
-        ED-LSTM          5793.7400              5.9800           12.4600 293259.0000
-CRTP-LSTM (NDA)          3746.8400              0.6100           34.8500 148923.0000
+          Model  Runs  Training time (s)  Inference time (s)  Testing time (s)    # params
+       Graph_v1     1          4643.5700              4.1500           29.0000 119757.0000
+       SEP-LSTM     1           515.2800             15.0600           24.4600 270423.0000
+           BEST     1             3.5400              0.1700           11.8200         NaN
+   SuTraN (NDA)     1          3425.9600             34.0000           35.5200 147916.0000
+CRTP-LSTM (NDA)     1           853.8300              0.0200            3.0700 148923.0000
+        ED-LSTM     1           796.1400              0.6400            2.2000 293259.0000
+    SuTraN (DA)     0                NaN                 NaN               NaN         NaN
+ CRTP-LSTM (DA)     0                NaN                 NaN               NaN         NaN
 
 === Log: BPI_Challenge_2012_A ===
-          Model  Training time (s)  Inference time (s)  Testing time (s)    # params
-       Graph_v1          5856.1100              2.6200           29.1000  24144.0000
-       SEP-LSTM          2153.3500              2.5800            6.3300 207579.0000
-CRTP-LSTM (NDA)          3551.3400              0.1100            3.0400  95679.0000
-           BEST             0.4500              0.2200            3.7300         NaN
-   SuTraN (NDA)          3464.0000              3.0900            3.1600 120016.0000
-        ED-LSTM          2256.9100              1.1100            1.1900 238479.0000
+          Model  Runs  Training time (s)  Inference time (s)  Testing time (s)    # params
+       Graph_v1     1          3418.4000             34.5400           38.4200  58065.0000
+CRTP-LSTM (NDA)     1          1637.3300              0.0500            1.5400  95679.0000
+   SuTraN (NDA)     1          2416.0800              1.4200            1.5100 120016.0000
+        ED-LSTM     1          1539.3500              0.7000            0.7400 238479.0000
+           BEST     1             0.4500              0.2000            2.0200         NaN
+       SEP-LSTM     1          1430.0700              1.5100            3.6000 207579.0000
+    SuTraN (DA)     0                NaN                 NaN               NaN         NaN
+ CRTP-LSTM (DA)     0                NaN                 NaN               NaN         NaN
 
 === Log: BPI_Challenge_2012_O ===
-          Model  Training time (s)  Inference time (s)  Testing time (s)    # params
-       Graph_v1          6225.6900              1.3300           17.1200  23219.0000
-        ED-LSTM          3328.8000              0.8900            1.0000 237746.0000
-   SuTraN (NDA)          2822.2400             12.1200           12.2500 119827.0000
-       SEP-LSTM          1858.9700              5.8200           10.3500 206850.0000
-CRTP-LSTM (NDA)          2142.7100              0.0700            2.1200  95090.0000
-           BEST             0.2900              0.1300            3.1300         NaN
+          Model  Runs  Training time (s)  Inference time (s)  Testing time (s)    # params
+   SuTraN (NDA)     1          1215.5200              5.9900            6.1700 119827.0000
+        ED-LSTM     1          1539.1300              0.7200            0.8600 237746.0000
+       Graph_v1     1          3190.6900             19.0600           21.7700  57140.0000
+CRTP-LSTM (NDA)     1          1281.9300              0.0300            1.2200  95090.0000
+       SEP-LSTM     1           863.5000              2.4500            4.4900 206850.0000
+           BEST     1             0.2600              0.1300            1.9700         NaN
+    SuTraN (DA)     0                NaN                 NaN               NaN         NaN
+ CRTP-LSTM (DA)     0                NaN                 NaN               NaN         NaN
 
 === Log: Sepsis ===
-          Model  Training time (s)  Inference time (s)  Testing time (s)    # params
-       Graph_v1          2001.5300              1.1500           10.7800  26012.0000
-           BEST             0.4700              0.1100            4.6900         NaN
-       SEP-LSTM           332.3200              6.2000           10.9600 209055.0000
-CRTP-LSTM (NDA)           514.4500              0.0400            1.9100  96875.0000
-   SuTraN (NDA)           959.2900             11.6600           11.9900 120412.0000
-        ED-LSTM           845.6200              0.5500            0.9000 239963.0000
+          Model  Runs  Training time (s)  Inference time (s)  Testing time (s)    # params
+       Graph_v1     1          1275.3900              5.5100            7.8500  59933.0000
+           BEST     1             0.3500              0.1200            2.8300         NaN
+       SEP-LSTM     1           183.9400              4.0400            8.0000 209055.0000
+CRTP-LSTM (NDA)     1           325.4600              0.0300            1.4900  96875.0000
+   SuTraN (NDA)     1          1040.4500              8.7100            9.3900 120412.0000
+        ED-LSTM     1           346.8300              0.4000            0.7100 239963.0000
+    SuTraN (DA)     0                NaN                 NaN               NaN         NaN
+ CRTP-LSTM (DA)     0                NaN                 NaN               NaN         NaN

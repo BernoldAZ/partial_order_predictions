@@ -15,15 +15,34 @@ For prefixes and (separately) for suffixes it reports:
         * length < 2  (trivially impossible)
         * length >= 2 but all timestamps distinct
 
+With per-sample metric sources it also reports mean DLS / GES / TTNE / RRT per
+subset (prefix PO vs no-PO, suffix PO vs no-PO, source-case PO vs no-PO). Add one
+model with --metrics NAME=PATH (PATH is a baseline TEST_SET_RESULTS dir or a GNN
+<log>_per_sample_metrics.pt bundle), and/or point --baselines at a per-log
+baselines folder to pick up every known baseline at --baseline-run. Each source
+is checked to be positionally aligned to the dataset (per-sample prefix / suffix
+lengths).
+
 Usage
 -----
     python analyze_partial_order.py <path-to-test_graphdataset.pt> [--tss-index N] [--csv OUT.csv]
+        [--metrics NAME=PATH ...] [--baselines DIR] [--baseline-run N]
+
+    python analyze_partial_order.py results_per_log/Sepsis/test_graphdataset.pt \
+  --csv results_per_log/Sepsis/sepsis_po.csv \
+  --metrics GNN_v1=results_time_gatv2_gru_nb_v1/run_1/Sepsis_per_sample_metrics.pt \
+  --baselines ../baselines/results_per_log/Sepsis/
+
+  python analyze_partial_order.py results_per_log/BPI_Challenge_2012_O/test_graphdataset.pt \
+  --csv results_per_log/BPI_Challenge_2012_O/BPI_Challenge_2012_O_po.csv \
+  --metrics GNN_v1=results_time_gatv2_gru_nb_v1/run_1/BPI_Challenge_2012_O_per_sample_metrics.pt \
+  --baselines ../baselines/results_per_log/BPI_Challenge_2012_O/
+
 
     python analyze_partial_order.py results_per_log/Sepsis/test_graphdataset.pt --csv results_per_log/Sepsis/sepsis_po.csv
     python analyze_partial_order.py results_per_log/BPI_Challenge_2012_O/test_graphdataset.pt --csv results_per_log/BPI_Challenge_2012_O/BPI_Challenge_2012_O_po.csv
     python analyze_partial_order.py results_per_log/BPIC15_4/test_graphdataset.pt --csv results_per_log/BPIC15_4/BPIC15_4_po.csv
-"""
-
+    """
 import argparse
 import csv
 import os
@@ -102,11 +121,17 @@ def analyze(dataset, tss_index):
         n_cases=0, case_po=0, case_nopo_len_lt2=0, case_nopo_distinct=0,
         case_shared_events=0, case_total_events=0,
     )
+    # per-index arrays (dataset order) for the metrics-by-subset join
+    masks = dict(prefix_po=[False] * n, suffix_po=[False] * n, case_po=[False] * n,
+                 k=[0] * n, m=[0] * n)
+    case_buf = []  # indices of the current source case, closed on the m == 0 pair
 
-    for data in dataset:
+    for i, data in enumerate(dataset):
         k, p_sc, p_po = prefix_stats(data, tss_index)
         r["pref_shared_events"] += p_sc
         r["pref_total_events"] += k
+        masks["k"][i] = k
+        masks["prefix_po"][i] = p_po
         if p_po:
             r["pref_po"] += 1
         elif k < 2:
@@ -117,6 +142,8 @@ def analyze(dataset, tss_index):
         m, s_sc, s_po = suffix_stats(data)
         r["suf_shared_events"] += s_sc
         r["suf_total_events"] += m
+        masks["m"][i] = m
+        masks["suffix_po"][i] = s_po
         if s_po:
             r["suf_po"] += 1
         elif m < 2:
@@ -125,10 +152,14 @@ def analyze(dataset, tss_index):
             r["suf_nopo_distinct"] += 1
 
         # full-case sample: suffix is only the END token -> prefix spans the whole case
+        case_buf.append(i)
         if m == 0:
             r["n_cases"] += 1
             r["case_shared_events"] += p_sc
             r["case_total_events"] += k
+            for j in case_buf:            # broadcast the full-trace PO flag to every pair
+                masks["case_po"][j] = p_po
+            case_buf = []
             if p_po:
                 r["case_po"] += 1
             elif k < 2:
@@ -139,7 +170,7 @@ def analyze(dataset, tss_index):
     assert r["pref_po"] + r["pref_nopo_len_lt2"] + r["pref_nopo_distinct"] == n
     assert r["suf_po"] + r["suf_nopo_len_lt2"] + r["suf_nopo_distinct"] == n
     assert r["n_cases"] >= 1
-    return r
+    return r, masks
 
 
 def print_report(log_name, r):
@@ -169,6 +200,123 @@ def print_report(log_name, r):
     print(f"  events sharing a timestamp  : {r['case_shared_events']:>8}  ({pct(r['case_shared_events'], r['case_total_events'])} of all case events)")
 
 
+# ─── Metrics by partial-order subset ─────────────────────────────────────────
+
+# (report label, csv key, masks key, wanted bool value) for the 6 subsets
+_SUBSETS = [
+    ("prefix PO",    "prefix_po",   "prefix_po", True),
+    ("prefix no-PO", "prefix_nopo", "prefix_po", False),
+    ("suffix PO",    "suffix_po",   "suffix_po", True),
+    ("suffix no-PO", "suffix_nopo", "suffix_po", False),
+    ("case PO",      "case_po",     "case_po",   True),
+    ("case no-PO",   "case_nopo",   "case_po",   False),
+]
+# (report header, csv key, key in a metric source)
+_METRICS = [
+    ("DLS",       "dls",      "dl_similarity"),
+    ("GES",       "ges",      "ges_approx"),
+    ("TTNE(min)", "ttne_min", "ttne_mae_minutes"),
+    ("RRT(min)",  "rrt_min",  "rrt_mae_minutes"),
+]
+_SRC_KEYS = ("dl_similarity", "ges_approx", "ttne_mae_minutes", "rrt_mae_minutes",
+             "pref_len", "suf_len")
+_BASELINE_FILES = {
+    "dl_similarity":    "dam_lev_similarity.pt",
+    "ges_approx":       "ges_per_sample.pt",
+    "ttne_mae_minutes": "MAE_ttne_minutes.pt",
+    "rrt_mae_minutes":  "MAE_rrt_minutes.pt",
+    "pref_len":         "pref_len.pt",
+    "suf_len":          "suf_len.pt",
+}
+# source name -> result-dir base under a per-log baselines folder
+# (layout: <base>_run<N>/TEST_SET_RESULTS/, same as results_collector.py)
+_BASELINE_MODELS = {
+    "SuTraN_DA":     "SUTRAN_DA_results",
+    "SuTraN_NDA":    "SUTRAN_NDA_results",
+    "CRTP_LSTM_DA":  "CRTP_LSTM_DA_results",
+    "CRTP_LSTM_NDA": "CRTP_LSTM_NDA_results",
+    "ED_LSTM":       "ED_LSTM_results",
+    "SEP_LSTM":      "SEP_LSTM_results",
+    "BEST":          "BEST_results",
+}
+
+
+def load_metric_source(path):
+    """Load per-sample metric vectors, dataset order, as plain python lists.
+
+    `path` is either a baseline TEST_SET_RESULTS directory (one .pt per metric)
+    or a GNN `<log>_per_sample_metrics.pt` bundle (a dict). Missing metrics come
+    back as None.
+    """
+    def _to_list(t):
+        return None if t is None else t.tolist()
+
+    if os.path.isdir(path):
+        raw = {}
+        for key, fname in _BASELINE_FILES.items():
+            fp = os.path.join(path, fname)
+            raw[key] = (torch.load(fp, map_location="cpu", weights_only=False)
+                        if os.path.exists(fp) else None)
+    else:
+        d = torch.load(path, map_location="cpu", weights_only=False)
+        raw = {key: d.get(key) for key in _SRC_KEYS}
+    return {key: _to_list(raw[key]) for key in _SRC_KEYS}
+
+
+def validate_alignment(name, src, masks, ap):
+    n = len(masks["k"])
+    for key in ("pref_len", "suf_len"):
+        if src[key] is None:
+            ap.error(f"--metrics {name}: {key} missing; cannot align to the dataset")
+        if len(src[key]) != n:
+            ap.error(f"--metrics {name}: {len(src[key])} rows but the dataset has {n}")
+    bad_p = sum(1 for i in range(n) if int(src["pref_len"][i]) != masks["k"][i])
+    bad_s = sum(1 for i in range(n) if int(src["suf_len"][i]) != masks["m"][i] + 1)
+    if bad_p or bad_s:
+        ap.error(f"--metrics {name}: not aligned to the dataset order "
+                 f"({bad_p} prefix-length, {bad_s} suffix-length mismatches)")
+
+
+def _subset_indices(masks, mask_key, want):
+    return [i for i, v in enumerate(masks[mask_key]) if bool(v) is want]
+
+
+def _mean(vals, idxs):
+    return sum(vals[i] for i in idxs) / len(idxs) if (vals is not None and idxs) else None
+
+
+def metrics_report(sources, masks):
+    print("\nMETRICS BY PARTIAL-ORDER SUBSET")
+    for name, src in sources.items():
+        print(f"\n  {name}")
+        hdr = f"    {'subset':<13} {'n':>7}  " + "  ".join(f"{h:>9}" for _, h, _ in _METRICS)
+        print(hdr)
+        for label, _, mask_key, want in _SUBSETS:
+            idxs = _subset_indices(masks, mask_key, want)
+            cells = []
+            for _, _, src_key in _METRICS:
+                v = _mean(src.get(src_key), idxs)
+                cells.append(f"{v:>9.4f}" if v is not None else f"{'n/a':>9}")
+            print(f"    {label:<13} {len(idxs):>7}  " + "  ".join(cells))
+
+
+def write_metrics_csv(path, log_name, sources, masks):
+    """One tidy row per (model, subset): log_name, model, subset, n, DLS, GES, TTNE, RRT."""
+    fieldnames = ["log_name", "model", "subset", "n"] + [k for _, k, _ in _METRICS]
+    with open(path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fieldnames)
+        w.writeheader()
+        for name, src in sources.items():
+            for _, sub_key, mask_key, want in _SUBSETS:
+                idxs = _subset_indices(masks, mask_key, want)
+                row = {"log_name": log_name, "model": name, "subset": sub_key,
+                       "n": len(idxs)}
+                for _, m_key, src_key in _METRICS:
+                    v = _mean(src.get(src_key), idxs)
+                    row[m_key] = "" if v is None else round(v, 6)
+                w.writerow(row)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -177,6 +325,16 @@ def main():
                     help="column index of ts_start in data.x "
                          "(default: read tss_index.txt next to the dataset)")
     ap.add_argument("--csv", default=None, help="write a one-row summary CSV here")
+    ap.add_argument("--metrics", action="append", default=[], metavar="NAME=PATH",
+                    help="per-sample metrics source to break down by subset. PATH is a "
+                         "baseline TEST_SET_RESULTS dir or a GNN <log>_per_sample_metrics.pt "
+                         "bundle. Repeatable.")
+    ap.add_argument("--baselines", default=None, metavar="DIR",
+                    help="per-log baselines folder (e.g. "
+                         "baselines/results_per_log/<log>/); "
+                         "every known baseline model found under it is added automatically.")
+    ap.add_argument("--baseline-run", type=int, default=1,
+                    help="run number to read for --baselines (default: 1)")
     args = ap.parse_args()
 
     dataset_dir = os.path.dirname(os.path.abspath(args.dataset_path))
@@ -190,9 +348,36 @@ def main():
         with open(tss_path) as f:
             tss_index = int(f.read().strip())
 
-    dataset = torch.load(args.dataset_path, weights_only=False)
-    r = analyze(dataset, tss_index)
+    dataset = torch.load(args.dataset_path, map_location="cpu", weights_only=False)
+    r, masks = analyze(dataset, tss_index)
     print_report(log_name, r)
+
+    sources = {}
+    for spec in args.metrics:
+        if "=" not in spec:
+            ap.error(f"--metrics expects NAME=PATH, got {spec!r}")
+        name, path = spec.split("=", 1)
+        src = load_metric_source(path)
+        validate_alignment(name, src, masks, ap)
+        sources[name] = src
+
+    if args.baselines:
+        found = 0
+        for name, base in _BASELINE_MODELS.items():
+            d = os.path.join(args.baselines, f"{base}_run{args.baseline_run}",
+                             "TEST_SET_RESULTS")
+            if not os.path.isdir(d):
+                continue
+            src = load_metric_source(d)
+            validate_alignment(name, src, masks, ap)
+            sources[name] = src
+            found += 1
+        if not found:
+            print(f"\nWARNING: no baseline run-{args.baseline_run} results found under "
+                  f"{args.baselines}")
+
+    if sources:
+        metrics_report(sources, masks)
 
     if args.csv:
         r_row = {"log_name": log_name, **r}
@@ -201,6 +386,12 @@ def main():
             w.writeheader()
             w.writerow(r_row)
         print(f"\nCSV written to {args.csv}")
+
+        if sources:
+            base, ext = os.path.splitext(args.csv)
+            metrics_path = f"{base}_metrics{ext or '.csv'}"
+            write_metrics_csv(metrics_path, log_name, sources, masks)
+            print(f"Metrics CSV written to {metrics_path}")
 
 
 if __name__ == "__main__":

@@ -11,10 +11,22 @@ ABLATION_CONFIGS = {
         "results_sub": "approach_suffix_v2/results_time_gatv2_seq_gru_nb_v1",
         "csv_file":    "results_suffix_time_gnn.csv",
     },
-    "Flip_v1": {
+    "GraphFlip_v1": {
+        "results_sub": "approach_suffix_v2/results_time_gatv2_gru_nb_v1",
+        "csv_file":    "results_suffix_time_gnn_prefixflip.csv",
+    },
+    "GraphRandom_v1": {
+        "results_sub": "approach_suffix_v2/results_time_gatv2_gru_nb_v1",
+        "csv_file":    "results_suffix_time_gnn_prefixrandom.csv",
+    },
+    "SeqFlip_v1": {
         "results_sub": "approach_suffix_v2/results_time_gatv2_seq_gru_nb_v1",
-        "csv_file":    "results_suffix_time_gnn_flip.csv",
-    }
+        "csv_file":    "results_suffix_time_gnn_prefixflip.csv",
+    },
+    "SeqRandom_v1": {
+        "results_sub": "approach_suffix_v2/results_time_gatv2_seq_gru_nb_v1",
+        "csv_file":    "results_suffix_time_gnn_prefixrandom.csv",
+    },
 }
 
 METRICS = [
@@ -94,7 +106,7 @@ def run():
 
     bar = "═" * 100
     print(f"\n╔{bar}╗")
-    print(f"║  {'ABLATION: Input Format (Graph vs Seq vs Flip)':<98}║")
+    print(f"║  {'ABLATION: Input Format (Graph vs Seq vs Flip vs Random)':<98}║")
     print(f"╚{bar}╝\n")
 
     headers = ["Variant", "N"] + [label for label, *_ in METRICS] + ["# params"]

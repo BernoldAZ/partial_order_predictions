@@ -1,6 +1,6 @@
 """
 GATv2 encoder + GRU decoder with new-block head only.
-Standalone implementation — no inheritance from v1/v2/v3/v4.
+Standalone implementation — no inheritance from v2/v3.
 
 Predicts:
   - activity suffix      (fc_out_act)
@@ -9,24 +9,41 @@ Predicts:
       target=1  event starts a new concurrent block
       target=0  event is concurrent with the previous one
 
-tsp feedback during decoding:
-    new_block=1  →  tsp[t+1] = TTNE-derived (sequential event)
-    new_block=0  →  tsp[t+1] = standardised(0) (concurrent, no time gap)
+tsp/tss feedback during decoding (gap = TTNE if new_block=1 else 0):
+    new_block=1  →  tsp[t+1] = TTNE-derived, tss[t+1] = tss[t] + TTNE (sequential event)
+    new_block=0  →  tsp[t+1] = standardised(0), tss[t+1] = tss[t] (concurrent, no time gap)
 
-Difference from v2: _EdgeAttnBias residual is removed from the encoder.
-The encoder uses GATv2Conv output directly, without edge-attention bias.
+The GRU is initialised from h_global (pooled prefix), which is the decoder's
+only view of the encoded prefix.
+
+Encoder: n_gnn_layers stacked GATv2Conv layers (no residual), followed by
+attention pooling (AttentionalAggregation) into h_global.
+
+First decoder step is invariant to the order of events within the prefix's
+last concurrent block:
+    activity  mean activity embedding over all nodes of the last block
+    tss       last_prefix_num[:, 0] (identical for every node of the block)
+    tsp       edge_attr of the inter-block edge entering the last node of the
+              prefix (identical for every edge between the two blocks);
+              falls back to last_prefix_num[:, 1] for single-block prefixes
+
+Scheduled sampling is the parallel two-pass approximation (Duckworth et al.,
+2019; Mihaylova & Martins, 2019): a no-grad teacher-forced pass produces
+predictions for all steps, which are mixed into the ground-truth inputs per
+step with probability 1 - p_teacher, followed by a second parallel pass with
+gradients. Cost ≈ 2× teacher forcing instead of W sequential decoder steps.
 """
 
 import torch
 import torch.nn as nn
 import torch.nn.init as init
-from torch_geometric.nn import GATv2Conv, global_mean_pool
+from torch_geometric.nn import GATv2Conv, global_mean_pool, AttentionalAggregation
 
 
 class GATv2EncoderGRUDecoderNewBlockV1(nn.Module):
     """
     Standalone GATv2 encoder + GRU decoder with new-block head (no stop head).
-    No _EdgeAttnBias residual; no h_last: encoder context is h_global only.
+    No _EdgeAttnBias residual; encoder context is h_global only.
 
     Parameters
     ----------
@@ -35,21 +52,24 @@ class GATv2EncoderGRUDecoderNewBlockV1(nn.Module):
     d_model : int
         Hidden size for GNN and GRU.
     dropout : float
-    n_layers : int
+    n_gru_layers : int
         Number of GRU layers in the decoder.
+    n_gnn_layers : int
+        Number of stacked GATv2Conv layers in the encoder.
     nhead : int
-        Number of GATv2Conv attention heads (concat=False → output is d_model).
+        Number of GATv2Conv heads (concat=False → GATv2 output is d_model
+        regardless of nhead).
     use_scheduled_sampling : bool
         If True, _scheduled_sampling is used during training instead of teacher forcing.
     """
 
     def __init__(self, num_activities: int, d_model: int = 64,
-                 dropout: float = 0.2, n_layers: int = 1, nhead: int = 4,
-                 use_scheduled_sampling: bool = False):
+                 dropout: float = 0.2, n_gru_layers: int = 1, nhead: int = 4,
+                 use_scheduled_sampling: bool = False, n_gnn_layers: int = 2):
         super().__init__()
         self.num_activities         = num_activities
         self.d_model                = d_model
-        self.n_layers               = n_layers
+        self.n_gru_layers           = n_gru_layers
         self.use_scheduled_sampling = use_scheduled_sampling
 
         emb_size      = min(600, round(1.6 * (num_activities - 2) ** 0.56))
@@ -58,16 +78,21 @@ class GATv2EncoderGRUDecoderNewBlockV1(nn.Module):
         self.dropout  = nn.Dropout(dropout)
 
         # GNN encoder — concat=False keeps output at d_model regardless of nhead
-        self.gatv2    = GATv2Conv(emb_size + 1, d_model, heads=nhead, concat=False, edge_dim=1) # + 1 because of tss
+        self.gnn_layers = nn.ModuleList(
+            [GATv2Conv(emb_size + 1, d_model, heads=nhead, concat=False, edge_dim=1)]  # + 1 because of tss
+            + [GATv2Conv(d_model, d_model, heads=nhead, concat=False, edge_dim=1)
+               for _ in range(n_gnn_layers - 1)]
+        )
+        self.att_pool = AttentionalAggregation(gate_nn=nn.Linear(d_model, 1))
         self.bn_enc   = nn.BatchNorm1d(d_model)
-        self.enc_to_h = nn.Linear(d_model, d_model * n_layers)
+        self.enc_to_h = nn.Linear(d_model, d_model * n_gru_layers)
 
         # GRU decoder: act_emb + tss + tsp
-        dec_dropout  = dropout if n_layers > 1 else 0.0
+        dec_dropout  = dropout if n_gru_layers > 1 else 0.0
         self.decoder = nn.GRU(
             input_size=emb_size + 2,
             hidden_size=d_model,
-            num_layers=n_layers,
+            num_layers=n_gru_layers,
             batch_first=True,
             dropout=dec_dropout,
         )
@@ -91,129 +116,116 @@ class GATv2EncoderGRUDecoderNewBlockV1(nn.Module):
     def _encode(self, data):
         h = torch.cat([self.act_emb(data.cat_x[:, -1]), data.x[:, [0]]], dim=-1)
         h = self.dropout(h)
-        h = self.gatv2(h, data.edge_index, data.edge_attr).relu()
-        h = self.dropout(h)
-        h_global = global_mean_pool(h, data.batch)   # (B, d_model)
-        return self.bn_enc(h_global)
+        for gnn in self.gnn_layers:
+            h = gnn(h, data.edge_index, data.edge_attr).relu()
+            h = self.dropout(h)
+        h_global = self.att_pool(h, data.batch)             # (B, d_model)
+        h_global = self.bn_enc(h_global)
+        return h_global
+
+    def _start_step(self, data):
+        """Order-invariant input for the first decoder step (see module docstring)."""
+        B  = data.num_graphs
+        lb = data.last_block_mask                                           # (N,) bool
+        act_emb   = self.act_emb(data.cat_x[:, -1])                         # (N, emb)
+        start_emb = global_mean_pool(act_emb[lb], data.batch[lb], size=B)   # (B, emb)
+
+        # Inter-block edges entering the last node of each prefix: source outside the last block
+        src, dst = data.edge_index
+        is_last_node = torch.zeros_like(lb)
+        is_last_node[data.ptr[1:] - 1] = True
+        in_edge = is_last_node[dst] & ~lb[src]
+        tsp_0 = data.last_prefix_num[:, 1].clone()                          # (B,) fallback: single-block prefix
+        tsp_0[data.batch[dst[in_edge]]] = data.edge_attr[in_edge, 0]
+        return start_emb, tsp_0
 
     def _init_gru_state(self, c):
         B = c.shape[0]
         return (self.enc_to_h(c)
-                .view(B, self.n_layers, self.d_model)
-                .permute(1, 0, 2).contiguous())       # (n_layers, B, d_model)
+                .view(B, self.n_gru_layers, self.d_model)
+                .permute(1, 0, 2).contiguous())       # (n_gru_layers, B, d_model)
 
     def forward(self, data, window_size=None, mean_std_ttne=None,
                 mean_std_tss=None, mean_std_tsp=None, p_teacher=1.0):
         c  = self._encode(data)
         h0 = self._init_gru_state(c)
+        start_emb, tsp_0 = self._start_step(data)
         if self.training:
             if self.use_scheduled_sampling:
-                return self._scheduled_sampling(data, h0, p_teacher,
+                return self._scheduled_sampling(data, h0, start_emb, tsp_0, p_teacher,
                                                 mean_std_ttne, mean_std_tss, mean_std_tsp)
             else:
-                return self._teacher_forcing(data, h0)
+                return self._teacher_forcing(data, h0, start_emb, tsp_0)
         else:
-            return self._autoregressive(data, h0, window_size,
+            return self._autoregressive(data, h0, start_emb, tsp_0, window_size,
                                         mean_std_ttne, mean_std_tss, mean_std_tsp)
 
-    # ── Teacher forcing ────────────────────────────────────────────────────────
+    # ── Parallel decoding helpers ──────────────────────────────────────────────
 
-    def _teacher_forcing(self, data, h0):
+    def _gt_inputs(self, data, tsp_0):
+        """Ground-truth decoder inputs; step 0 (start_emb) is added in _decode."""
         B  = data.num_graphs
         W  = data.suffix_act.shape[0] // B
         suffix_act = data.suffix_act.view(B, W)
         suffix_num = data.suffix_num.view(B, W, 2)
 
-        dec_start_act = data.cat_x[data.ptr[1:] - 1, -1]
-        dec_acts = torch.cat(
-            [dec_start_act.unsqueeze(-1), suffix_act[:, :-1]], dim=-1
-        ).clamp(max=self.num_activities - 2)              # (B, W)
+        dec_acts = suffix_act[:, :-1].clamp(max=self.num_activities - 2)  # (B, W-1) inputs of steps 1..W-1
+        tss_0    = data.last_prefix_num[:, [0]].unsqueeze(1)                         # (B, 1, 1)
+        tss      = torch.cat([tss_0, suffix_num[:, :-1, [0]]], dim=1)                # (B, W, 1)
+        tsp      = torch.cat([tsp_0.view(B, 1, 1), suffix_num[:, :-1, [1]]], dim=1)  # (B, W, 1)
+        return dec_acts, tss, tsp
 
-        act_emb = self.act_emb(dec_acts)                  # (B, W, emb)
-        tss_0   = data.last_prefix_num[:, [0]].unsqueeze(1)           # (B, 1, 1)
-        tsp_0   = data.last_prefix_num[:, [1]].unsqueeze(1)           # (B, 1, 1)
-        tss     = torch.cat([tss_0, suffix_num[:, :-1, [0]]], dim=1)  # (B, W, 1)
-        tsp     = torch.cat([tsp_0, suffix_num[:, :-1, [1]]], dim=1)  # (B, W, 1)
-        dec_in  = torch.cat([act_emb, tss, tsp], dim=-1)  # (B, W, emb+2)
+    def _decode(self, h0, start_emb, dec_acts, tss, tsp):
+        """One parallel decoder pass over all W steps."""
+        act_emb = torch.cat([start_emb.unsqueeze(1), self.act_emb(dec_acts)], dim=1)  # (B, W, emb)
+        dec_in  = torch.cat([act_emb, tss, tsp], dim=-1)   # (B, W, emb+2)
 
         output, _ = self.decoder(dec_in, h0)               # (B, W, d_model)
         nb_logits = self.fc_new_block(output).squeeze(-1)  # (B, W)
         return self.fc_out_act(output), self.fc_out_ttne(output), nb_logits
 
-    # ── Scheduled sampling ─────────────────────────────────────────────────────
+    # ── Teacher forcing ────────────────────────────────────────────────────────
 
-    def _scheduled_sampling(self, data, h0, p_teacher, mean_std_ttne, mean_std_tss, mean_std_tsp):
-        B  = data.num_graphs
-        W  = data.suffix_act.shape[0] // B
-        suffix_act = data.suffix_act.view(B, W)
-        suffix_num = data.suffix_num.view(B, W, 2)
+    def _teacher_forcing(self, data, h0, start_emb, tsp_0):
+        return self._decode(h0, start_emb, *self._gt_inputs(data, tsp_0))
 
-        dec_start_act = data.cat_x[data.ptr[1:] - 1, -1]
-        gt_acts = torch.cat(
-            [dec_start_act.unsqueeze(-1), suffix_act[:, :-1]], dim=-1
-        ).clamp(max=self.num_activities - 2)              # (B, W)
+    # ── Scheduled sampling (parallel two-pass) ─────────────────────────────────
 
-        act_input = gt_acts[:, 0]                         # (B,)
-        tss_curr  = data.last_prefix_num[:, 0]            # (B,)  last prefix ts_start
-        tsp_curr  = data.last_prefix_num[:, 1]            # (B,)  last prefix ts_prev
-        h = h0
+    def _scheduled_sampling(self, data, h0, start_emb, tsp_0, p_teacher,
+                            mean_std_ttne, mean_std_tss, mean_std_tsp):
+        """Pass 1 (no grad) predicts every step from ground-truth inputs; each step's
+        input is then replaced by the pass-1 prediction of the previous step with
+        probability 1 - p_teacher; pass 2 decodes the mixed inputs with gradients."""
+        ttne_mean, ttne_std = mean_std_ttne
+        tss_mean,  tss_std  = mean_std_tss
+        tsp_mean,  tsp_std  = mean_std_tsp
 
-        has_norm = mean_std_ttne is not None
-        if has_norm:
-            ttne_mean, ttne_std = mean_std_ttne
-            tss_mean,  tss_std  = mean_std_tss
-            tsp_mean,  tsp_std  = mean_std_tsp
+        dec_acts, tss, tsp = self._gt_inputs(data, tsp_0)
 
-        all_act_logits, all_ttne, all_nb = [], [], []
+        with torch.no_grad():
+            act_logits, ttne_pred, nb_logits = self._decode(
+                h0, start_emb, dec_acts, tss, tsp)
 
-        for t in range(W):
-            emb    = self.act_emb(act_input)
-            dec_in = torch.cat([emb,
-                                 tss_curr.unsqueeze(-1),
-                                 tsp_curr.unsqueeze(-1)], dim=-1).unsqueeze(1)  # (B,1,emb+2)
+            # Prediction at step t → candidate input for step t+1 (t = 0..W-2)
+            pred_act  = act_logits[:, :-1].argmax(dim=-1).clamp(max=self.num_activities - 2)  # (B, W-1)
+            ttne_secs = (ttne_pred[:, :-1, 0] * ttne_std + ttne_mean).clamp(min=0)              # (B, W-1)
+            # concurrent at t → no time gap: tss unchanged, tsp = std(0)
+            ttne_secs = torch.where(nb_logits[:, :-1] > 0, ttne_secs, torch.zeros_like(ttne_secs))
+            tss_secs  = (tss[:, :-1, 0] * tss_std + tss_mean).clamp(min=0)
+            pred_tss  = (tss_secs + ttne_secs - tss_mean) / tss_std
+            pred_tsp  = (ttne_secs - tsp_mean) / tsp_std
 
-            out, h = self.decoder(dec_in, h)
-            out    = out.squeeze(1)                        # (B, d_model)
+        use_gt   = torch.rand(dec_acts.shape, device=dec_acts.device) < p_teacher  # (B, W-1)
+        dec_acts = torch.where(use_gt, dec_acts, pred_act)
+        tss = torch.cat([tss[:, :1], torch.where(use_gt, tss[:, 1:, 0], pred_tss).unsqueeze(-1)], dim=1)
+        tsp = torch.cat([tsp[:, :1], torch.where(use_gt, tsp[:, 1:, 0], pred_tsp).unsqueeze(-1)], dim=1)
 
-            act_logits = self.fc_out_act(out)              # (B, C)
-            ttne_pred  = self.fc_out_ttne(out)             # (B, 1)
-            nb_logit   = self.fc_new_block(out).squeeze(-1)  # (B,)
-
-            all_act_logits.append(act_logits)
-            all_ttne.append(ttne_pred)
-            all_nb.append(nb_logit)
-
-            if t + 1 < W:
-                use_gt = torch.rand(B, device=out.device) < p_teacher  # (B,)
-
-                pred_act  = act_logits.argmax(dim=-1).clamp(max=self.num_activities - 2)
-                act_input = torch.where(use_gt, gt_acts[:, t + 1], pred_act)
-
-                if has_norm:
-                    ttne_secs = (ttne_pred[:, 0] * ttne_std + ttne_mean).clamp(min=0)
-                    tss_secs  = (tss_curr * tss_std + tss_mean).clamp(min=0)
-                    pred_tss  = (tss_secs + ttne_secs - tss_mean) / tss_std
-                    # tsp feedback: concurrent at t → assume concurrent at t+1 → tsp = std(0)
-                    pred_tsp  = torch.where(
-                        nb_logit > 0,
-                        (ttne_secs - tsp_mean) / tsp_std,
-                        torch.full_like(tss_curr, -tsp_mean / tsp_std),
-                    )
-                    # GT path: suffix_num already encodes std(0) for concurrent events
-                    tss_curr = torch.where(use_gt, suffix_num[:, t + 1, 0], pred_tss)
-                    tsp_curr = torch.where(use_gt, suffix_num[:, t + 1, 1], pred_tsp)
-                else:
-                    tss_curr = suffix_num[:, t + 1, 0]
-                    tsp_curr = suffix_num[:, t + 1, 1]
-
-        act_out  = torch.stack(all_act_logits, dim=1)     # (B, W, C)
-        ttne_out = torch.stack(all_ttne,       dim=1)     # (B, W, 1)
-        nb_out   = torch.stack(all_nb,         dim=1)     # (B, W)
-        return act_out, ttne_out, nb_out
+        return self._decode(h0, start_emb, dec_acts, tss, tsp)
 
     # ── Autoregressive inference ───────────────────────────────────────────────
 
-    def _autoregressive(self, data, h0, window_size, mean_std_ttne, mean_std_tss, mean_std_tsp):
+    def _autoregressive(self, data, h0, start_emb, tsp_0, window_size,
+                        mean_std_ttne, mean_std_tss, mean_std_tsp):
         B      = h0.shape[1]
         device = h0.device
         ttne_mean, ttne_std = mean_std_ttne
@@ -226,19 +238,18 @@ class GATv2EncoderGRUDecoderNewBlockV1(nn.Module):
         suffix_ttne = torch.zeros(B, W, dtype=torch.float, device=device)
         suffix_nb   = torch.zeros(B, W, dtype=torch.float, device=device)
 
-        act_input = data.cat_x[data.ptr[1:] - 1, -1].clamp(max=self.num_activities - 2)
-        tss_curr  = data.last_prefix_num[:, 0]            # last prefix ts_start
-        tsp_curr  = data.last_prefix_num[:, 1]            # last prefix ts_prev
+        tss_curr  = data.last_prefix_num[:, 0]            # last prefix block ts_start
+        tsp_curr  = tsp_0                                 # inter-block gap into last prefix block
 
         h = h0
         for t in range(W):
-            emb    = self.act_emb(act_input)
+            emb    = start_emb if t == 0 else self.act_emb(act_input)
             dec_in = torch.cat([emb,
                                  tss_curr.unsqueeze(-1),
                                  tsp_curr.unsqueeze(-1)], dim=-1).unsqueeze(1)
 
             out, h = self.decoder(dec_in, h)
-            out    = out.squeeze(1)                                   # (B, d_model)
+            out    = out.squeeze(1)                                 # (B, d_model)
 
             act_logits = self.fc_out_act(out)                         # (B, C)
             ttne_pred  = self.fc_out_ttne(out)                        # (B, 1)
@@ -248,17 +259,15 @@ class GATv2EncoderGRUDecoderNewBlockV1(nn.Module):
             act_selected = act_logits.argmax(dim=-1)                  # (B,)
 
             suffix_acts[:, t] = act_selected
-            suffix_ttne[:, t] = ttne_pred[:, 0]
+            suffix_ttne[:, t] = torch.where(nb_logit > 0, ttne_pred[:, 0],
+                                            torch.full((B,), -ttne_mean / ttne_std, device=device))
             suffix_nb[:, t]   = (nb_logit > 0).float()
 
             ttne_secs = (ttne_pred[:, 0] * ttne_std + ttne_mean).clamp(min=0)
+            ttne_secs = torch.where(nb_logit > 0, ttne_secs, torch.zeros_like(ttne_secs))
             tss_secs  = (tss_curr * tss_std + tss_mean).clamp(min=0)
             tss_curr  = (tss_secs + ttne_secs - tss_mean) / tss_std
-            tsp_curr  = torch.where(
-                nb_logit > 0,
-                (ttne_secs - tsp_mean) / tsp_std,
-                torch.full((B,), -tsp_mean / tsp_std, device=device),
-            )
+            tsp_curr  = (ttne_secs - tsp_mean) / tsp_std
             act_input = act_selected.clamp(max=self.num_activities - 2)
 
         return suffix_acts, suffix_ttne, suffix_nb

@@ -1,6 +1,6 @@
 """
 GATv2 encoder + GRU decoder with new-block head only.
-Standalone implementation — no inheritance from v1/v2/v3/v4.
+Standalone implementation — no inheritance from v1/v2.
 
 Predicts:
   - activity suffix      (fc_out_act)
@@ -9,27 +9,40 @@ Predicts:
       target=1  event starts a new concurrent block
       target=0  event is concurrent with the previous one
 
-tsp feedback during decoding:
-    new_block=1  →  tsp[t+1] = TTNE-derived (sequential event)
-    new_block=0  →  tsp[t+1] = standardised(0) (concurrent, no time gap)
+tsp/tss feedback during decoding (gap = TTNE if new_block=1 else 0):
+    new_block=1  →  tsp[t+1] = TTNE-derived, tss[t+1] = tss[t] + TTNE (sequential event)
+    new_block=0  →  tsp[t+1] = standardised(0), tss[t+1] = tss[t] (concurrent, no time gap)
 
-Difference from v1: trained as next-activity prediction only. Training
-runs a single GRU decoder step (using the last prefix event as input) and
-is supervised only against the first suffix position — the rest of the
-suffix window is never touched during training. Test-time inference is
+The GRU is initialised from h_global (pooled prefix), which is the decoder's
+only view of the encoded prefix.
+
+Encoder: n_gnn_layers stacked GATv2Conv layers (no residual), followed by
+attention pooling (AttentionalAggregation) into h_global.
+
+First decoder step is invariant to the order of events within the prefix's
+last concurrent block:
+    activity  mean activity embedding over all nodes of the last block
+    tss       last_prefix_num[:, 0] (identical for every node of the block)
+    tsp       edge_attr of the inter-block edge entering the last node of the
+              prefix (identical for every edge between the two blocks);
+              falls back to last_prefix_num[:, 1] for single-block prefixes
+
+Difference from v1: trained as next-activity prediction only. Training runs
+a single GRU decoder step (the order-invariant first step above) and is
+supervised only against the first suffix position. Test-time inference is
 unchanged: full-suffix autoregressive rollout via _autoregressive.
 """
 
 import torch
 import torch.nn as nn
 import torch.nn.init as init
-from torch_geometric.nn import GATv2Conv, global_mean_pool
+from torch_geometric.nn import GATv2Conv, global_mean_pool, AttentionalAggregation
 
 
 class GATv2EncoderGRUDecoderNewBlockV3(nn.Module):
     """
     Standalone GATv2 encoder + GRU decoder with new-block head (no stop head).
-    No _EdgeAttnBias residual; no h_last: encoder context is h_global only.
+    No _EdgeAttnBias residual; encoder context is h_global only.
 
     Parameters
     ----------
@@ -38,18 +51,22 @@ class GATv2EncoderGRUDecoderNewBlockV3(nn.Module):
     d_model : int
         Hidden size for GNN and GRU.
     dropout : float
-    n_layers : int
+    n_gru_layers : int
         Number of GRU layers in the decoder.
+    n_gnn_layers : int
+        Number of stacked GATv2Conv layers in the encoder.
     nhead : int
-        Number of GATv2Conv attention heads (concat=False → output is d_model).
+        Number of GATv2Conv heads (concat=False → GATv2 output is d_model
+        regardless of nhead).
     """
 
     def __init__(self, num_activities: int, d_model: int = 64,
-                 dropout: float = 0.2, n_layers: int = 1, nhead: int = 4):
+                 dropout: float = 0.2, n_gru_layers: int = 1, nhead: int = 4,
+                 n_gnn_layers: int = 2):
         super().__init__()
         self.num_activities = num_activities
         self.d_model        = d_model
-        self.n_layers       = n_layers
+        self.n_gru_layers   = n_gru_layers
 
         emb_size      = min(600, round(1.6 * (num_activities - 2) ** 0.56))
         self.emb_size = emb_size
@@ -57,16 +74,21 @@ class GATv2EncoderGRUDecoderNewBlockV3(nn.Module):
         self.dropout  = nn.Dropout(dropout)
 
         # GNN encoder — concat=False keeps output at d_model regardless of nhead
-        self.gatv2    = GATv2Conv(emb_size + 1, d_model, heads=nhead, concat=False, edge_dim=1) # + 1 because of tss
+        self.gnn_layers = nn.ModuleList(
+            [GATv2Conv(emb_size + 1, d_model, heads=nhead, concat=False, edge_dim=1)]  # + 1 because of tss
+            + [GATv2Conv(d_model, d_model, heads=nhead, concat=False, edge_dim=1)
+               for _ in range(n_gnn_layers - 1)]
+        )
+        self.att_pool = AttentionalAggregation(gate_nn=nn.Linear(d_model, 1))
         self.bn_enc   = nn.BatchNorm1d(d_model)
-        self.enc_to_h = nn.Linear(d_model, d_model * n_layers)
+        self.enc_to_h = nn.Linear(d_model, d_model * n_gru_layers)
 
         # GRU decoder: act_emb + tss + tsp
-        dec_dropout  = dropout if n_layers > 1 else 0.0
+        dec_dropout  = dropout if n_gru_layers > 1 else 0.0
         self.decoder = nn.GRU(
             input_size=emb_size + 2,
             hidden_size=d_model,
-            num_layers=n_layers,
+            num_layers=n_gru_layers,
             batch_first=True,
             dropout=dec_dropout,
         )
@@ -90,35 +112,51 @@ class GATv2EncoderGRUDecoderNewBlockV3(nn.Module):
     def _encode(self, data):
         h = torch.cat([self.act_emb(data.cat_x[:, -1]), data.x[:, [0]]], dim=-1)
         h = self.dropout(h)
-        h = self.gatv2(h, data.edge_index, data.edge_attr).relu()
-        h = self.dropout(h)
-        h_global = global_mean_pool(h, data.batch)   # (B, d_model)
-        return self.bn_enc(h_global)
+        for gnn in self.gnn_layers:
+            h = gnn(h, data.edge_index, data.edge_attr).relu()
+            h = self.dropout(h)
+        h_global = self.att_pool(h, data.batch)             # (B, d_model)
+        h_global = self.bn_enc(h_global)
+        return h_global
+
+    def _start_step(self, data):
+        """Order-invariant input for the first decoder step (see module docstring)."""
+        B  = data.num_graphs
+        lb = data.last_block_mask                                           # (N,) bool
+        act_emb   = self.act_emb(data.cat_x[:, -1])                         # (N, emb)
+        start_emb = global_mean_pool(act_emb[lb], data.batch[lb], size=B)   # (B, emb)
+
+        # Inter-block edges entering the last node of each prefix: source outside the last block
+        src, dst = data.edge_index
+        is_last_node = torch.zeros_like(lb)
+        is_last_node[data.ptr[1:] - 1] = True
+        in_edge = is_last_node[dst] & ~lb[src]
+        tsp_0 = data.last_prefix_num[:, 1].clone()                          # (B,) fallback: single-block prefix
+        tsp_0[data.batch[dst[in_edge]]] = data.edge_attr[in_edge, 0]
+        return start_emb, tsp_0
 
     def _init_gru_state(self, c):
         B = c.shape[0]
         return (self.enc_to_h(c)
-                .view(B, self.n_layers, self.d_model)
-                .permute(1, 0, 2).contiguous())       # (n_layers, B, d_model)
+                .view(B, self.n_gru_layers, self.d_model)
+                .permute(1, 0, 2).contiguous())       # (n_gru_layers, B, d_model)
 
     def forward(self, data, window_size=None, mean_std_ttne=None,
                 mean_std_tss=None, mean_std_tsp=None):
         c  = self._encode(data)
         h0 = self._init_gru_state(c)
+        start_emb, tsp_0 = self._start_step(data)
         if self.training:
-            return self._next_step(data, h0)
+            return self._next_step(data, h0, start_emb, tsp_0)
         else:
-            return self._autoregressive(data, h0, window_size,
+            return self._autoregressive(data, h0, start_emb, tsp_0, window_size,
                                         mean_std_ttne, mean_std_tss, mean_std_tsp)
 
     # ── Next-activity prediction (single decoder step) ─────────────────────────
 
-    def _next_step(self, data, h0):
-        dec_start_act = data.cat_x[data.ptr[1:] - 1, -1].clamp(max=self.num_activities - 2)
-        act_emb = self.act_emb(dec_start_act)                          # (B, emb)
-        tss     = data.last_prefix_num[:, [0]]                         # (B, 1)
-        tsp     = data.last_prefix_num[:, [1]]                         # (B, 1)
-        dec_in  = torch.cat([act_emb, tss, tsp], dim=-1).unsqueeze(1)  # (B, 1, emb+2)
+    def _next_step(self, data, h0, start_emb, tsp_0):
+        tss_0  = data.last_prefix_num[:, [0]]                                        # (B, 1)
+        dec_in = torch.cat([start_emb, tss_0, tsp_0.unsqueeze(-1)], dim=-1).unsqueeze(1)  # (B, 1, emb+2)
 
         output, _ = self.decoder(dec_in, h0)                # (B, 1, d_model)
         nb_logits = self.fc_new_block(output).squeeze(-1)   # (B, 1)
@@ -126,7 +164,8 @@ class GATv2EncoderGRUDecoderNewBlockV3(nn.Module):
 
     # ── Autoregressive inference ───────────────────────────────────────────────
 
-    def _autoregressive(self, data, h0, window_size, mean_std_ttne, mean_std_tss, mean_std_tsp):
+    def _autoregressive(self, data, h0, start_emb, tsp_0, window_size,
+                        mean_std_ttne, mean_std_tss, mean_std_tsp):
         B      = h0.shape[1]
         device = h0.device
         ttne_mean, ttne_std = mean_std_ttne
@@ -139,19 +178,18 @@ class GATv2EncoderGRUDecoderNewBlockV3(nn.Module):
         suffix_ttne = torch.zeros(B, W, dtype=torch.float, device=device)
         suffix_nb   = torch.zeros(B, W, dtype=torch.float, device=device)
 
-        act_input = data.cat_x[data.ptr[1:] - 1, -1].clamp(max=self.num_activities - 2)
-        tss_curr  = data.last_prefix_num[:, 0]            # last prefix ts_start
-        tsp_curr  = data.last_prefix_num[:, 1]            # last prefix ts_prev
+        tss_curr  = data.last_prefix_num[:, 0]            # last prefix block ts_start
+        tsp_curr  = tsp_0                                 # inter-block gap into last prefix block
 
         h = h0
         for t in range(W):
-            emb    = self.act_emb(act_input)
+            emb    = start_emb if t == 0 else self.act_emb(act_input)
             dec_in = torch.cat([emb,
                                  tss_curr.unsqueeze(-1),
                                  tsp_curr.unsqueeze(-1)], dim=-1).unsqueeze(1)
 
             out, h = self.decoder(dec_in, h)
-            out    = out.squeeze(1)                                   # (B, d_model)
+            out    = out.squeeze(1)                                 # (B, d_model)
 
             act_logits = self.fc_out_act(out)                         # (B, C)
             ttne_pred  = self.fc_out_ttne(out)                        # (B, 1)
@@ -161,17 +199,15 @@ class GATv2EncoderGRUDecoderNewBlockV3(nn.Module):
             act_selected = act_logits.argmax(dim=-1)                  # (B,)
 
             suffix_acts[:, t] = act_selected
-            suffix_ttne[:, t] = ttne_pred[:, 0]
+            suffix_ttne[:, t] = torch.where(nb_logit > 0, ttne_pred[:, 0],
+                                            torch.full((B,), -ttne_mean / ttne_std, device=device))
             suffix_nb[:, t]   = (nb_logit > 0).float()
 
             ttne_secs = (ttne_pred[:, 0] * ttne_std + ttne_mean).clamp(min=0)
+            ttne_secs = torch.where(nb_logit > 0, ttne_secs, torch.zeros_like(ttne_secs))
             tss_secs  = (tss_curr * tss_std + tss_mean).clamp(min=0)
             tss_curr  = (tss_secs + ttne_secs - tss_mean) / tss_std
-            tsp_curr  = torch.where(
-                nb_logit > 0,
-                (ttne_secs - tsp_mean) / tsp_std,
-                torch.full((B,), -tsp_mean / tsp_std, device=device),
-            )
+            tsp_curr  = (ttne_secs - tsp_mean) / tsp_std
             act_input = act_selected.clamp(max=self.num_activities - 2)
 
         return suffix_acts, suffix_ttne, suffix_nb

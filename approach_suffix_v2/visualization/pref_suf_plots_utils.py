@@ -42,13 +42,13 @@ CONFIG_STYLES = {
 # Display name for each event log when plotting. Logs not listed here are
 # shown under their original (directory/pkl) name.
 EVENT_LOGS = {
-    'BPIC15_1': 'BPIC15.1',
-    'BPIC15_2': 'BPIC15.2',
-    'BPIC15_3': 'BPIC15.3',
-    'BPIC15_4': 'BPIC15.4',
-    'BPIC15_5': 'BPIC15.5',
-    'BPI_Challenge_2012_A': 'BPIC12.A',
-    'BPI_Challenge_2012_O': 'BPIC12.O',
+    'BPIC15_1': 'BPIC 15.1',
+    'BPIC15_2': 'BPIC 15.2',
+    'BPIC15_3': 'BPIC 15.3',
+    'BPIC15_4': 'BPIC 15.4',
+    'BPIC15_5': 'BPIC 15.5',
+    'BPI_Challenge_2012_A': 'BPIC 12.A',
+    'BPI_Challenge_2012_O': 'BPIC 12.O',
     'Sepsis': 'Sepsis',
 }
 
@@ -56,7 +56,7 @@ EVENT_LOGS = {
 # `create_dataframes()`: (prefix_df_idx, suffix_df_idx, col_suffix, ylabel).
 METRIC_CONFIG = {
     'ges':     {'prefix_df_idx': 4, 'suffix_df_idx': 5, 'col_suffix': '_ges', 'ylabel': 'GES'},
-    'dl':      {'prefix_df_idx': 0, 'suffix_df_idx': 2, 'col_suffix': '_dls', 'ylabel': 'DL similarity'},
+    'dl':      {'prefix_df_idx': 0, 'suffix_df_idx': 2, 'col_suffix': '_dls', 'ylabel': 'DLS'},
     'mae_rrt': {'prefix_df_idx': 1, 'suffix_df_idx': 3, 'col_suffix': '_mae', 'ylabel': 'MAE RRT (minutes)'},
 }
 
@@ -294,33 +294,33 @@ def create_plots_log(pref_suf_dfs,
     ax_ges_pref = ax[0, 0].twinx()
     ax[0, 0].set_ylabel('GES', fontsize=fontsize)
     ax[0, 0].set_xlabel('Prefix Length', fontsize=fontsize)
-    ax_ges_pref.plot(df_5['prefix_length'], df_5['instance_count'], label='Number of Instances', color='grey', linestyle='--')
+    ax_ges_pref.plot(df_5['prefix_length'], df_5['instance_count'], label='Number of Samples', color='grey', linestyle='--')
     ax_ges_pref.fill_between(df_5['prefix_length'], 0, df_5['instance_count'], color='grey', alpha=0.3, zorder=0)
-    ax_ges_pref.set_ylabel("Instances", color='grey', fontsize=fontsize)
+    ax_ges_pref.set_ylabel("Samples", color='grey', fontsize=fontsize)
     ax_ges_pref.tick_params('y', colors='grey', labelsize=labelsize)
 
     ax_mae_pref = ax[0, 1].twinx()
     ax[0, 1].set_ylabel('MAE Remaining Time ({})'.format(time_unit), fontsize=fontsize)
     ax[0, 1].set_xlabel('Prefix Length', fontsize=fontsize)
-    ax_mae_pref.plot(df_2['prefix_length'], df_2['instance_count'], label='Number of Instances', color='grey', linestyle='--')
+    ax_mae_pref.plot(df_2['prefix_length'], df_2['instance_count'], label='Number of Samples', color='grey', linestyle='--')
     ax_mae_pref.fill_between(df_2['prefix_length'], 0, df_2['instance_count'], color='grey', alpha=0.3, zorder=0)
-    ax_mae_pref.set_ylabel("Instances", color='grey', fontsize=fontsize)
+    ax_mae_pref.set_ylabel("Samples", color='grey', fontsize=fontsize)
     ax_mae_pref.tick_params('y', colors='grey', labelsize=labelsize)
 
     ax_ges_suf = ax[1, 0].twinx()
     ax[1, 0].set_ylabel('GES', fontsize=fontsize)
     ax[1, 0].set_xlabel('Suffix Length', fontsize=fontsize)
-    ax_ges_suf.plot(df_6['suffix_length'], df_6['instance_count'], label='Number of Instances', color='grey', linestyle='--')
+    ax_ges_suf.plot(df_6['suffix_length'], df_6['instance_count'], label='Number of Samples', color='grey', linestyle='--')
     ax_ges_suf.fill_between(df_6['suffix_length'], 0, df_6['instance_count'], color='grey', alpha=0.3, zorder=0)
-    ax_ges_suf.set_ylabel("Instances", color='grey', fontsize=fontsize)
+    ax_ges_suf.set_ylabel("Samples", color='grey', fontsize=fontsize)
     ax_ges_suf.tick_params('y', colors='grey', labelsize=labelsize)
 
     ax_mae_suf = ax[1, 1].twinx()
     ax[1, 1].set_ylabel('MAE Remaining Time ({})'.format(time_unit), fontsize=fontsize)
     ax[1, 1].set_xlabel('Suffix Length', fontsize=fontsize)
-    ax_mae_suf.plot(df_4['suffix_length'], df_4['instance_count'], label='Number of Instances', color='grey', linestyle='--')
+    ax_mae_suf.plot(df_4['suffix_length'], df_4['instance_count'], label='Number of Samples', color='grey', linestyle='--')
     ax_mae_suf.fill_between(df_4['suffix_length'], 0, df_4['instance_count'], color='grey', alpha=0.3, zorder=0)
-    ax_mae_suf.set_ylabel("Instances", color='grey', fontsize=fontsize)
+    ax_mae_suf.set_ylabel("Samples", color='grey', fontsize=fontsize)
     ax_mae_suf.tick_params('y', colors='grey', labelsize=labelsize)
 
     for ax_row in ax:
@@ -714,10 +714,15 @@ def plot_all_logs(
     approach_results_base : str
         Absolute path to the approach results directory.
     save_path : str
-        File path the PNG figure is written to (parent dirs are created
-        if needed).
-    metric : str
-        One of 'ges', 'dl', 'mae_rrt' (keys of METRIC_CONFIG).
+        File path the figure is written to; the format follows the
+        extension (e.g. '.png', '.pdf'). Parent dirs are created if needed.
+    metric : str or list of str
+        One or more of 'ges', 'dl', 'mae_rrt' (keys of METRIC_CONFIG).
+        Each log gets one sub-column per metric x length axis (e.g.
+        ['ges', 'dl'] with length_axis='suffix' gives 2 sub-columns per
+        log). With more than one sub-column per log, each subplot is
+        titled "Average <metric> over <axis> length" and the log name is
+        written once, centred above its group of subplots.
     length_axis : str
         One of 'prefix', 'suffix', 'both'. Selects which column(s) are drawn.
     logs_per_row : int
@@ -730,27 +735,34 @@ def plot_all_logs(
     baselines_to_include : list of str or None
         Subset of _BASELINE_PATHS keys to include. None = all seven.
     """
-    if metric not in METRIC_CONFIG:
-        raise ValueError(f"metric must be one of {list(METRIC_CONFIG)}, got {metric!r}")
+    metrics = [metric] if isinstance(metric, str) else list(metric)
+    for m in metrics:
+        if m not in METRIC_CONFIG:
+            raise ValueError(f"metric must be one of {list(METRIC_CONFIG)}, got {m!r}")
     if length_axis not in ('prefix', 'suffix', 'both'):
         raise ValueError(f"length_axis must be one of 'prefix', 'suffix', 'both', got {length_axis!r}")
 
-    metric_cfg = METRIC_CONFIG[metric]
-    col_suffix = metric_cfg['col_suffix']
-
     columns = []
-    if length_axis in ('prefix', 'both'):
-        columns.append({
-            'df_idx': metric_cfg['prefix_df_idx'],
-            'length_col': 'prefix_length',
-            'title': 'Prefix Length',
-        })
-    if length_axis in ('suffix', 'both'):
-        columns.append({
-            'df_idx': metric_cfg['suffix_df_idx'],
-            'length_col': 'suffix_length',
-            'title': 'Suffix Length',
-        })
+    for m in metrics:
+        metric_cfg = METRIC_CONFIG[m]
+        if length_axis in ('prefix', 'both'):
+            columns.append({
+                'metric': m,
+                'col_suffix': metric_cfg['col_suffix'],
+                'ylabel': metric_cfg['ylabel'],
+                'df_idx': metric_cfg['prefix_df_idx'],
+                'length_col': 'prefix_length',
+                'title': 'Prefix Length',
+            })
+        if length_axis in ('suffix', 'both'):
+            columns.append({
+                'metric': m,
+                'col_suffix': metric_cfg['col_suffix'],
+                'ylabel': metric_cfg['ylabel'],
+                'df_idx': metric_cfg['suffix_df_idx'],
+                'length_col': 'suffix_length',
+                'title': 'Suffix Length',
+            })
 
     fontsize = 30
     labelsize = 25
@@ -761,7 +773,7 @@ def plot_all_logs(
     n_metric_cols = len(columns)
     n_grid_rows = (n_logs + logs_per_row - 1) // logs_per_row
     n_grid_cols = logs_per_row * n_metric_cols
-    fig, axes = plt.subplots(n_grid_rows, n_grid_cols, figsize=(10 * n_grid_cols, 8 * n_grid_rows), squeeze=False)
+    fig, axes = plt.subplots(n_grid_rows, n_grid_cols, figsize=(10 * n_grid_cols, 7 * n_grid_rows), squeeze=False)
     #fig.suptitle(f"{metric_cfg['ylabel']} across event logs", fontsize=fontsize)
 
     legend_handles = {}
@@ -785,9 +797,9 @@ def plot_all_logs(
             df = pref_suf_dfs[column['df_idx']]
 
             for model in model_keys:
-                if metric == 'mae_rrt' and model == 'BEST':
+                if column['metric'] == 'mae_rrt' and model == 'BEST':
                     continue  # BEST has no real RRT predictions
-                data_col = f'{model}{col_suffix}'
+                data_col = f"{model}{column['col_suffix']}"
                 color, linestyle = CONFIG_STYLES[model]
                 label = CONFIG_STRING[model]
                 if data_col in df.columns and df[data_col].notna().any():
@@ -802,11 +814,15 @@ def plot_all_logs(
                                  color='grey', alpha=0.3, zorder=0)
             ax_twin.tick_params('y', colors='grey', labelsize=labelsize)
 
-            ax.set_title(EVENT_LOGS.get(log_name, log_name), fontsize=fontsize+10)
-            ax.set_ylabel(metric_cfg['ylabel'], fontsize=fontsize)
+            if n_metric_cols == 1:
+                ax.set_title(EVENT_LOGS.get(log_name, log_name), fontsize=fontsize+10)
+            else:
+                ax.set_title(f"Average {column['ylabel']} over {column['title'].lower()}",
+                             fontsize=fontsize)
+            ax.set_ylabel(column['ylabel'], fontsize=fontsize)
 
             #if row == 0:
-            ax_twin.set_ylabel('Instances', color='grey', fontsize=fontsize)
+            ax_twin.set_ylabel('Samples', color='grey', fontsize=fontsize)
 
             #if row == n_logs - 1:
             ax.set_xlabel(column['title'], fontsize=fontsize)
@@ -814,9 +830,26 @@ def plot_all_logs(
             ax.tick_params(axis='both', which='major', labelsize=labelsize)
 
     fig.tight_layout()
-    fig.subplots_adjust(hspace=0.5, bottom=0.20)
+    # Reserve a fixed ~1.5in for the bottom x-labels (independent of the
+    # number of rows) and hang the legend right below it.
+    fig.subplots_adjust(hspace=0.4 if n_metric_cols == 1 else 0.55,
+                        bottom=1.5 / fig.get_figheight())
+
+    # With several subplots per log, write the log name once, centred
+    # above its group of subplots (~0.7in above the axes, over the titles).
+    if n_metric_cols > 1:
+        for i, log_name in enumerate(log_names):
+            grid_row = i // logs_per_row
+            first_col = (i % logs_per_row) * n_metric_cols
+            pos_first = axes[grid_row, first_col].get_position()
+            pos_last = axes[grid_row, first_col + n_metric_cols - 1].get_position()
+            fig.text((pos_first.x0 + pos_last.x1) / 2,
+                     pos_first.y1 + 0.7 / fig.get_figheight(),
+                     EVENT_LOGS.get(log_name, log_name),
+                     ha='center', va='bottom', fontsize=fontsize+10)
+
     fig.legend(legend_handles.values(), legend_handles.keys(),
-               loc='lower center', bbox_to_anchor=(0.5, 0.0),
+               loc='upper center', bbox_to_anchor=(0.5, 0.0),
                ncol=min(len(legend_handles), 3), fontsize=legend_fontsize)
 
     os.makedirs(os.path.dirname(save_path), exist_ok=True)

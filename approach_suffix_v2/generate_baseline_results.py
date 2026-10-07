@@ -1,14 +1,16 @@
 import os
 import numpy as np
 import pandas as pd
-from baselines.SuffixTransformerNetwork.results_collector import get_suffix_baseline_results
+from baselines.results_collector import get_suffix_baseline_results
 
 RESULTS_TXT = "approach_suffix_v2/baseline_results.txt"
 SCALABILITY_TXT = "approach_suffix_v2/scalability_results.txt"
 
+ONLY_RUN = 1  # set to None to aggregate over all runs
+
 OWN_CONFIGS = {
     "Graph_v1": {
-        "results_sub": "approach_suffix_v2/results_time_gatv2_gru_nb_v1",
+        "results_sub": "approach_suffix_v2/results_time_gatv2_gru_nb_v2",
         "csv_file":    "results_suffix_time_gnn.csv",
     }
 }
@@ -37,14 +39,14 @@ def fmt_mean_std(mean, std):
 def get_own_results():
     rows = []
     for model_name, cfg in OWN_CONFIGS.items():
-        run_id, run_dfs, inf_dfs = 1, [], []
+        run_id, run_dfs = ONLY_RUN or 1, []
         while True:
             path = os.path.join(cfg["results_sub"], f"run_{run_id}", cfg["csv_file"])
             if not os.path.isfile(path):
                 break
             run_dfs.append(pd.read_csv(path).rename(columns=COL_MAP))
-            inf_path = os.path.join(cfg["results_sub"], f"run_{run_id}", "inference_times.csv")
-            inf_dfs.append(pd.read_csv(inf_path) if os.path.isfile(inf_path) else None)
+            if ONLY_RUN is not None:
+                break
             run_id += 1
         if not run_dfs:
             continue
@@ -82,9 +84,9 @@ def get_own_results():
             row["testing_time"] = round(np.mean(test_time_vals), 2) if test_time_vals else float("nan")
 
             infer_time_vals = [
-                float(idf.loc[idf["log"] == log_name, "inference_time_seconds"].iloc[0])
-                for idf in inf_dfs
-                if idf is not None and not idf.loc[idf["log"] == log_name].empty
+                float(df.loc[df["log"] == log_name, "inference_time_seconds"].iloc[0])
+                for df in run_dfs
+                if not df.loc[df["log"] == log_name].empty and "inference_time_seconds" in df.columns
             ]
             row["inference_time"] = round(np.mean(infer_time_vals), 2) if infer_time_vals else float("nan")
 
@@ -95,11 +97,11 @@ def get_own_results():
 
 def run():
     logs = [
-        d for d in os.listdir("baselines/SuffixTransformerNetwork/results_per_log")
-        if os.path.isdir(os.path.join("baselines/SuffixTransformerNetwork/results_per_log", d))
+        d for d in os.listdir("baselines/results_per_log")
+        if os.path.isdir(os.path.join("baselines/results_per_log", d))
     ]
 
-    df_baselines = get_suffix_baseline_results(logs)
+    df_baselines = get_suffix_baseline_results(logs, run_id=ONLY_RUN)
     df_own = get_own_results()
     if df_own.empty:
         print("No own results found.")
@@ -150,7 +152,7 @@ def run():
                 .rename(columns={"training_time":  "Training time (s)",
                                   "inference_time": "Inference time (s)",
                                   "testing_time":   "Testing time (s)"})
-                [["Model", "Training time (s)", "Inference time (s)", "Testing time (s)", "# params"]]
+                [["Model", "Runs", "Training time (s)", "Inference time (s)", "Testing time (s)", "# params"]]
                 .to_string(index=False)
             )
             print(header)

@@ -2,7 +2,7 @@ import math
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-from create_graph_data import load_log, preprocess_log, plot_split
+from data_creation.create_graph_data import load_log, preprocess_log, plot_split
 
 
 def _stem(fname):
@@ -91,7 +91,7 @@ def plot_all_splits(
     grid_path=None,
 ):
     """Plot the train/val/test split visualisation (see `plot_split` in
-    create_graph_data.py) for every event log in *folder*, in parallel and
+    data_creation/create_graph_data.py) for every event log in *folder*, in parallel and
     without running the full graph-construction preprocessing pipeline.
     The individual per-log plots are then combined into a single grid figure.
 

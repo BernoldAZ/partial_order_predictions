@@ -12,18 +12,12 @@ Supported models and their output CSVs
 ---------------------------------------
   suffix_time_v1     → results_time_gatv2_gru_nb_v1/run_N/results_suffix_time_gnn.csv
   suffix_time_v1_seq → results_time_gatv2_seq_gru_nb_v1/run_N/results_suffix_time_gnn.csv
+  suffix_time_v1_1     → results_time_gatv2_gru_nb_v1_1/run_N/results_suffix_time_gnn.csv
+  suffix_time_v1_1_seq → results_time_gatv2_seq_gru_nb_v1_1/run_N/results_suffix_time_gnn.csv
   suffix_time_v2     → results_time_gatv2_gru_nb_v2/run_N/results_suffix_time_gnn.csv
   suffix_time_v3     → results_time_gatv2_gru_nb_v3/run_N/results_suffix_time_gnn.csv
-
-Arguments
------
-   --model {suffix_time_v1, suffix_time_v1_seq, suffix_time_v2, suffix_time_v3}
-   --run-id N            repetition index (1-5)
-   --workers N           event logs trained in parallel
-   --logs-dir PATH       override the XES logs directory
-   --progress-file PATH  override the progress log path
-   --no-train            skip training, load the saved model
-   --no-eval             skip evaluation, only time inference
+  suffix_time_v5     → results_time_gatv2_gru_nb_v5/run_N/results_suffix_time_gnn.csv
+  suffix_v6          → results_time_gatv2_tf_nb_v6/run_N/results_suffix_time_gnn.csv
 
 Usage
 -----
@@ -31,10 +25,23 @@ Usage
     python run_all_suffix.py --workers 4                                      # suffix_time_v1, run 1, 4 logs in parallel
     python run_all_suffix.py --model suffix_time_v1_seq --run-id 2 --workers 4
     python run_all_suffix.py --logs-dir /path/to/logs
+    python run_all_suffix.py --run-ids 1 2 3 4 5 --workers 8                   # all runs, one shared pool
+
+Arguments
+-----
+   --model {suffix_time_v1, suffix_time_v1_seq, suffix_time_v1_1, suffix_time_v1_1_seq, suffix_time_v2, suffix_time_v3, suffix_time_v5, suffix_v6}
+   --run-id N            repetition index (1-5)
+   --run-ids N [N ...]   run several repetitions with one shared worker pool
+   --workers N           event logs trained in parallel
+   --logs-dir PATH       override the XES logs directory
+   --progress-file PATH  override the progress log path
+   --no-train            skip training, load the saved model
+   --no-eval             skip evaluation, only time inference
+   --force               re-evaluate even if the result exists (implies --no-train)
 
 Docker
 ------
-    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --workers 10 --model suffix_time_v1 --run-id 1 --no-train --no-eval
+    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --workers 1 --model suffix_v6
 """
 
 import argparse
@@ -89,6 +96,20 @@ MODEL_CONFIGS = {
         'results_subdir':  'results_time_gatv2_seq_gru_nb_v1',
         'csv_file':        'results_suffix_time_gnn.csv',
     },
+    'suffix_time_v1_1': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v1_1',
+        'version':         None,
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_gru_nb_v1_1',
+        'csv_file':        'results_suffix_time_gnn.csv',
+    },
+    'suffix_time_v1_1_seq': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v1_1_seq',
+        'version':         None,
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_seq_gru_nb_v1_1',
+        'csv_file':        'results_suffix_time_gnn.csv',
+    },
     'suffix_time_v2': {
         'module':          'approach_suffix_v2.models_v2.run_suffix_time_v2',
         'version':         None,
@@ -103,6 +124,20 @@ MODEL_CONFIGS = {
         'results_subdir':  'results_time_gatv2_gru_nb_v3',
         'csv_file':        'results_suffix_time_gnn.csv',
     },
+    'suffix_time_v5': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v5',
+        'version':         None,
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_gru_nb_v5',
+        'csv_file':        'results_suffix_time_gnn.csv',
+    },
+    'suffix_v6': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_v6',
+        'version':         None,
+        'no_log_path':     True,
+        'results_subdir':  'results_time_gatv2_tf_nb_v6',
+        'csv_file':        'results_suffix_time_gnn.csv',
+    },
 }
 
 # ─────────────────────────────────────────────
@@ -113,7 +148,7 @@ _HERE         = os.path.dirname(os.path.abspath(__file__))
 _PROJECT_ROOT = os.path.dirname(_HERE)
 
 _DEFAULT_LOGS_DIR = os.path.join(
-    _PROJECT_ROOT, "baselines", "SuffixTransformerNetwork", "Logs"
+    _PROJECT_ROOT, "baselines", "Logs"
 )
 
 
@@ -280,9 +315,12 @@ def _run_one(log_file, log_name, results_dir, model, progress_file,
 # ─────────────────────────────────────────────
 
 def run_all(model='suffix_time_v1', run_id=1, progress_file=None, logs_dir=None, workers=1,
-            do_train=True, do_eval=True):
+            do_train=True, do_eval=True, force=False):
     if model not in MODEL_CONFIGS:
         raise ValueError(f"Unknown model {model!r}. Choose from: {list(MODEL_CONFIGS)}")
+
+    if force:
+        do_train = False
 
     logs_dir      = logs_dir      or _DEFAULT_LOGS_DIR
     progress_file = progress_file or _progress_file(model, run_id)
@@ -291,6 +329,7 @@ def run_all(model='suffix_time_v1', run_id=1, progress_file=None, logs_dir=None,
     print(f"Model              : {model}")
     print(f"Run ID             : {run_id}")
     print(f"Train / Eval       : {do_train} / {do_eval}")
+    print(f"Force re-eval       : {force}")
     print(f"Workers (logs)     : {workers}")
     print(f"Total logs         : {len(EVENT_LOGS)}")
     print(f"Logs directory     : {logs_dir}")
@@ -299,7 +338,7 @@ def run_all(model='suffix_time_v1', run_id=1, progress_file=None, logs_dir=None,
 
     jobs = []
     for log_name in EVENT_LOGS:
-        if result_exists(log_name, model, run_id, do_eval):
+        if not force and result_exists(log_name, model, run_id, do_eval):
             print(f"[SKIP] log={log_name}", flush=True)
             continue
         log_file = _find_log_file(log_name, logs_dir)
@@ -314,6 +353,60 @@ def run_all(model='suffix_time_v1', run_id=1, progress_file=None, logs_dir=None,
             pool.submit(_run_one, lf, ln, results_dir, model, progress_file,
                         do_train, do_eval): ln
             for lf, ln in jobs
+        }
+        for fut in concurrent.futures.as_completed(futures):
+            try:
+                fut.result()
+            except Exception:
+                ln = futures[fut]
+                print(f"[LOG-FATAL] log={ln}\n{traceback.format_exc()}", flush=True)
+
+
+def run_all_repeats(model='suffix_time_v1', run_ids=(1, 2, 3, 4, 5), progress_file=None,
+                    logs_dir=None, workers=1, do_train=True, do_eval=True, force=False):
+    """Run `model` on all event logs for every run_id in `run_ids` using a single
+    shared thread pool, so exactly `workers` subprocesses stay busy across the
+    whole set (the pool is never drained between run_ids).
+
+    Each run_id keeps its own progress log and its own <results_subdir>/run_N/
+    directory unless `progress_file` is given, in which case all jobs log there.
+    """
+    if model not in MODEL_CONFIGS:
+        raise ValueError(f"Unknown model {model!r}. Choose from: {list(MODEL_CONFIGS)}")
+
+    if force:
+        do_train = False
+
+    run_ids  = list(run_ids)
+    logs_dir = logs_dir or _DEFAULT_LOGS_DIR
+
+    print(f"Model              : {model}")
+    print(f"Run IDs            : {run_ids}")
+    print(f"Train / Eval       : {do_train} / {do_eval}")
+    print(f"Force re-eval       : {force}")
+    print(f"Workers (global)   : {workers}")
+    print(f"Total logs         : {len(EVENT_LOGS)}")
+    print(f"Logs directory     : {logs_dir}\n", flush=True)
+
+    jobs = []  # (log_file, log_name, results_dir, progress_file)
+    for run_id in run_ids:
+        pf = progress_file or _progress_file(model, run_id)
+        rd = _results_dir(model, run_id)
+        for log_name in EVENT_LOGS:
+            if not force and result_exists(log_name, model, run_id, do_eval):
+                print(f"[SKIP] run={run_id} | log={log_name}", flush=True)
+                continue
+            log_file = _find_log_file(log_name, logs_dir)
+            if log_file is None:
+                print(f"[MISSING] run={run_id} | log={log_name} — not found in "
+                      f"{logs_dir} (.xes.gz or .xes)", flush=True)
+                continue
+            jobs.append((log_file, log_name, rd, pf))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = {
+            pool.submit(_run_one, lf, ln, rd, model, pf, do_train, do_eval): ln
+            for lf, ln, rd, pf in jobs
         }
         for fut in concurrent.futures.as_completed(futures):
             try:
@@ -345,6 +438,15 @@ if __name__ == "__main__":
              "<results_subdir>/run_N/. (default: 1)",
     )
     parser.add_argument(
+        "--run-ids",
+        type=int,
+        nargs="+",
+        default=None,
+        help="Run several repetitions with ONE shared worker pool so exactly "
+             "--workers subprocesses stay busy across the whole set (e.g. "
+             "--run-ids 1 2 3 4 5). Overrides --run-id.",
+    )
+    parser.add_argument(
         "--workers",
         type=int,
         default=1,
@@ -372,13 +474,35 @@ if __name__ == "__main__":
         action="store_true",
         help="Skip evaluation; only run inference and report its time",
     )
-    args = parser.parse_args()
-    run_all(
-        model=args.model,
-        run_id=args.run_id,
-        progress_file=args.progress_file,
-        logs_dir=args.logs_dir,
-        workers=args.workers,
-        do_train=not args.no_train,
-        do_eval=not args.no_eval,
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-evaluate every log even if its run-N result already exists "
+             "(bypasses the result_exists skip). Implies --no-train: the saved "
+             "model for each log / run_id is loaded and only evaluation is "
+             "redone, overwriting the existing result row and per-log output "
+             "files. Assumes each log already has a trained model for that run id.",
     )
+    args = parser.parse_args()
+    if args.run_ids:
+        run_all_repeats(
+            model=args.model,
+            run_ids=args.run_ids,
+            progress_file=args.progress_file,
+            logs_dir=args.logs_dir,
+            workers=args.workers,
+            do_train=not args.no_train,
+            do_eval=not args.no_eval,
+            force=args.force,
+        )
+    else:
+        run_all(
+            model=args.model,
+            run_id=args.run_id,
+            progress_file=args.progress_file,
+            logs_dir=args.logs_dir,
+            workers=args.workers,
+            do_train=not args.no_train,
+            do_eval=not args.no_eval,
+            force=args.force,
+        )

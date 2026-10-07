@@ -1,0 +1,232 @@
+[2026-10-06 18:36:23] RUNNING | model=SuTraN_DA | log=BPIC15_1
+[2026-10-06 18:36:41] RUNNING | model=SuTraN_DA | log=BPIC15_1
+[2026-10-06 18:36:41] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_1
+[2026-10-06 18:36:41] RUNNING | model=ED_LSTM | log=BPIC15_1
+[2026-10-06 18:36:41] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_1
+[2026-10-06 18:36:41] RUNNING | model=SuTraN_NDA | log=BPIC15_1
+[2026-10-06 18:36:43] ERROR | model=ED_LSTM | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-06 18:36:43] RUNNING | model=SEP_LSTM | log=BPIC15_1
+[2026-10-06 18:36:43] ERROR | model=CRTP_LSTM_DA | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-06 18:36:43] RUNNING | model=BEST | log=BPIC15_1
+[2026-10-06 18:36:43] ERROR | model=CRTP_LSTM_NDA | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-06 18:36:43] RUNNING | model=SuTraN_DA | log=BPIC15_2
+[2026-10-06 18:36:45] ERROR | model=SEP_LSTM | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-06 18:36:45] RUNNING | model=SuTraN_NDA | log=BPIC15_2
+[2026-10-06 18:36:49] ERROR | model=SuTraN_NDA | log=BPIC15_2
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-10-06 18:36:49] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_2
+[2026-10-06 18:37:49] RUNNING | model=SuTraN_DA | log=BPIC15_1
+[2026-10-06 18:37:49] RUNNING | model=SuTraN_NDA | log=BPIC15_1
+[2026-10-06 18:37:49] RUNNING | model=CRTP_LSTM_DA | log=BPIC15_1
+[2026-10-06 18:37:49] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_1
+[2026-10-06 18:37:49] RUNNING | model=ED_LSTM | log=BPIC15_1
+[2026-10-06 18:38:22] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_1
+[2026-10-06 18:38:22] RUNNING | model=SuTraN_NDA | log=BPIC15_1
+[2026-10-06 18:38:22] RUNNING | model=ED_LSTM | log=BPIC15_1
+[2026-10-06 18:38:22] RUNNING | model=SEP_LSTM | log=BPIC15_1
+[2026-10-06 18:38:22] RUNNING | model=BEST | log=BPIC15_1
+[2026-10-06 18:38:25] ERROR | model=SEP_LSTM | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-06 18:38:25] RUNNING | model=SuTraN_NDA | log=BPIC15_2
+[2026-10-06 18:38:27] ERROR | model=BEST | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-10-06 18:38:27] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_2
+[2026-10-06 18:38:28] ERROR | model=SuTraN_NDA | log=BPIC15_2
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-10-06 18:38:28] RUNNING | model=ED_LSTM | log=BPIC15_2
+[2026-10-06 18:38:28] ERROR | model=CRTP_LSTM_NDA | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-10-06 18:38:28] RUNNING | model=SEP_LSTM | log=BPIC15_2
+[2026-10-06 18:38:28] ERROR | model=SuTraN_NDA | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-10-06 18:38:28] RUNNING | model=BEST | log=BPIC15_2
+[2026-10-06 18:38:28] ERROR | model=ED_LSTM | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-10-06 18:38:28] RUNNING | model=SuTraN_NDA | log=BPIC15_3
+[2026-10-06 18:39:20] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_1
+[2026-10-06 18:39:20] RUNNING | model=SuTraN_NDA | log=BPIC15_1
+[2026-10-06 18:39:20] RUNNING | model=ED_LSTM | log=BPIC15_1
+[2026-10-06 18:39:20] RUNNING | model=SEP_LSTM | log=BPIC15_1
+[2026-10-06 18:39:20] RUNNING | model=BEST | log=BPIC15_1
+[2026-10-06 18:40:09] DONE | model=BEST | log=BPIC15_1
+[2026-10-06 18:40:09] RUNNING | model=SuTraN_NDA | log=BPIC15_2
+[2026-10-06 18:45:17] OOM→CPU | model=SEP_LSTM | log=BPIC15_1
+[2026-10-06 18:57:02] ERROR | model=SEP_LSTM | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 269, in _run_subprocess
+        raise _OOMError()
+    _OOMError
+    
+    During handling of the above exception, another exception occurred:
+    
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 291, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-10-06 18:57:02] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_2
+[2026-10-06 18:57:02] ERROR | model=ED_LSTM | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-10-06 18:57:02] RUNNING | model=ED_LSTM | log=BPIC15_2
+[2026-10-06 18:57:02] ERROR | model=SuTraN_NDA | log=BPIC15_2
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-10-06 18:57:02] ERROR | model=CRTP_LSTM_NDA | log=BPIC15_1
+    Traceback (most recent call last):
+      File "/app/run_all_suffix_baselines.py", line 287, in _train_one
+        _run_subprocess(_build_model_code(model, log_name, tss, run_id, dst,
+      File "/app/run_all_suffix_baselines.py", line 272, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code -2 (killed by signal 2)
+[2026-10-06 18:57:02] RUNNING | model=SEP_LSTM | log=BPIC15_2
+[2026-10-06 18:57:02] RUNNING | model=BEST | log=BPIC15_2
+[2026-10-06 18:57:08] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_1
+[2026-10-06 18:57:08] RUNNING | model=SuTraN_NDA | log=BPIC15_1
+[2026-10-06 18:57:08] RUNNING | model=ED_LSTM | log=BPIC15_1
+[2026-10-06 19:16:51] DONE | model=CRTP_LSTM_NDA | log=BPIC15_1
+[2026-10-06 19:16:51] RUNNING | model=SEP_LSTM | log=BPIC15_1
+[2026-10-06 19:31:02] DONE | model=SEP_LSTM | log=BPIC15_1
+[2026-10-06 19:31:02] RUNNING | model=SuTraN_NDA | log=BPIC15_2
+[2026-10-06 19:49:27] DONE | model=ED_LSTM | log=BPIC15_1
+[2026-10-06 19:49:27] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_2
+[2026-10-06 20:09:31] DONE | model=CRTP_LSTM_NDA | log=BPIC15_2
+[2026-10-06 20:09:31] RUNNING | model=ED_LSTM | log=BPIC15_2
+[2026-10-06 20:44:30] DONE | model=ED_LSTM | log=BPIC15_2
+[2026-10-06 20:44:30] RUNNING | model=SEP_LSTM | log=BPIC15_2
+[2026-10-06 20:45:34] OOM→CPU | model=SEP_LSTM | log=BPIC15_2
+[2026-10-06 21:13:53] DONE | model=SEP_LSTM | log=BPIC15_2
+[2026-10-06 21:13:53] RUNNING | model=BEST | log=BPIC15_2
+[2026-10-06 21:14:56] DONE | model=BEST | log=BPIC15_2
+[2026-10-06 21:14:56] RUNNING | model=SuTraN_NDA | log=BPIC15_3
+[2026-10-06 21:15:55] OOM→CPU | model=SuTraN_NDA | log=BPIC15_3
+[2026-10-06 22:32:06] DONE | model=SuTraN_NDA | log=BPIC15_1
+[2026-10-06 22:32:06] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_3
+[2026-10-06 22:52:32] DONE | model=CRTP_LSTM_NDA | log=BPIC15_3
+[2026-10-06 22:52:32] RUNNING | model=ED_LSTM | log=BPIC15_3
+[2026-10-06 23:02:20] DONE | model=SuTraN_NDA | log=BPIC15_2
+[2026-10-06 23:02:20] RUNNING | model=SEP_LSTM | log=BPIC15_3
+[2026-10-06 23:15:30] DONE | model=SEP_LSTM | log=BPIC15_3
+[2026-10-06 23:15:30] RUNNING | model=BEST | log=BPIC15_3
+[2026-10-06 23:17:02] DONE | model=BEST | log=BPIC15_3
+[2026-10-06 23:17:02] RUNNING | model=SuTraN_NDA | log=BPIC15_4
+[2026-10-06 23:37:03] DONE | model=ED_LSTM | log=BPIC15_3
+[2026-10-06 23:37:03] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_4
+[2026-10-06 23:50:43] DONE | model=CRTP_LSTM_NDA | log=BPIC15_4
+[2026-10-06 23:50:43] RUNNING | model=ED_LSTM | log=BPIC15_4
+[2026-10-07 00:20:50] DONE | model=ED_LSTM | log=BPIC15_4
+[2026-10-07 00:20:50] RUNNING | model=SEP_LSTM | log=BPIC15_4
+[2026-10-07 00:30:33] DONE | model=SEP_LSTM | log=BPIC15_4
+[2026-10-07 00:30:33] RUNNING | model=BEST | log=BPIC15_4
+[2026-10-07 00:31:19] DONE | model=BEST | log=BPIC15_4
+[2026-10-07 00:31:19] RUNNING | model=SuTraN_NDA | log=BPIC15_5
+[2026-10-07 00:31:46] DONE | model=SuTraN_NDA | log=BPIC15_4
+[2026-10-07 00:31:46] RUNNING | model=CRTP_LSTM_NDA | log=BPIC15_5
+[2026-10-07 00:47:11] DONE | model=CRTP_LSTM_NDA | log=BPIC15_5
+[2026-10-07 00:47:11] RUNNING | model=ED_LSTM | log=BPIC15_5
+[2026-10-07 01:01:34] DONE | model=ED_LSTM | log=BPIC15_5
+[2026-10-07 01:01:34] RUNNING | model=SEP_LSTM | log=BPIC15_5
+[2026-10-07 01:11:35] DONE | model=SEP_LSTM | log=BPIC15_5
+[2026-10-07 01:11:35] RUNNING | model=BEST | log=BPIC15_5
+[2026-10-07 01:13:00] DONE | model=BEST | log=BPIC15_5
+[2026-10-07 01:13:00] RUNNING | model=SuTraN_NDA | log=Sepsis
+[2026-10-07 01:30:20] DONE | model=SuTraN_NDA | log=BPIC15_5
+[2026-10-07 01:30:20] RUNNING | model=CRTP_LSTM_NDA | log=Sepsis
+[2026-10-07 01:30:56] DONE | model=SuTraN_NDA | log=Sepsis
+[2026-10-07 01:30:56] RUNNING | model=ED_LSTM | log=Sepsis
+[2026-10-07 01:36:04] DONE | model=CRTP_LSTM_NDA | log=Sepsis
+[2026-10-07 01:36:04] RUNNING | model=SEP_LSTM | log=Sepsis
+[2026-10-07 01:37:04] DONE | model=ED_LSTM | log=Sepsis
+[2026-10-07 01:37:04] RUNNING | model=BEST | log=Sepsis
+[2026-10-07 01:37:18] DONE | model=BEST | log=Sepsis
+[2026-10-07 01:37:18] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_A
+[2026-10-07 01:39:29] DONE | model=SEP_LSTM | log=Sepsis
+[2026-10-07 01:39:29] RUNNING | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_A
+[2026-10-07 02:07:00] DONE | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_A
+[2026-10-07 02:07:00] RUNNING | model=ED_LSTM | log=BPI_Challenge_2012_A
+[2026-10-07 02:17:54] DONE | model=SuTraN_NDA | log=BPI_Challenge_2012_A
+[2026-10-07 02:17:54] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_A
+[2026-10-07 02:32:54] DONE | model=ED_LSTM | log=BPI_Challenge_2012_A
+[2026-10-07 02:32:54] RUNNING | model=BEST | log=BPI_Challenge_2012_A
+[2026-10-07 02:33:07] DONE | model=BEST | log=BPI_Challenge_2012_A
+[2026-10-07 02:33:07] RUNNING | model=SuTraN_NDA | log=BPI_Challenge_2012_O
+[2026-10-07 02:42:01] DONE | model=SEP_LSTM | log=BPI_Challenge_2012_A
+[2026-10-07 02:42:01] RUNNING | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_O
+[2026-10-07 02:53:44] DONE | model=SuTraN_NDA | log=BPI_Challenge_2012_O
+[2026-10-07 02:53:44] RUNNING | model=ED_LSTM | log=BPI_Challenge_2012_O
+[2026-10-07 03:03:35] DONE | model=CRTP_LSTM_NDA | log=BPI_Challenge_2012_O
+[2026-10-07 03:03:35] RUNNING | model=SEP_LSTM | log=BPI_Challenge_2012_O
+[2026-10-07 03:18:12] DONE | model=SEP_LSTM | log=BPI_Challenge_2012_O
+[2026-10-07 03:18:12] RUNNING | model=BEST | log=BPI_Challenge_2012_O
+[2026-10-07 03:18:22] DONE | model=BEST | log=BPI_Challenge_2012_O
+[2026-10-07 03:19:34] DONE | model=ED_LSTM | log=BPI_Challenge_2012_O

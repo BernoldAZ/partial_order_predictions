@@ -1,6 +1,6 @@
 """Train and evaluate GATv2EncoderGRUDecoderNewBlockV1 for activity
-suffix + TTNE prediction.  v1 removes _EdgeAttnBias from the encoder;
-the GRU is initialised from h_global only (d_model instead of 2*d_model).
+suffix + TTNE prediction.  v1 initialises the GRU from h_global,
+which is the decoder's only view of the encoded prefix.
 
 Usage
 -----
@@ -14,23 +14,25 @@ Run create_general_data.py first to generate these files.
 """
 import argparse
 import csv
+import math
 import os
 import pickle
 import time
 from concurrent.futures import ProcessPoolExecutor
 
-import networkx as nx
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.loader import DataLoader
 
 from model_suffix_time_v1 import GATv2EncoderGRUDecoderNewBlockV1
+from partial_order_metrics import ges_compute_sample, bucket_order_similarity
 
 # ─── Hyperparameters ──────────────────────────────────────────────────────────
 D_MODEL     = 64
 DROPOUT     = 0.4
-N_LAYERS    = 1
+N_GRU_LAYERS = 1
+N_GNN_LAYERS = 2
 LR          = 0.002
 MAX_EPOCHS  = 200
 PATIENCE    = 24
@@ -40,66 +42,15 @@ BATCH_SIZE  = 128
 
 # ─── Scheduled sampling ───────────────────────────────────────────────────────
 USE_SCHEDULED_SAMPLING = True
-SS_P_TEACHER_START     = 1.0
-SS_P_TEACHER_END       = 0.0
-SS_ANNEAL_EPOCHS       = MAX_EPOCHS
+# Inverse sigmoid decay (Bengio et al., 2015): p_teacher = k / (k + exp(epoch / k)).
+# k=30 → p≈0.97 at epoch 0, 0.5 at epoch ~102, ≈0.04 at epoch 200.
+SS_SIGMOID_K           = 30
 
 # ─── New-block loss weight ────────────────────────────────────────────────────
 NB_WEIGHT = 1.0   # scalar multiplier on the new-block BCE loss term
 
 METHOD_NAME = 'gatv2_gru_nb_v1'
 GES_WORKERS = 4
-
-
-# ─── GES helpers ──────────────────────────────────────────────────────────────
-
-def _build_suffix_graph(acts, nb_bits):
-    n = len(acts)
-    G = nx.DiGraph()
-    if n == 0:
-        return G
-    for i in range(n):
-        G.add_node(i, act=int(acts[i]))
-    blocks = [[0]]
-    for i in range(1, n):
-        if nb_bits[i]:
-            blocks.append([i])
-        else:
-            blocks[-1].append(i)
-    for block in blocks:
-        for u in block:
-            for v in block:
-                if u != v:
-                    G.add_edge(u, v)
-    for bi in range(len(blocks) - 1):
-        for u in blocks[bi]:
-            for v in blocks[bi + 1]:
-                G.add_edge(u, v)
-    return G
-
-
-def _node_match(n1, n2):
-    return n1['act'] == n2['act']
-
-
-def _graph_edit_similarity(G_pred, G_true):
-    np_n, np_e = G_pred.number_of_nodes(), G_pred.number_of_edges()
-    nt_n, nt_e = G_true.number_of_nodes(), G_true.number_of_edges()
-    if np_n == 0 and nt_n == 0:
-        return 1.0
-    if np_n == 0 or nt_n == 0:
-        return 0.0
-    denom = (np_n + np_e) + (nt_n + nt_e)
-    ged   = next(nx.optimize_graph_edit_distance(G_pred, G_true, node_match=_node_match))
-    return 1.0 - ged / denom
-
-
-def _ges_compute_sample(args):
-    sa_list, nbp_list, la_list, nbl_list = args
-    return _graph_edit_similarity(
-        _build_suffix_graph(sa_list, nbp_list),
-        _build_suffix_graph(la_list, nbl_list),
-    )
 
 
 # ─── Loss ─────────────────────────────────────────────────────────────────────
@@ -163,9 +114,9 @@ def _compute_metrics(suffix_acts, suffix_ttne, suffix_nb,
     batch_range = torch.arange(N, device=device)
 
     # ── Damerau-Levenshtein similarity ────────────────────────────────────────
-    len_pred   = pred_length   + 1
-    len_actual = actual_length + 1
-    max_len    = torch.maximum(len_pred, len_actual).float()
+    len_pred   = pred_length      # activities only, EOS excluded
+    len_actual = actual_length
+    max_len    = torch.maximum(len_pred, len_actual).clamp(min=1).float()
 
     d  = torch.full((N, W + 1, W + 1), fill_value=0, dtype=torch.int64, device=device)
     ar = torch.arange(W + 1, device=device).unsqueeze(0)
@@ -194,7 +145,12 @@ def _compute_metrics(suffix_acts, suffix_ttne, suffix_nb,
     ttne_preds_sec[counting > pred_length.unsqueeze(-1)] = 0.0
 
     before_end   = counting <= actual_length.unsqueeze(-1)
-    ttne_mae_sec = torch.abs(ttne_preds_sec - ttne_labels_sec)[before_end].mean().item()
+    ttne_abs     = torch.abs(ttne_preds_sec - ttne_labels_sec)
+    ttne_mae_sec = ttne_abs[before_end].mean().item()
+    ttne_mae_per_inst_min = (
+        (ttne_abs * before_end.float()).sum(dim=-1)
+        / before_end.sum(dim=-1).clamp(min=1)
+    ) / 60.0
 
     # ── RRT MAE ───────────────────────────────────────────────────────────────
     rrt_preds_sec = ttne_preds_sec.clone()
@@ -249,6 +205,7 @@ def _compute_metrics(suffix_acts, suffix_ttne, suffix_nb,
         first_acc = first_f1 = None
 
     ges = None
+    bo  = None
     if compute_ges:
         pred_len_ges = torch.where(has_end, pred_length, torch.full_like(pred_length, W))
         sa_cpu, la_cpu   = suffix_acts.cpu(), act_labels.cpu()
@@ -263,16 +220,23 @@ def _compute_metrics(suffix_acts, suffix_ttne, suffix_nb,
         ]
         try:
             with ProcessPoolExecutor(max_workers=GES_WORKERS) as pool:
-                ges_vals = list(pool.map(_ges_compute_sample, args_list))
+                ges_vals = list(pool.map(ges_compute_sample, args_list))
         except Exception:
-            ges_vals = [_ges_compute_sample(a) for a in args_list]
+            ges_vals = [ges_compute_sample(a) for a in args_list]
         ges = sum(ges_vals) / len(ges_vals) if ges_vals else 1.0
+        bo_vals = [bucket_order_similarity(*a) for a in args_list]
+        bo = {}
+        for k, name in enumerate(('order', 'content', 'combined')):
+            vals = [v[k] for v in bo_vals]
+            bo[f'{name}_vals'] = vals
+            bo[name] = sum(vals) / len(vals) if vals else 1.0
 
     return (dl_sim, ttne_mae_sec / 60.0, rrt_mae_sec / 60.0,
             mean_pred_len, mean_actual_len, nb_f1, nb_acc, first_acc, first_f1, ges,
             tp, fp, fn, tn,
             actual_length.tolist(), dl_per_inst.tolist(),
-            (rrt_mae_per_inst / 60.0).tolist(), ges_vals if compute_ges else [])
+            (rrt_mae_per_inst / 60.0).tolist(), ges_vals if compute_ges else [],
+            ttne_mae_per_inst_min.tolist(), bo)
 
 
 # ─── Evaluation pass ──────────────────────────────────────────────────────────
@@ -382,7 +346,8 @@ def run(log_name: str, results_dir: str = None, run_id: int = 0,
         num_activities=num_activities,
         d_model=D_MODEL,
         dropout=DROPOUT,
-        n_layers=N_LAYERS,
+        n_gru_layers=N_GRU_LAYERS,
+        n_gnn_layers=N_GNN_LAYERS,
         use_scheduled_sampling=USE_SCHEDULED_SAMPLING,
     ).to(device)
     num_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -410,9 +375,7 @@ def run(log_name: str, results_dir: str = None, run_id: int = 0,
             total_loss, n_batches = 0.0, 0
 
             if USE_SCHEDULED_SAMPLING:
-                progress  = epoch / max(SS_ANNEAL_EPOCHS - 1, 1)
-                p_teacher = max(SS_P_TEACHER_END,
-                                SS_P_TEACHER_START - (SS_P_TEACHER_START - SS_P_TEACHER_END) * progress)
+                p_teacher = SS_SIGMOID_K / (SS_SIGMOID_K + math.exp(epoch / SS_SIGMOID_K))
             else:
                 p_teacher = 1.0
 
@@ -438,7 +401,7 @@ def run(log_name: str, results_dir: str = None, run_id: int = 0,
 
             (dl_sim, ttne_mae_min, rrt_mae_min,
              mean_pred_len, mean_actual_len, nb_f1, nb_acc, _, _, _, _, _, _, _,
-             _, _, _, _, _, _) = _evaluate(
+             _, _, _, _, _, _, _, _) = _evaluate(
                 model, val_loader, device, num_activities, window_size,
                 mean_std_ttne, mean_std_tss, mean_std_tsp, mean_std_rrt)
 
@@ -535,6 +498,8 @@ def run(log_name: str, results_dir: str = None, run_id: int = 0,
      nb_f1, nb_acc, first_acc, first_f1, ges,
      nb_tp, nb_fp, nb_fn, nb_tn,
      suf_lens, dl_per_inst_list, rrt_per_inst_list, ges_vals,
+     ttne_per_inst_list,
+     bo,
      inference_time, evaluation_time) = _evaluate(
         model, test_loader, device, num_activities, window_size,
         mean_std_ttne, mean_std_tss, mean_std_tsp, mean_std_rrt,
@@ -544,6 +509,9 @@ def run(log_name: str, results_dir: str = None, run_id: int = 0,
     print(f"\n{'─'*60}")
     print(f"DL similarity  : {dl_sim:.4f}")
     print(f"GES            : {ges:.4f}")
+    print(f"BO order sim   : {bo['order']:.4f}")
+    print(f"BO content F1  : {bo['content']:.4f}")
+    print(f"BO combined    : {bo['combined']:.4f}")
     print(f"TTNE MAE       : {ttne_mae_min:.2f} min")
     print(f"RRT MAE        : {rrt_mae_min:.2f} min")
     print(f"NB F1          : {nb_f1:.4f}")
@@ -559,7 +527,8 @@ def run(log_name: str, results_dir: str = None, run_id: int = 0,
     # ── Save results ──────────────────────────────────────────────────────────
     csv_path   = os.path.join(results_dir, 'results_suffix_time_gnn.csv')
     fieldnames = ['log', 'model', 'method',
-                  'dl_similarity', 'ges_approx', 'ttne_mae_minutes', 'rrt_mae_minutes',
+                  'dl_similarity', 'ges_approx', 'bo_order_sim', 'bo_content_f1', 'bo_combined',
+                  'ttne_mae_minutes', 'rrt_mae_minutes',
                   'nb_f1', 'nb_accuracy', 'nb_tp', 'nb_fp', 'nb_fn', 'nb_tn',
                   'first_step_f1', 'first_step_accuracy',
                   'training_time_seconds', 'inference_time_seconds',
@@ -571,6 +540,9 @@ def run(log_name: str, results_dir: str = None, run_id: int = 0,
         'method':                METHOD_NAME,
         'dl_similarity':         round(dl_sim,        6),
         'ges_approx':            round(ges,           6),
+        'bo_order_sim':          round(bo['order'],       6),
+        'bo_content_f1':         round(bo['content'],     6),
+        'bo_combined':           round(bo['combined'],    6),
         'ttne_mae_minutes':      round(ttne_mae_min,  6),
         'rrt_mae_minutes':       round(rrt_mae_min,   6),
         'nb_f1':                 round(nb_f1,         6),
@@ -621,21 +593,30 @@ def run(log_name: str, results_dir: str = None, run_id: int = 0,
     pref_lens = [test_data[i].num_nodes for i in range(len(test_data))]
     _by_pref = {}
     _by_suf  = {}
-    for plen, slen, dl_val, rrt_val, gval in zip(
-            pref_lens, suf_lens, dl_per_inst_list, rrt_per_inst_list, ges_vals):
-        _by_pref.setdefault(int(plen), {'dl': [], 'rrt': [], 'ges': []})
-        _by_suf.setdefault(int(slen),  {'dl': [], 'rrt': [], 'ges': []})
-        _by_pref[int(plen)]['dl'].append(dl_val)
-        _by_pref[int(plen)]['rrt'].append(rrt_val)
-        _by_pref[int(plen)]['ges'].append(gval)
-        _by_suf[int(slen)]['dl'].append(dl_val)
-        _by_suf[int(slen)]['rrt'].append(rrt_val)
-        _by_suf[int(slen)]['ges'].append(gval)
+    for plen, slen, dl_val, rrt_val, gval, bo_o, bo_c, bo_x in zip(
+            pref_lens, suf_lens, dl_per_inst_list, rrt_per_inst_list, ges_vals,
+            bo['order_vals'], bo['content_vals'], bo['combined_vals']):
+        for d, key in ((_by_pref, int(plen)), (_by_suf, int(slen))):
+            d.setdefault(key, {'dl': [], 'rrt': [], 'ges': [],
+                               'bo_order': [], 'bo_content': [], 'bo_combined': []})
+            d[key]['dl'].append(dl_val)
+            d[key]['rrt'].append(rrt_val)
+            d[key]['ges'].append(gval)
+            d[key]['bo_order'].append(bo_o)
+            d[key]['bo_content'].append(bo_c)
+            d[key]['bo_combined'].append(bo_x)
+    # [dl, rrt, count, ges, bo_order, bo_content, bo_combined]
     pref_len_dict = {k: [sum(v['dl'])/len(v['dl']), sum(v['rrt'])/len(v['rrt']),
-                         len(v['dl']), sum(v['ges'])/len(v['ges'])]
+                         len(v['dl']), sum(v['ges'])/len(v['ges']),
+                         sum(v['bo_order'])/len(v['bo_order']),
+                         sum(v['bo_content'])/len(v['bo_content']),
+                         sum(v['bo_combined'])/len(v['bo_combined'])]
                      for k, v in _by_pref.items()}
     suf_len_dict  = {k: [sum(v['dl'])/len(v['dl']), sum(v['rrt'])/len(v['rrt']),
-                         len(v['dl']), sum(v['ges'])/len(v['ges'])]
+                         len(v['dl']), sum(v['ges'])/len(v['ges']),
+                         sum(v['bo_order'])/len(v['bo_order']),
+                         sum(v['bo_content'])/len(v['bo_content']),
+                         sum(v['bo_combined'])/len(v['bo_combined'])]
                      for k, v in _by_suf.items()}
     pref_pkl = os.path.join(results_dir, f'{log_name}_prefix_length_results_dict.pkl')
     suf_pkl  = os.path.join(results_dir, f'{log_name}_suffix_length_results_dict.pkl')
@@ -645,16 +626,467 @@ def run(log_name: str, results_dir: str = None, run_id: int = 0,
         pickle.dump(suf_len_dict, f)
     print(f"Per-length result dicts saved → {results_dir}")
 
+    per_sample_path = os.path.join(results_dir, f'{log_name}_per_sample_metrics.pt')
+    torch.save({
+        'dl_similarity':    torch.tensor(dl_per_inst_list,   dtype=torch.float32),
+        'ges_approx':       torch.tensor(ges_vals,           dtype=torch.float32),
+        'bo_order_sim':     torch.tensor(bo['order_vals'], dtype=torch.float32),
+        'bo_content_f1':    torch.tensor(bo['content_vals'], dtype=torch.float32),
+        'bo_combined':      torch.tensor(bo['combined_vals'], dtype=torch.float32),
+        'ttne_mae_minutes': torch.tensor(ttne_per_inst_list, dtype=torch.float32),
+        'rrt_mae_minutes':  torch.tensor(rrt_per_inst_list,  dtype=torch.float32),
+        'pref_len':         torch.tensor(pref_lens,          dtype=torch.int64),
+        'suf_len':          torch.tensor([s + 1 for s in suf_lens], dtype=torch.int64),
+    }, per_sample_path)
+    print(f"Per-sample metrics saved → {per_sample_path}")
+
     return {'dl_similarity': dl_sim, 'ges_approx': ges,
             'ttne_mae_minutes': ttne_mae_min, 'rrt_mae_minutes': rrt_mae_min,
             'nb_f1': nb_f1, 'nb_accuracy': nb_acc}
+
+
+# ─── Prefix-flip evaluation ────────────────────────────────────────────────────
+
+def run_eval_prefix_flip(log_name: str, results_dir: str):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"\n{'='*60}\nLog : {log_name}  [PREFIX-FLIP EVAL]\nDevice : {device}\n{'='*60}")
+
+    data_dir  = os.path.join("approach_suffix_v2", 'results_per_log', log_name)
+    test_data = torch.load(os.path.join(data_dir, 'test_graphdataset_prefixflip.pt'), weights_only=False)
+
+    with open(os.path.join(data_dir, f'{log_name}_train_means_dict.pkl'), 'rb') as f:
+        means = pickle.load(f)
+    with open(os.path.join(data_dir, f'{log_name}_train_std_dict.pkl'), 'rb') as f:
+        stds  = pickle.load(f)
+
+    mean_std_ttne = [means['timeLabel_df'][0], stds['timeLabel_df'][0]]
+    mean_std_rrt  = [means['timeLabel_df'][1], stds['timeLabel_df'][1]]
+    mean_std_tss  = [means['suffix_df'][0],    stds['suffix_df'][0]]
+    mean_std_tsp  = [means['suffix_df'][1],    stds['suffix_df'][1]]
+
+    with open(os.path.join(data_dir, f'{log_name}_cardin_list_prefix.pkl'), 'rb') as f:
+        pref_cat_cars = pickle.load(f)
+    window_size    = test_data[0].suffix_act.shape[0]
+    num_activities = pref_cat_cars[-1] + 2
+
+    model = GATv2EncoderGRUDecoderNewBlockV1(
+        num_activities=num_activities,
+        d_model=D_MODEL,
+        dropout=DROPOUT,
+        n_gru_layers=N_GRU_LAYERS,
+        n_gnn_layers=N_GNN_LAYERS,
+        use_scheduled_sampling=USE_SCHEDULED_SAMPLING,
+    ).to(device)
+    num_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+    best_model_path = os.path.join(results_dir, f'{log_name}_{METHOD_NAME}.pt')
+    model.load_state_dict(torch.load(best_model_path, weights_only=True))
+    model.to(device)
+
+    test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
+    (dl_sim, ttne_mae_min, rrt_mae_min, _, _,
+     nb_f1, nb_acc, first_acc, first_f1, ges,
+     nb_tp, nb_fp, nb_fn, nb_tn,
+     suf_lens, dl_per_inst_list, rrt_per_inst_list, ges_vals,
+     ttne_per_inst_list,
+     bo,
+     inference_time, evaluation_time) = _evaluate(
+        model, test_loader, device, num_activities, window_size,
+        mean_std_ttne, mean_std_tss, mean_std_tsp, mean_std_rrt,
+        compute_ges=True, compute_first_step=True)
+    testing_time = inference_time + evaluation_time
+
+    print(f"\n{'─'*60}")
+    print(f"DL similarity  : {dl_sim:.4f}")
+    print(f"GES            : {ges:.4f}")
+    print(f"BO order sim   : {bo['order']:.4f}")
+    print(f"BO content F1  : {bo['content']:.4f}")
+    print(f"BO combined    : {bo['combined']:.4f}")
+    print(f"TTNE MAE       : {ttne_mae_min:.2f} min")
+    print(f"RRT MAE        : {rrt_mae_min:.2f} min")
+    print(f"NB F1          : {nb_f1:.4f}")
+    print(f"NB accuracy    : {nb_acc:.4f}")
+    print(f"NB CM          : TP={nb_tp}  FP={nb_fp}  FN={nb_fn}  TN={nb_tn}")
+    print(f"First-step F1  : {first_f1:.4f}")
+    print(f"First-step acc : {first_acc:.4f}")
+    print(f"Testing time   : {testing_time:.1f}s")
+
+    csv_path   = os.path.join(results_dir, 'results_suffix_time_gnn_prefixflip.csv')
+    fieldnames = ['log', 'model', 'method',
+                  'dl_similarity', 'ges_approx', 'bo_order_sim', 'bo_content_f1', 'bo_combined',
+                  'ttne_mae_minutes', 'rrt_mae_minutes',
+                  'nb_f1', 'nb_accuracy', 'nb_tp', 'nb_fp', 'nb_fn', 'nb_tn',
+                  'first_step_f1', 'first_step_accuracy',
+                  'testing_time_seconds', 'num_trainable_params']
+    new_row = {
+        'log':                  log_name,
+        'model':                'suffix_time_nb_v1',
+        'method':               METHOD_NAME,
+        'dl_similarity':        round(dl_sim,       6),
+        'ges_approx':           round(ges,          6),
+        'bo_order_sim':         round(bo['order'],      6),
+        'bo_content_f1':        round(bo['content'],    6),
+        'bo_combined':          round(bo['combined'],   6),
+        'ttne_mae_minutes':     round(ttne_mae_min, 6),
+        'rrt_mae_minutes':      round(rrt_mae_min,  6),
+        'nb_f1':                round(nb_f1,        6),
+        'nb_accuracy':          round(nb_acc,       6),
+        'nb_tp':                nb_tp,
+        'nb_fp':                nb_fp,
+        'nb_fn':                nb_fn,
+        'nb_tn':                nb_tn,
+        'first_step_f1':        round(first_f1,     6),
+        'first_step_accuracy':  round(first_acc,    6),
+        'testing_time_seconds': round(testing_time, 2),
+        'num_trainable_params': num_trainable_params,
+    }
+
+    lock_path = csv_path + '.lock'
+    while True:
+        try:
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
+            break
+        except FileExistsError:
+            time.sleep(0.05)
+    try:
+        rows = []
+        if os.path.isfile(csv_path):
+            with open(csv_path, newline='') as f:
+                rows = list(csv.DictReader(f))
+        updated = False
+        for row in rows:
+            if row['log'] == log_name and row['method'] == METHOD_NAME:
+                row.update(new_row)
+                updated = True
+                break
+        if not updated:
+            rows.append(new_row)
+        with open(csv_path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+    finally:
+        os.remove(lock_path)
+
+    print(f"Results saved → {csv_path}")
+
+    pref_lens = [test_data[i].num_nodes for i in range(len(test_data))]
+    per_sample_path = os.path.join(results_dir, f'{log_name}_per_sample_metrics_prefixflip.pt')
+    torch.save({
+        'dl_similarity':    torch.tensor(dl_per_inst_list,   dtype=torch.float32),
+        'ges_approx':       torch.tensor(ges_vals,           dtype=torch.float32),
+        'bo_order_sim':     torch.tensor(bo['order_vals'], dtype=torch.float32),
+        'bo_content_f1':    torch.tensor(bo['content_vals'], dtype=torch.float32),
+        'bo_combined':      torch.tensor(bo['combined_vals'], dtype=torch.float32),
+        'ttne_mae_minutes': torch.tensor(ttne_per_inst_list, dtype=torch.float32),
+        'rrt_mae_minutes':  torch.tensor(rrt_per_inst_list,  dtype=torch.float32),
+        'pref_len':         torch.tensor(pref_lens,          dtype=torch.int64),
+        'suf_len':          torch.tensor([s + 1 for s in suf_lens], dtype=torch.int64),
+    }, per_sample_path)
+    print(f"Per-sample metrics saved → {per_sample_path}")
+
+
+# ─── Prefix-random evaluation ──────────────────────────────────────────────────
+
+def run_eval_prefix_random(log_name: str, results_dir: str):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"\n{'='*60}\nLog : {log_name}  [PREFIX-RANDOM EVAL]\nDevice : {device}\n{'='*60}")
+
+    data_dir  = os.path.join("approach_suffix_v2", 'results_per_log', log_name)
+    test_data = torch.load(os.path.join(data_dir, 'test_graphdataset_prefixrandom.pt'), weights_only=False)
+
+    with open(os.path.join(data_dir, f'{log_name}_train_means_dict.pkl'), 'rb') as f:
+        means = pickle.load(f)
+    with open(os.path.join(data_dir, f'{log_name}_train_std_dict.pkl'), 'rb') as f:
+        stds  = pickle.load(f)
+
+    mean_std_ttne = [means['timeLabel_df'][0], stds['timeLabel_df'][0]]
+    mean_std_rrt  = [means['timeLabel_df'][1], stds['timeLabel_df'][1]]
+    mean_std_tss  = [means['suffix_df'][0],    stds['suffix_df'][0]]
+    mean_std_tsp  = [means['suffix_df'][1],    stds['suffix_df'][1]]
+
+    with open(os.path.join(data_dir, f'{log_name}_cardin_list_prefix.pkl'), 'rb') as f:
+        pref_cat_cars = pickle.load(f)
+    window_size    = test_data[0].suffix_act.shape[0]
+    num_activities = pref_cat_cars[-1] + 2
+
+    model = GATv2EncoderGRUDecoderNewBlockV1(
+        num_activities=num_activities,
+        d_model=D_MODEL,
+        dropout=DROPOUT,
+        n_gru_layers=N_GRU_LAYERS,
+        n_gnn_layers=N_GNN_LAYERS,
+        use_scheduled_sampling=USE_SCHEDULED_SAMPLING,
+    ).to(device)
+    num_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+    best_model_path = os.path.join(results_dir, f'{log_name}_{METHOD_NAME}.pt')
+    model.load_state_dict(torch.load(best_model_path, weights_only=True))
+    model.to(device)
+
+    test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
+    (dl_sim, ttne_mae_min, rrt_mae_min, _, _,
+     nb_f1, nb_acc, first_acc, first_f1, ges,
+     nb_tp, nb_fp, nb_fn, nb_tn,
+     suf_lens, dl_per_inst_list, rrt_per_inst_list, ges_vals,
+     ttne_per_inst_list,
+     bo,
+     inference_time, evaluation_time) = _evaluate(
+        model, test_loader, device, num_activities, window_size,
+        mean_std_ttne, mean_std_tss, mean_std_tsp, mean_std_rrt,
+        compute_ges=True, compute_first_step=True)
+    testing_time = inference_time + evaluation_time
+
+    print(f"\n{'─'*60}")
+    print(f"DL similarity  : {dl_sim:.4f}")
+    print(f"GES            : {ges:.4f}")
+    print(f"BO order sim   : {bo['order']:.4f}")
+    print(f"BO content F1  : {bo['content']:.4f}")
+    print(f"BO combined    : {bo['combined']:.4f}")
+    print(f"TTNE MAE       : {ttne_mae_min:.2f} min")
+    print(f"RRT MAE        : {rrt_mae_min:.2f} min")
+    print(f"NB F1          : {nb_f1:.4f}")
+    print(f"NB accuracy    : {nb_acc:.4f}")
+    print(f"NB CM          : TP={nb_tp}  FP={nb_fp}  FN={nb_fn}  TN={nb_tn}")
+    print(f"First-step F1  : {first_f1:.4f}")
+    print(f"First-step acc : {first_acc:.4f}")
+    print(f"Testing time   : {testing_time:.1f}s")
+
+    csv_path   = os.path.join(results_dir, 'results_suffix_time_gnn_prefixrandom.csv')
+    fieldnames = ['log', 'model', 'method',
+                  'dl_similarity', 'ges_approx', 'bo_order_sim', 'bo_content_f1', 'bo_combined',
+                  'ttne_mae_minutes', 'rrt_mae_minutes',
+                  'nb_f1', 'nb_accuracy', 'nb_tp', 'nb_fp', 'nb_fn', 'nb_tn',
+                  'first_step_f1', 'first_step_accuracy',
+                  'testing_time_seconds', 'num_trainable_params']
+    new_row = {
+        'log':                  log_name,
+        'model':                'suffix_time_nb_v1',
+        'method':               METHOD_NAME,
+        'dl_similarity':        round(dl_sim,       6),
+        'ges_approx':           round(ges,          6),
+        'bo_order_sim':         round(bo['order'],      6),
+        'bo_content_f1':        round(bo['content'],    6),
+        'bo_combined':          round(bo['combined'],   6),
+        'ttne_mae_minutes':     round(ttne_mae_min, 6),
+        'rrt_mae_minutes':      round(rrt_mae_min,  6),
+        'nb_f1':                round(nb_f1,        6),
+        'nb_accuracy':          round(nb_acc,       6),
+        'nb_tp':                nb_tp,
+        'nb_fp':                nb_fp,
+        'nb_fn':                nb_fn,
+        'nb_tn':                nb_tn,
+        'first_step_f1':        round(first_f1,     6),
+        'first_step_accuracy':  round(first_acc,    6),
+        'testing_time_seconds': round(testing_time, 2),
+        'num_trainable_params': num_trainable_params,
+    }
+
+    lock_path = csv_path + '.lock'
+    while True:
+        try:
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
+            break
+        except FileExistsError:
+            time.sleep(0.05)
+    try:
+        rows = []
+        if os.path.isfile(csv_path):
+            with open(csv_path, newline='') as f:
+                rows = list(csv.DictReader(f))
+        updated = False
+        for row in rows:
+            if row['log'] == log_name and row['method'] == METHOD_NAME:
+                row.update(new_row)
+                updated = True
+                break
+        if not updated:
+            rows.append(new_row)
+        with open(csv_path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+    finally:
+        os.remove(lock_path)
+
+    print(f"Results saved → {csv_path}")
+
+    pref_lens = [test_data[i].num_nodes for i in range(len(test_data))]
+    per_sample_path = os.path.join(results_dir, f'{log_name}_per_sample_metrics_prefixrandom.pt')
+    torch.save({
+        'dl_similarity':    torch.tensor(dl_per_inst_list,   dtype=torch.float32),
+        'ges_approx':       torch.tensor(ges_vals,           dtype=torch.float32),
+        'bo_order_sim':     torch.tensor(bo['order_vals'], dtype=torch.float32),
+        'bo_content_f1':    torch.tensor(bo['content_vals'], dtype=torch.float32),
+        'bo_combined':      torch.tensor(bo['combined_vals'], dtype=torch.float32),
+        'ttne_mae_minutes': torch.tensor(ttne_per_inst_list, dtype=torch.float32),
+        'rrt_mae_minutes':  torch.tensor(rrt_per_inst_list,  dtype=torch.float32),
+        'pref_len':         torch.tensor(pref_lens,          dtype=torch.int64),
+        'suf_len':          torch.tensor([s + 1 for s in suf_lens], dtype=torch.int64),
+    }, per_sample_path)
+    print(f"Per-sample metrics saved → {per_sample_path}")
+
+
+# ─── Pre-split random / flip evaluation ────────────────────────────────────────
+# The test set was shuffled / flipped within concurrent blocks BEFORE the
+# prefix/suffix split, so the labels stored in the dataset file differ from
+# the normal test set.
+
+def _run_eval_variant(log_name: str, results_dir: str, tag: str):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"\n{'='*60}\nLog : {log_name}  [{tag.upper()} EVAL]\nDevice : {device}\n{'='*60}")
+
+    data_dir  = os.path.join("approach_suffix_v2", 'results_per_log', log_name)
+    test_data = torch.load(os.path.join(data_dir, f'test_graphdataset_{tag}.pt'), weights_only=False)
+
+    with open(os.path.join(data_dir, f'{log_name}_train_means_dict.pkl'), 'rb') as f:
+        means = pickle.load(f)
+    with open(os.path.join(data_dir, f'{log_name}_train_std_dict.pkl'), 'rb') as f:
+        stds  = pickle.load(f)
+
+    mean_std_ttne = [means['timeLabel_df'][0], stds['timeLabel_df'][0]]
+    mean_std_rrt  = [means['timeLabel_df'][1], stds['timeLabel_df'][1]]
+    mean_std_tss  = [means['suffix_df'][0],    stds['suffix_df'][0]]
+    mean_std_tsp  = [means['suffix_df'][1],    stds['suffix_df'][1]]
+
+    with open(os.path.join(data_dir, f'{log_name}_cardin_list_prefix.pkl'), 'rb') as f:
+        pref_cat_cars = pickle.load(f)
+    window_size    = test_data[0].suffix_act.shape[0]
+    num_activities = pref_cat_cars[-1] + 2
+
+    model = GATv2EncoderGRUDecoderNewBlockV1(
+        num_activities=num_activities,
+        d_model=D_MODEL,
+        dropout=DROPOUT,
+        n_gru_layers=N_GRU_LAYERS,
+        n_gnn_layers=N_GNN_LAYERS,
+        use_scheduled_sampling=USE_SCHEDULED_SAMPLING,
+    ).to(device)
+    num_trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+    best_model_path = os.path.join(results_dir, f'{log_name}_{METHOD_NAME}.pt')
+    model.load_state_dict(torch.load(best_model_path, weights_only=True))
+    model.to(device)
+
+    test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=False)
+    (dl_sim, ttne_mae_min, rrt_mae_min, _, _,
+     nb_f1, nb_acc, first_acc, first_f1, ges,
+     nb_tp, nb_fp, nb_fn, nb_tn,
+     suf_lens, dl_per_inst_list, rrt_per_inst_list, ges_vals,
+     ttne_per_inst_list,
+     bo,
+     inference_time, evaluation_time) = _evaluate(
+        model, test_loader, device, num_activities, window_size,
+        mean_std_ttne, mean_std_tss, mean_std_tsp, mean_std_rrt,
+        compute_ges=True, compute_first_step=True)
+    testing_time = inference_time + evaluation_time
+
+    print(f"\n{'─'*60}")
+    print(f"DL similarity  : {dl_sim:.4f}")
+    print(f"GES            : {ges:.4f}")
+    print(f"BO order sim   : {bo['order']:.4f}")
+    print(f"BO content F1  : {bo['content']:.4f}")
+    print(f"BO combined    : {bo['combined']:.4f}")
+    print(f"TTNE MAE       : {ttne_mae_min:.2f} min")
+    print(f"RRT MAE        : {rrt_mae_min:.2f} min")
+    print(f"NB F1          : {nb_f1:.4f}")
+    print(f"NB accuracy    : {nb_acc:.4f}")
+    print(f"NB CM          : TP={nb_tp}  FP={nb_fp}  FN={nb_fn}  TN={nb_tn}")
+    print(f"First-step F1  : {first_f1:.4f}")
+    print(f"First-step acc : {first_acc:.4f}")
+    print(f"Testing time   : {testing_time:.1f}s")
+
+    csv_path   = os.path.join(results_dir, f'results_suffix_time_gnn_{tag}.csv')
+    fieldnames = ['log', 'model', 'method',
+                  'dl_similarity', 'ges_approx', 'bo_order_sim', 'bo_content_f1', 'bo_combined',
+                  'ttne_mae_minutes', 'rrt_mae_minutes',
+                  'nb_f1', 'nb_accuracy', 'nb_tp', 'nb_fp', 'nb_fn', 'nb_tn',
+                  'first_step_f1', 'first_step_accuracy',
+                  'testing_time_seconds', 'num_trainable_params']
+    new_row = {
+        'log':                  log_name,
+        'model':                'suffix_time_nb_v1',
+        'method':               METHOD_NAME,
+        'dl_similarity':        round(dl_sim,       6),
+        'ges_approx':           round(ges,          6),
+        'bo_order_sim':         round(bo['order'],      6),
+        'bo_content_f1':        round(bo['content'],    6),
+        'bo_combined':          round(bo['combined'],   6),
+        'ttne_mae_minutes':     round(ttne_mae_min, 6),
+        'rrt_mae_minutes':      round(rrt_mae_min,  6),
+        'nb_f1':                round(nb_f1,        6),
+        'nb_accuracy':          round(nb_acc,       6),
+        'nb_tp':                nb_tp,
+        'nb_fp':                nb_fp,
+        'nb_fn':                nb_fn,
+        'nb_tn':                nb_tn,
+        'first_step_f1':        round(first_f1,     6),
+        'first_step_accuracy':  round(first_acc,    6),
+        'testing_time_seconds': round(testing_time, 2),
+        'num_trainable_params': num_trainable_params,
+    }
+
+    lock_path = csv_path + '.lock'
+    while True:
+        try:
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
+            break
+        except FileExistsError:
+            time.sleep(0.05)
+    try:
+        rows = []
+        if os.path.isfile(csv_path):
+            with open(csv_path, newline='') as f:
+                rows = list(csv.DictReader(f))
+        updated = False
+        for row in rows:
+            if row['log'] == log_name and row['method'] == METHOD_NAME:
+                row.update(new_row)
+                updated = True
+                break
+        if not updated:
+            rows.append(new_row)
+        with open(csv_path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+    finally:
+        os.remove(lock_path)
+
+    print(f"Results saved → {csv_path}")
+
+    pref_lens = [test_data[i].num_nodes for i in range(len(test_data))]
+    per_sample_path = os.path.join(results_dir, f'{log_name}_per_sample_metrics_{tag}.pt')
+    torch.save({
+        'dl_similarity':    torch.tensor(dl_per_inst_list,   dtype=torch.float32),
+        'ges_approx':       torch.tensor(ges_vals,           dtype=torch.float32),
+        'bo_order_sim':     torch.tensor(bo['order_vals'], dtype=torch.float32),
+        'bo_content_f1':    torch.tensor(bo['content_vals'], dtype=torch.float32),
+        'bo_combined':      torch.tensor(bo['combined_vals'], dtype=torch.float32),
+        'ttne_mae_minutes': torch.tensor(ttne_per_inst_list, dtype=torch.float32),
+        'rrt_mae_minutes':  torch.tensor(rrt_per_inst_list,  dtype=torch.float32),
+        'pref_len':         torch.tensor(pref_lens,          dtype=torch.int64),
+        'suf_len':          torch.tensor([s + 1 for s in suf_lens], dtype=torch.int64),
+    }, per_sample_path)
+    print(f"Per-sample metrics saved → {per_sample_path}")
+
+
+def run_eval_random(log_name: str, results_dir: str):
+    _run_eval_variant(log_name, results_dir, 'random')
+
+
+def run_eval_flip(log_name: str, results_dir: str):
+    _run_eval_variant(log_name, results_dir, 'flip')
 
 
 # ─── Entry point ──────────────────────────────────────────────────────────────
 
 def _parse_args():
     p = argparse.ArgumentParser(
-        description='Train GRU+new-block v1 model (no edge-attn bias) and evaluate for suffix + RRT')
+        description='Train GRU+new-block v1 model and evaluate for suffix + RRT')
     p.add_argument('log_name',    help='Log name (must match results_per_log/<log_name>/)')
     p.add_argument('results_dir', nargs='?', default=None)
     p.add_argument('--run_id',    type=int, default=0)

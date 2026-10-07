@@ -1,0 +1,2 @@
+log,model,method,dl_similarity,ges_approx,ttne_mae_minutes,rrt_mae_minutes,nb_f1,nb_accuracy,nb_tp,nb_fp,nb_fn,nb_tn,first_step_f1,first_step_accuracy,training_time_seconds,inference_time_seconds,evaluation_time_seconds,testing_time_seconds,num_trainable_params
+Sepsis,suffix_time_nb_v1,gatv2_seq_gru_nb_v1,0.54357,0.513701,3103.651563,21642.772917,0.70571,0.650959,6501,1406,4016,3611,0.55618,0.581801,1254.09,4.73,5.41,10.14,59933

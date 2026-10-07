@@ -15,13 +15,17 @@ ABLATION_CONFIGS = {
         "results_sub": "approach_suffix_v2/results_time_gatv2_gru_nb_v3",
         "csv_file":    "results_suffix_time_gnn.csv",
     },
+    "v6 (different)": {
+        "results_sub": "approach_suffix_v2/results_time_gatv2_tf_nb_v6",
+        "csv_file":    "results_suffix_time_gnn.csv",
+    },
 }
 
 METRICS = [
     ("GES ↑",        "ges_approx",          "↑", lambda v: f"{v:.2f}"),
     ("DL sim ↑",     "dl_similarity",        "↑", lambda v: f"{v:.2f}"),
-    ("TTNE (min) ↓", "ttne_mae_minutes",     "↓", lambda v: f"{int(round(v))}"),
-    ("RRT (min) ↓",  "rrt_mae_minutes",      "↓", lambda v: f"{int(round(v))}"),
+    #("TTNE (min) ↓", "ttne_mae_minutes",     "↓", lambda v: f"{int(round(v))}"),
+    #("RRT (min) ↓",  "rrt_mae_minutes",      "↓", lambda v: f"{int(round(v))}"),
     ("NB F1 ↑",      "nb_f1",               "↑", lambda v: f"{v:.2f}"),
     ("NB acc ↑",     "nb_accuracy",          "↑", lambda v: f"{v:.2f}"),
     ("Step F1 ↑",    "first_step_f1",        "↑", lambda v: f"{v:.2f}"),
