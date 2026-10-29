@@ -21,7 +21,7 @@ import pickle
 def sort_log(df, case_id = 'case:concept:name', timestamp = 'time:timestamp', act_label = 'concept:name'):
     """Sort events in event log such that cases that occur first are stored 
     first, and such that events within the same case are stored based on timestamp, 
-    with ties (concurrent events) broken alphabetically by activity label. 
+    with ties (concurrent events) kept in their original event-log order (stable sort).
 
     Parameters
     ----------
@@ -45,7 +45,7 @@ def sort_log(df, case_id = 'case:concept:name', timestamp = 'time:timestamp', ac
     df_first['case_id_int'] = [i for i in range(len(df_first))]
     df_first = df_first.drop(timestamp, axis = 1)
     df = df.merge(df_first, on = case_id, how = 'left')
-    df = df.sort_values(['case_id_int', timestamp, act_label], ascending = [True, True, True], kind='mergesort')
+    df = df.sort_values(['case_id_int', timestamp], ascending = [True, True], kind='mergesort')
     df = df.drop('case_id_int', axis = 1)
     return df.reset_index(drop=True)
 

@@ -450,10 +450,10 @@ class BatchInference():
             for each of the `batch_size` prefix-suffix pairs / instances. 
             Shape (batch_size, ), dtype torch.float32. 
         """
-        len_pred = self.pred_length # (self.batch_size, ) activities only, EOS excluded
-        len_actual = self.actual_length # (self.batch_size, ) activities only, EOS excluded
+        len_pred = self.pred_length # (self.batch_size, ) END token excluded
+        len_actual = self.actual_length # (self.batch_size, ) END token excluded
         # max_length between the ground-truth and predicted activity sequence
-        max_len = torch.maximum(len_pred, len_actual).clamp(min=1) # (self.batch_size,) clamp: both empty -> similarity 1
+        max_len = torch.maximum(len_pred, len_actual).clamp(min=1) # (self.batch_size,) both empty -> 0/1
 
         # Initializing the (self.batch_size, self.window_size+1, 
         # self.window_size+1)-shaped distance matrix, with the innermost 

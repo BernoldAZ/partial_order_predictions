@@ -1,0 +1,9 @@
+log,method,dl_similarity,ges_exact,bo_order_sim,bo_content_f1,bo_combined
+Sepsis,oracle_sequential,1.0,0.812535,0.955445,1.0,0.955445
+BPI_Challenge_2012_A,oracle_sequential,1.0,0.952854,0.966995,1.0,0.966995
+BPI_Challenge_2012_O,oracle_sequential,1.0,0.974245,0.994826,1.0,0.994826
+BPIC15_1,oracle_sequential,1.0,0.501032,0.82285,1.0,0.82285
+BPIC15_2,oracle_sequential,1.0,0.548972,0.847888,1.0,0.847888
+BPIC15_3,oracle_sequential,1.0,0.513654,0.835817,1.0,0.835817
+BPIC15_4,oracle_sequential,1.0,0.559609,0.841252,1.0,0.841252
+BPIC15_5,oracle_sequential,1.0,0.527048,0.841612,1.0,0.841612

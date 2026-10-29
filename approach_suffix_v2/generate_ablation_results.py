@@ -3,41 +3,54 @@ import numpy as np
 import pandas as pd
 
 ABLATION_CONFIGS = {
-    "Graph_v1": {
-        "results_sub": "approach_suffix_v2/results_time_gatv2_gru_nb_v1",
-        "csv_file":    "results_suffix_time_gnn.csv",
+    "input": {
+        "title": "ABLATION: Input structure (block-at-a-time v2)",
+        "extra_metrics": [
+            ("DL sim ↑", "dl_similarity", "↑", lambda v: f"{v:.2f}"),
+        ],
+        "variants": {
+            "Graph": {
+                #"results_sub": "approach_suffix_v2/results_time_gatv2_gru_block_v2", # decoder Block by Block
+                "results_sub": "approach_suffix_v2/results_time_gatv2_gru_nb_v2_actnb",
+                "csv_file":    "results_suffix_time_gnn.csv",
+            },
+            "Seq": {
+                #"results_sub": "approach_suffix_v2/results_time_gatv2_seq_gru_block_v2", # decoder Block by Block
+                "results_sub": "approach_suffix_v2/results_time_gatv2_seq_gru_nb_v2_actnb",
+                "csv_file":    "results_suffix_time_gnn.csv",
+            },
+            "Seq reversed": {
+                #"results_sub": "approach_suffix_v2/results_time_gatv2_seq_gru_block_v2", # decoder Block by Block
+                "results_sub": "approach_suffix_v2/results_time_gatv2_seq_gru_nb_v2_actnb",
+                "csv_file":    "results_suffix_time_gnn_prefixflip.csv",
+            },
+            "Seq random": {
+                #"results_sub": "approach_suffix_v2/results_time_gatv2_seq_gru_block_v2", # decoder Block by Block
+                "results_sub": "approach_suffix_v2/results_time_gatv2_seq_gru_nb_v2_actnb",
+                "csv_file":    "results_suffix_time_gnn_prefixrandom.csv",
+            },
+        },
     },
-    "Seq_v1": {
-        "results_sub": "approach_suffix_v2/results_time_gatv2_seq_gru_nb_v1",
-        "csv_file":    "results_suffix_time_gnn.csv",
-    },
-    "GraphFlip_v1": {
-        "results_sub": "approach_suffix_v2/results_time_gatv2_gru_nb_v1",
-        "csv_file":    "results_suffix_time_gnn_prefixflip.csv",
-    },
-    "GraphRandom_v1": {
-        "results_sub": "approach_suffix_v2/results_time_gatv2_gru_nb_v1",
-        "csv_file":    "results_suffix_time_gnn_prefixrandom.csv",
-    },
-    "SeqFlip_v1": {
-        "results_sub": "approach_suffix_v2/results_time_gatv2_seq_gru_nb_v1",
-        "csv_file":    "results_suffix_time_gnn_prefixflip.csv",
-    },
-    "SeqRandom_v1": {
-        "results_sub": "approach_suffix_v2/results_time_gatv2_seq_gru_nb_v1",
-        "csv_file":    "results_suffix_time_gnn_prefixrandom.csv",
+    "decoder": {
+        "title": "ABLATION: Decoder structure (graph input, v2)",
+        "variants": {
+            "Block-at-a-time": {
+                "results_sub": "approach_suffix_v2/results_time_gatv2_gru_block_v2",
+                "csv_file":    "results_suffix_time_gnn.csv",
+            },
+            "Event-at-a-time": {
+                "results_sub": "approach_suffix_v2/results_time_gatv2_gru_nb_v2_actnb",
+                "csv_file":    "results_suffix_time_gnn.csv",
+            },
+        },
     },
 }
 
 METRICS = [
-    ("GES ↑",        "ges_approx",          "↑", lambda v: f"{v:.2f}"),
-    ("DL sim ↑",     "dl_similarity",        "↑", lambda v: f"{v:.2f}"),
-    ("TTNE (min) ↓", "ttne_mae_minutes",     "↓", lambda v: f"{int(round(v))}"),
-    ("RRT (min) ↓",  "rrt_mae_minutes",      "↓", lambda v: f"{int(round(v))}"),
-    ("NB F1 ↑",      "nb_f1",               "↑", lambda v: f"{v:.2f}"),
-    ("NB acc ↑",     "nb_accuracy",          "↑", lambda v: f"{v:.2f}"),
-    ("Step F1 ↑",    "first_step_f1",        "↑", lambda v: f"{v:.2f}"),
-    ("Step acc ↑",   "first_step_accuracy",  "↑", lambda v: f"{v:.2f}"),
+    ("GES ↑",        "ges_exact",      "↑", lambda v: f"{v:.2f}"),
+    ("BO order ↑",   "bo_order_sim",   "↑", lambda v: f"{v:.2f}"),
+    ("BO content ↑", "bo_content_f1",  "↑", lambda v: f"{v:.2f}"),
+    ("BO comb ↑",    "bo_combined",    "↑", lambda v: f"{v:.2f}"),
 ]
 
 SEP = "─"
@@ -87,14 +100,19 @@ def load_variant(cfg):
 
 
 def run():
+    for ablation in ABLATION_CONFIGS.values():
+        run_ablation(ablation["title"], ablation["variants"], METRICS + ablation.get("extra_metrics", []))
+
+
+def run_ablation(title, variants, metrics):
     variant_data = {}
-    for name, cfg in ABLATION_CONFIGS.items():
+    for name, cfg in variants.items():
         dfs = load_variant(cfg)
         if dfs:
             variant_data[name] = dfs
 
     if not variant_data:
-        print("No ablation results found.")
+        print(f"No ablation results found for: {title}")
         return
 
     all_logs = sorted({
@@ -106,16 +124,16 @@ def run():
 
     bar = "═" * 100
     print(f"\n╔{bar}╗")
-    print(f"║  {'ABLATION: Input Format (Graph vs Seq vs Flip vs Random)':<98}║")
+    print(f"║  {title:<98}║")
     print(f"╚{bar}╝\n")
 
-    headers = ["Variant", "N"] + [label for label, *_ in METRICS] + ["# params"]
-    aligns  = ["left", "right"] + ["right"] * len(METRICS) + ["right"]
+    headers = ["Variant", "N"] + [label for label, *_ in metrics] + ["# params"]
+    aligns  = ["left", "right"] + ["right"] * len(metrics) + ["right"]
 
     for log_name in all_logs:
         print(f"  === Log: {log_name} ===\n")
         rows = []
-        for variant in ABLATION_CONFIGS:
+        for variant in variants:
             if variant not in variant_data:
                 continue
             dfs = variant_data[variant]
@@ -124,7 +142,7 @@ def run():
                 continue
 
             row = [variant, str(len(log_dfs))]
-            for _, col, _, fmt in METRICS:
+            for _, col, _, fmt in metrics:
                 vals = [
                     float(df.loc[df["log"] == log_name, col].iloc[0])
                     for df in log_dfs
@@ -151,7 +169,7 @@ def run():
             continue
 
         rows.sort(key=lambda r: float(r[2].split(" ")[0]) if r[2] != "N/A" else -1, reverse=True)
-        print_table("Results by input format", headers, aligns, rows)
+        print_table("Results", headers, aligns, rows)
 
 
 if __name__ == "__main__":

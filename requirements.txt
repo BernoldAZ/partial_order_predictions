@@ -31,6 +31,8 @@ lightning==2.6.1
 
 # Graph learning
 networkx==3.4.2
+# Exact graph edit distance (binary program solved with the bundled CBC)
+pulp==2.9.0
 
 # Process mining
 pm4py==2.7.20.1

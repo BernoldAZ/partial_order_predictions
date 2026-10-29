@@ -122,6 +122,7 @@ def inference_loop(best_model,
     # If END was never predicted, treat the last position as the END step
     no_end_pred = ~pred_end_mask.any(dim=1)                  # (N,)
     pred_lengths[no_end_pred] = W - 1
+    suffix_acts_pred[no_end_pred, W - 1] = end_token
     inference_time = time.time() - inference_start
 
     if not do_eval:
@@ -361,9 +362,9 @@ def _compute_dl_similarity_batched(suffix_acts_pred,
 
         preds_b      = suffix_acts_pred[start:end].to(device)   # (bs, W)
         labels_b     = act_labels[start:end].to(device)          # (bs, W)
-        pred_len_b   = pred_lengths[start:end].to(device)      # activities only, EOS excluded (bs,)
-        actual_len_b = actual_lengths[start:end].to(device)    # activities only, EOS excluded (bs,)
-        max_len_b    = torch.maximum(pred_len_b, actual_len_b).clamp(min=1)  # (bs,) both empty -> similarity 1
+        pred_len_b   = pred_lengths[start:end].to(device)          # END token excluded (bs,)
+        actual_len_b = actual_lengths[start:end].to(device)        # END token excluded (bs,)
+        max_len_b    = torch.maximum(pred_len_b, actual_len_b).clamp(min=1)  # (bs,) both empty -> 0/1
 
         # Initialise DP matrix
         d = torch.zeros(

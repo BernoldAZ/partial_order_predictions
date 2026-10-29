@@ -12,12 +12,12 @@ import torch
 
 _BASELINE_PATHS = {
     'SEP_LSTM':     'SEP_LSTM_results',
-    'CRTP_LSTM':    'CRTP_LSTM_NDA_results',
+    #'CRTP_LSTM':    'CRTP_LSTM_NDA_results',
     #'CRTP_LSTM_DA': 'CRTP_LSTM_DA_results',
     'ED_LSTM':      'ED_LSTM_results',
     'SuTraN':       'SUTRAN_NDA_results',
     #'SuTraN_DA':    'SUTRAN_DA_results',
-    'BEST':         'BEST_results',
+    #'BEST':         'BEST_results',
 }
 
 CONFIG_STRING = {'SEP_LSTM' : 'SEP-LSTM',
@@ -27,7 +27,8 @@ CONFIG_STRING = {'SEP_LSTM' : 'SEP-LSTM',
                 'SuTraN' : 'SuTraN',
                 #'SuTraN_DA' : 'SuTraN',
                 'BEST' : 'BEST',
-                'GATv2_GRU' : 'POG (Ours)'}
+                'GATv2_GRU' : 'POPS (Ours)',
+                'Oracle_Seq' : 'Sequential Oracle'}
 CONFIG_STYLES = {
     'CRTP_LSTM': ('#9467bd', '--'),
     #'CRTP_LSTM_DA': ('#9467bd', '-'),
@@ -37,35 +38,33 @@ CONFIG_STYLES = {
     'ED_LSTM': ('#ff7f0e', '--'),
     'BEST': ('#8c564b', ':'),
     'GATv2_GRU': ('#1f77b4', '-'),
+    'Oracle_Seq': ('black', ':'),
 }
 
 # Display name for each event log when plotting. Logs not listed here are
 # shown under their original (directory/pkl) name.
 EVENT_LOGS = {
-    'BPIC15_1': 'BPIC 15.1',
-    'BPIC15_2': 'BPIC 15.2',
-    'BPIC15_3': 'BPIC 15.3',
-    'BPIC15_4': 'BPIC 15.4',
-    'BPIC15_5': 'BPIC 15.5',
-    'BPI_Challenge_2012_A': 'BPIC 12.A',
-    'BPI_Challenge_2012_O': 'BPIC 12.O',
+    'BPIC15_1': 'BPIC15.1',
+    'BPIC15_2': 'BPIC15.2',
+    'BPIC15_3': 'BPIC15.3',
+    'BPIC15_4': 'BPIC15.4',
+    'BPIC15_5': 'BPIC15.5',
+    'BPI_Challenge_2012_A': 'BPIC12.A',
+    'BPI_Challenge_2012_O': 'BPIC12.O',
     'Sepsis': 'Sepsis',
 }
 
-# Maps a metric name to where it lives in the tuple returned by
-# `create_dataframes()`: (prefix_df_idx, suffix_df_idx, col_suffix, ylabel).
+# Maps a metric name to its index in the per-length result lists
+# [dl, rrt, count, ges, bo_order, bo_content, bo_combined] (used by `plot_all_logs()`).
 METRIC_CONFIG = {
-    'ges':     {'prefix_df_idx': 4, 'suffix_df_idx': 5, 'col_suffix': '_ges', 'ylabel': 'GES'},
-    'dl':      {'prefix_df_idx': 0, 'suffix_df_idx': 2, 'col_suffix': '_dls', 'ylabel': 'DLS'},
-    'mae_rrt': {'prefix_df_idx': 1, 'suffix_df_idx': 3, 'col_suffix': '_mae', 'ylabel': 'MAE RRT (minutes)'},
+    'ges': {'idx': 3, 'ylabel': 'GES'},
+    'bos': {'idx': 6, 'ylabel': 'BOS'},
+    'dl':  {'idx': 0, 'ylabel': 'DLS'},
 }
 
 
 def _load_and_average_runs(pkl_paths):
     """Load per-length result dicts from available run paths and average them.
-
-    Handles both 3-element [DLS, MAE, count] and 4-element [DLS, MAE, count, GES]
-    dicts so that old results (without GES) can be mixed with new ones.
     Returns None if no path exists.
     """
     run_dicts = []
@@ -73,6 +72,16 @@ def _load_and_average_runs(pkl_paths):
         if os.path.isfile(p):
             with open(p, 'rb') as f:
                 run_dicts.append(pickle.load(f))
+    return _average_run_dicts(run_dicts)
+
+
+def _average_run_dicts(run_dicts):
+    """Average per-length result dicts over runs.
+
+    Handles both 3-element [DLS, MAE, count] and 4-element [DLS, MAE, count, GES]
+    dicts so that old results (without GES) can be mixed with new ones.
+    Returns None if `run_dicts` is empty.
+    """
     if not run_dicts:
         return None
     all_keys = set()
@@ -294,33 +303,33 @@ def create_plots_log(pref_suf_dfs,
     ax_ges_pref = ax[0, 0].twinx()
     ax[0, 0].set_ylabel('GES', fontsize=fontsize)
     ax[0, 0].set_xlabel('Prefix Length', fontsize=fontsize)
-    ax_ges_pref.plot(df_5['prefix_length'], df_5['instance_count'], label='Number of Samples', color='grey', linestyle='--')
+    ax_ges_pref.plot(df_5['prefix_length'], df_5['instance_count'], label='Number of Instances', color='grey', linestyle='--')
     ax_ges_pref.fill_between(df_5['prefix_length'], 0, df_5['instance_count'], color='grey', alpha=0.3, zorder=0)
-    ax_ges_pref.set_ylabel("Samples", color='grey', fontsize=fontsize)
+    ax_ges_pref.set_ylabel("Instances", color='grey', fontsize=fontsize)
     ax_ges_pref.tick_params('y', colors='grey', labelsize=labelsize)
 
     ax_mae_pref = ax[0, 1].twinx()
     ax[0, 1].set_ylabel('MAE Remaining Time ({})'.format(time_unit), fontsize=fontsize)
     ax[0, 1].set_xlabel('Prefix Length', fontsize=fontsize)
-    ax_mae_pref.plot(df_2['prefix_length'], df_2['instance_count'], label='Number of Samples', color='grey', linestyle='--')
+    ax_mae_pref.plot(df_2['prefix_length'], df_2['instance_count'], label='Number of Instances', color='grey', linestyle='--')
     ax_mae_pref.fill_between(df_2['prefix_length'], 0, df_2['instance_count'], color='grey', alpha=0.3, zorder=0)
-    ax_mae_pref.set_ylabel("Samples", color='grey', fontsize=fontsize)
+    ax_mae_pref.set_ylabel("Instances", color='grey', fontsize=fontsize)
     ax_mae_pref.tick_params('y', colors='grey', labelsize=labelsize)
 
     ax_ges_suf = ax[1, 0].twinx()
     ax[1, 0].set_ylabel('GES', fontsize=fontsize)
     ax[1, 0].set_xlabel('Suffix Length', fontsize=fontsize)
-    ax_ges_suf.plot(df_6['suffix_length'], df_6['instance_count'], label='Number of Samples', color='grey', linestyle='--')
+    ax_ges_suf.plot(df_6['suffix_length'], df_6['instance_count'], label='Number of Instances', color='grey', linestyle='--')
     ax_ges_suf.fill_between(df_6['suffix_length'], 0, df_6['instance_count'], color='grey', alpha=0.3, zorder=0)
-    ax_ges_suf.set_ylabel("Samples", color='grey', fontsize=fontsize)
+    ax_ges_suf.set_ylabel("Instances", color='grey', fontsize=fontsize)
     ax_ges_suf.tick_params('y', colors='grey', labelsize=labelsize)
 
     ax_mae_suf = ax[1, 1].twinx()
     ax[1, 1].set_ylabel('MAE Remaining Time ({})'.format(time_unit), fontsize=fontsize)
     ax[1, 1].set_xlabel('Suffix Length', fontsize=fontsize)
-    ax_mae_suf.plot(df_4['suffix_length'], df_4['instance_count'], label='Number of Samples', color='grey', linestyle='--')
+    ax_mae_suf.plot(df_4['suffix_length'], df_4['instance_count'], label='Number of Instances', color='grey', linestyle='--')
     ax_mae_suf.fill_between(df_4['suffix_length'], 0, df_4['instance_count'], color='grey', alpha=0.3, zorder=0)
-    ax_mae_suf.set_ylabel("Samples", color='grey', fontsize=fontsize)
+    ax_mae_suf.set_ylabel("Instances", color='grey', fontsize=fontsize)
     ax_mae_suf.tick_params('y', colors='grey', labelsize=labelsize)
 
     for ax_row in ax:
@@ -573,6 +582,51 @@ def get_subset_bool(pref_len_tensor,
 # Combined loading and plotting
 # ---------------------------------------------------------------------------
 
+def _baseline_po_dicts(res_path, po_source):
+    """Per-length DLS/GES/BOS dicts of one baseline run, built from per-sample scores.
+
+    DLS always comes from dam_lev_similarity.pt (it does not depend on the partial order).
+    po_source='total': GES/BOS of the total-order suffix (ges_per_sample.pt, bo_per_sample.pt).
+    po_source='ttne':  GES/BOS of the TTNE-derived partial order (po_ttne_results.pkl).
+
+    Suffix lengths exclude the END token (suf_len.pt includes it), matching the
+    approach's per-length dicts. Values follow the approach's layout
+    [dl, rrt, count, ges, bo_order, bo_content, bo_combined] with only dl, count,
+    ges and bo_combined filled in. Returns (None, None) if a file is missing.
+    """
+    paths = [os.path.join(res_path, f) for f in ('pref_len.pt', 'suf_len.pt', 'dam_lev_similarity.pt')]
+    if po_source == 'total':
+        paths += [os.path.join(res_path, f) for f in ('ges_per_sample.pt', 'bo_per_sample.pt')]
+    else:
+        paths += [os.path.join(res_path, 'po_ttne_results.pkl')]
+    if not all(os.path.isfile(p) for p in paths):
+        return None, None
+
+    pref_len = torch.load(paths[0], weights_only=True).tolist()
+    suf_len = (torch.load(paths[1], weights_only=True) - 1).tolist()
+    dls = torch.load(paths[2], map_location='cpu', weights_only=True).tolist()
+    if po_source == 'total':
+        ges = torch.load(paths[3], weights_only=True).tolist()
+        bos = torch.load(paths[4], weights_only=True)['bo_combined'].tolist()
+    else:
+        with open(paths[3], 'rb') as f:
+            per_sample = pickle.load(f)['per_sample']
+        ges = per_sample['ges'].tolist()
+        bos = per_sample['bo_combined'].tolist()
+
+    dicts = []
+    for lens in (pref_len, suf_len):
+        groups = {}
+        for length, d, g, b in zip(lens, dls, ges, bos):
+            groups.setdefault(int(length), []).append((d, g, b))
+        dicts.append({k: [sum(d for d, _, _ in v) / len(v), float('nan'), len(v),
+                          sum(g for _, g, _ in v) / len(v),
+                          float('nan'), float('nan'),
+                          sum(b for _, _, b in v) / len(v)]
+                      for k, v in groups.items()})
+    return dicts[0], dicts[1]
+
+
 def _load_model_dicts_for_log(
     log_name,
     baselines_root,
@@ -580,9 +634,18 @@ def _load_model_dicts_for_log(
     approach_key,
     run_ids,
     baselines_to_include,
+    po_source='total',
+    oracle_results_base=None,
 ):
     """Load per-length result dicts for all baselines and one approach model
     for a single event log, averaged across available runs.
+
+    Baseline dicts only hold DLS/GES/BOS (see `_baseline_po_dicts()`), with
+    GES/BOS taken from the total-order suffix (po_source='total') or the
+    TTNE-derived partial order (po_source='ttne').
+
+    If `oracle_results_base` is given, Oracle-Sequential (key 'Oracle_Seq',
+    see run_oracle_sequential.py) is loaded from it like the approach.
 
     Returns
     -------
@@ -597,15 +660,13 @@ def _load_model_dicts_for_log(
 
     for key in baselines_to_include:
         result_dir = _BASELINE_PATHS[key]
-        pref_paths = [
-            os.path.join(baselines_root, 'results_per_log', log_name,
-                         f'{result_dir}_run{r}', 'TEST_SET_RESULTS',
-                         'prefix_length_results_dict.pkl')
-            for r in run_ids
-        ]
-        suf_paths = [p.replace('prefix_length', 'suffix_length') for p in pref_paths]
-        pref_avg = _load_and_average_runs(pref_paths)
-        suf_avg  = _load_and_average_runs(suf_paths)
+        runs = [_baseline_po_dicts(os.path.join(baselines_root, 'results_per_log', log_name,
+                                                f'{result_dir}_run{r}', 'TEST_SET_RESULTS'),
+                                   po_source)
+                for r in run_ids]
+        runs = [r for r in runs if r[0] is not None]
+        pref_avg = _average_run_dicts([p for p, _ in runs])
+        suf_avg  = _average_run_dicts([s for _, s in runs])
         if pref_avg is None or suf_avg is None:
             print(f"[SKIP] {key}: no runs found for {log_name}")
             continue
@@ -613,20 +674,24 @@ def _load_model_dicts_for_log(
         suffix_dicts.append(suf_avg)
         model_keys.append(key)
 
-    pref_paths = [
-        os.path.join(approach_results_base, f'run_{r}',
-                     f'{log_name}_prefix_length_results_dict.pkl')
-        for r in run_ids
-    ]
-    suf_paths = [p.replace('prefix_length', 'suffix_length') for p in pref_paths]
-    pref_avg = _load_and_average_runs(pref_paths)
-    suf_avg  = _load_and_average_runs(suf_paths)
-    if pref_avg is not None and suf_avg is not None:
-        prefix_dicts.append(pref_avg)
-        suffix_dicts.append(suf_avg)
-        model_keys.append(approach_key)
-    else:
-        print(f"[SKIP] {approach_key}: no runs found for {log_name}")
+    own_models = [(approach_key, approach_results_base)]
+    if oracle_results_base is not None:
+        own_models.append(('Oracle_Seq', oracle_results_base))
+    for key, results_base in own_models:
+        pref_paths = [
+            os.path.join(results_base, f'run_{r}',
+                         f'{log_name}_prefix_length_results_dict.pkl')
+            for r in run_ids
+        ]
+        suf_paths = [p.replace('prefix_length', 'suffix_length') for p in pref_paths]
+        pref_avg = _load_and_average_runs(pref_paths)
+        suf_avg  = _load_and_average_runs(suf_paths)
+        if pref_avg is not None and suf_avg is not None:
+            prefix_dicts.append(pref_avg)
+            suffix_dicts.append(suf_avg)
+            model_keys.append(key)
+        else:
+            print(f"[SKIP] {key}: no runs found for {log_name}")
 
     return prefix_dicts, suffix_dicts, model_keys
 
@@ -648,7 +713,7 @@ def load_and_plot(
     log_name : str
         Event log name (e.g. 'Sepsis').
     baselines_root : str
-        Absolute path to the baselines/SuffixTransformerNetwork/ directory.
+        Absolute path to the baselines/ directory.
         Per-length pickles are expected at:
         {baselines_root}/results_per_log/{log_name}/{MODEL}_results_run{N}/
             TEST_SET_RESULTS/prefix_length_results_dict.pkl
@@ -686,12 +751,14 @@ def plot_all_logs(
     baselines_root,
     approach_results_base,
     save_path,
-    metric='ges',
+    metric=('ges', 'bos'),
     length_axis='both',
     logs_per_row=1,
     approach_key='GATv2_GRU',
     run_ids=(1, 2, 3, 4, 5),
     baselines_to_include=None,
+    po_source='total',
+    oracle_results_base=None,
 ):
     """Build a single figure with the chosen metric plotted over prefix
     and/or suffix length, for every log in `log_names`, and save it to
@@ -710,16 +777,16 @@ def plot_all_logs(
     log_names : list of str
         Event log names (e.g. ['Sepsis', 'BPIC17', ...]).
     baselines_root : str
-        Absolute path to the baselines/SuffixTransformerNetwork/ directory.
+        Absolute path to the baselines/ directory.
     approach_results_base : str
         Absolute path to the approach results directory.
     save_path : str
         File path the figure is written to; the format follows the
         extension (e.g. '.png', '.pdf'). Parent dirs are created if needed.
     metric : str or list of str
-        One or more of 'ges', 'dl', 'mae_rrt' (keys of METRIC_CONFIG).
+        One or more of 'ges', 'bos', 'dl' (keys of METRIC_CONFIG).
         Each log gets one sub-column per metric x length axis (e.g.
-        ['ges', 'dl'] with length_axis='suffix' gives 2 sub-columns per
+        ['ges', 'bos'] with length_axis='suffix' gives 2 sub-columns per
         log). With more than one sub-column per log, each subplot is
         titled "Average <metric> over <axis> length" and the log name is
         written once, centred above its group of subplots.
@@ -733,7 +800,15 @@ def plot_all_logs(
     run_ids : tuple of int
         Run IDs to look for. Missing runs are silently skipped.
     baselines_to_include : list of str or None
-        Subset of _BASELINE_PATHS keys to include. None = all seven.
+        Subset of _BASELINE_PATHS keys to include. None = all of them.
+    po_source : str
+        Partial order the baselines' GES/BOS are computed on: 'total'
+        (predicted suffix as a total order) or 'ttne' (concurrent blocks
+        derived from the predicted TTNE, see eval_ttne_partial_order.py).
+        DLS is the same for both.
+    oracle_results_base : str or None
+        Path to the Oracle-Sequential results directory (e.g.
+        .../approach_suffix_v2/results_oracle_sequential/). None = no oracle.
     """
     metrics = [metric] if isinstance(metric, str) else list(metric)
     for m in metrics:
@@ -741,6 +816,8 @@ def plot_all_logs(
             raise ValueError(f"metric must be one of {list(METRIC_CONFIG)}, got {m!r}")
     if length_axis not in ('prefix', 'suffix', 'both'):
         raise ValueError(f"length_axis must be one of 'prefix', 'suffix', 'both', got {length_axis!r}")
+    if po_source not in ('total', 'ttne'):
+        raise ValueError(f"po_source must be one of 'total', 'ttne', got {po_source!r}")
 
     columns = []
     for m in metrics:
@@ -748,18 +825,18 @@ def plot_all_logs(
         if length_axis in ('prefix', 'both'):
             columns.append({
                 'metric': m,
-                'col_suffix': metric_cfg['col_suffix'],
+                'idx': metric_cfg['idx'],
                 'ylabel': metric_cfg['ylabel'],
-                'df_idx': metric_cfg['prefix_df_idx'],
+                'dicts': 'prefix',
                 'length_col': 'prefix_length',
                 'title': 'Prefix Length',
             })
         if length_axis in ('suffix', 'both'):
             columns.append({
                 'metric': m,
-                'col_suffix': metric_cfg['col_suffix'],
+                'idx': metric_cfg['idx'],
                 'ylabel': metric_cfg['ylabel'],
-                'df_idx': metric_cfg['suffix_df_idx'],
+                'dicts': 'suffix',
                 'length_col': 'suffix_length',
                 'title': 'Suffix Length',
             })
@@ -784,22 +861,25 @@ def plot_all_logs(
 
         prefix_dicts, suffix_dicts, model_keys = _load_model_dicts_for_log(
             log_name, baselines_root, approach_results_base, approach_key,
-            run_ids, baselines_to_include,
+            run_ids, baselines_to_include, po_source, oracle_results_base,
         )
         if not model_keys:
             print(f"No results found for {log_name}.")
             continue
 
-        pref_suf_dfs = create_dataframes(prefix_dicts, suffix_dicts, model_keys)
-
         for col_idx, column in enumerate(columns):
             ax = axes[grid_row, log_col_group * n_metric_cols + col_idx]
-            df = pref_suf_dfs[column['df_idx']]
+            dicts = prefix_dicts if column['dicts'] == 'prefix' else suffix_dicts
+            lengths = sorted(set.intersection(*[set(d.keys()) for d in dicts]))
+            df = pd.DataFrame({
+                column['length_col']: lengths,
+                'instance_count': [dicts[0][k][2] for k in lengths],
+                **{f"{model}_{column['metric']}": [d[k][column['idx']] for k in lengths]
+                   for model, d in zip(model_keys, dicts)},
+            })
 
             for model in model_keys:
-                if column['metric'] == 'mae_rrt' and model == 'BEST':
-                    continue  # BEST has no real RRT predictions
-                data_col = f"{model}{column['col_suffix']}"
+                data_col = f"{model}_{column['metric']}"
                 color, linestyle = CONFIG_STYLES[model]
                 label = CONFIG_STRING[model]
                 if data_col in df.columns and df[data_col].notna().any():
@@ -816,41 +896,62 @@ def plot_all_logs(
 
             if n_metric_cols == 1:
                 ax.set_title(EVENT_LOGS.get(log_name, log_name), fontsize=fontsize+10)
-            else:
-                ax.set_title(f"Average {column['ylabel']} over {column['title'].lower()}",
-                             fontsize=fontsize)
             ax.set_ylabel(column['ylabel'], fontsize=fontsize)
 
             #if row == 0:
             ax_twin.set_ylabel('Samples', color='grey', fontsize=fontsize)
 
-            #if row == n_logs - 1:
-            ax.set_xlabel(column['title'], fontsize=fontsize)
+            # With several sub-columns per log, the titles and x-labels are
+            # written once per column (top / bottom of the figure) below.
+            if n_metric_cols == 1:
+                ax.set_xlabel(column['title'], fontsize=fontsize)
 
             ax.tick_params(axis='both', which='major', labelsize=labelsize)
 
     fig.tight_layout()
     # Reserve a fixed ~1.5in for the bottom x-labels (independent of the
     # number of rows) and hang the legend right below it.
-    fig.subplots_adjust(hspace=0.4 if n_metric_cols == 1 else 0.55,
+    fig.subplots_adjust(hspace=0.4 if n_metric_cols == 1 else 0.3,
                         bottom=1.5 / fig.get_figheight())
 
     # With several subplots per log, write the log name once, centred
     # above its group of subplots (~0.7in above the axes, over the titles).
     if n_metric_cols > 1:
+        title_fontsize = fontsize + 4
         for i, log_name in enumerate(log_names):
             grid_row = i // logs_per_row
             first_col = (i % logs_per_row) * n_metric_cols
             pos_first = axes[grid_row, first_col].get_position()
             pos_last = axes[grid_row, first_col + n_metric_cols - 1].get_position()
+            # Top row: leave room for the metric titles between axes and log name.
+            offset = 0.7 if grid_row == 0 else 0.2
             fig.text((pos_first.x0 + pos_last.x1) / 2,
-                     pos_first.y1 + 0.7 / fig.get_figheight(),
+                     pos_first.y1 + offset / fig.get_figheight(),
                      EVENT_LOGS.get(log_name, log_name),
                      ha='center', va='bottom', fontsize=fontsize+10)
 
-    fig.legend(legend_handles.values(), legend_handles.keys(),
+        # Metric titles once at the top, x-labels once at the bottom of each column.
+        for grid_col in range(n_grid_cols):
+            column = columns[grid_col % n_metric_cols]
+            used_rows = [r for r in range(n_grid_rows)
+                         if r * logs_per_row + grid_col // n_metric_cols < n_logs]
+            pos_top = axes[used_rows[0], grid_col].get_position()
+            pos_bottom = axes[used_rows[-1], grid_col].get_position()
+            x_mid = (pos_top.x0 + pos_top.x1) / 2
+            fig.text(x_mid, pos_top.y1 + 0.15 / fig.get_figheight(),
+                     f"Average {column['ylabel']} over {column['title'].lower()}",
+                     ha='center', va='bottom', fontsize=title_fontsize)
+            fig.text(x_mid, pos_bottom.y0 - 0.65 / fig.get_figheight(),
+                     column['title'], ha='center', va='top', fontsize=title_fontsize)
+
+    # Legend on 2 rows (e.g. 3 + 2 entries). Matplotlib fills it column by
+    # column, so reorder the entries to read left to right, row by row.
+    legend_ncol = (len(legend_handles) + 1) // 2
+    legend_items = list(legend_handles.items())
+    legend_items = [it for c in range(legend_ncol) for it in legend_items[c::legend_ncol]]
+    fig.legend([h for _, h in legend_items], [l for l, _ in legend_items],
                loc='upper center', bbox_to_anchor=(0.5, 0.0),
-               ncol=min(len(legend_handles), 3), fontsize=legend_fontsize)
+               ncol=legend_ncol, fontsize=legend_fontsize)
 
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     fig.savefig(save_path, dpi=150, bbox_inches='tight')

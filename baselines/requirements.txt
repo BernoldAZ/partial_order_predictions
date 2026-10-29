@@ -20,6 +20,11 @@ scikit-learn==1.3.2
 # Used in Preprocessing/create_benchmarks.py for XES log import/export
 pm4py==2.7.8
 
+# ── Partial-order metrics (partial_order_metrics.py) ──────────────────────────
+# networkx for the suffix graphs, pulp (bundles CBC) for the exact GES
+networkx
+pulp==2.9.0
+
 # ── Progress bars ─────────────────────────────────────────────────────────────
 tqdm==4.66.2
 

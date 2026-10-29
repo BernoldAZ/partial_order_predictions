@@ -20,7 +20,8 @@ import pickle
 
 def sort_log(df, case_id = 'case:concept:name', timestamp = 'time:timestamp', act_label = 'concept:name'):
     """Sort events in event log such that cases that occur first are stored 
-    first, and such that events within the same case are stored based on timestamp. 
+    first, and such that events within the same case are stored based on timestamp, 
+    with ties (concurrent events) kept in their original event-log order (stable sort).
 
     Parameters
     ----------
@@ -323,6 +324,37 @@ def _shuffle_prefix_blocks(prefix_df, case_id, timestamp, seed=42):
                      .reset_index(drop=True))
 
 
+def _shuffle_log_blocks(df, case_id, timestamp, seed=42):
+    """Randomly permute event order within each parallel block (same
+    timestamp) of every case in an event log, BEFORE the prefix/suffix
+    split. Both prefix and suffix (incl. labels) see the shuffled order.
+    No 'ts_prev' fix-up is needed since the time columns are computed
+    afterwards by create_numeric_timeCols.
+    """
+    rng = np.random.default_rng(seed)
+
+    def _shuffle_block(g):
+        if len(g) < 2:
+            return g
+        return g.iloc[rng.permutation(len(g))]
+
+    return (df.groupby([case_id, timestamp], sort=False, group_keys=False)
+              .apply(_shuffle_block)
+              .reset_index(drop=True))
+
+
+def _flip_log_blocks(df, case_id, timestamp):
+    """Reverse event order within each parallel block (same timestamp) of
+    every case in an event log, BEFORE the prefix/suffix split. Both
+    prefix and suffix (incl. labels) see the reversed order. No 'ts_prev'
+    fix-up is needed since the time columns are computed afterwards by
+    create_numeric_timeCols.
+    """
+    return (df.groupby([case_id, timestamp], sort=False, group_keys=False)
+              .apply(lambda g: g.iloc[::-1])
+              .reset_index(drop=True))
+
+
 def main_dataframe_pipeline(log,
                             log_name,
                             start_date,
@@ -343,7 +375,9 @@ def main_dataframe_pipeline(log,
                             num_eventfts = [],
                             outcome=None,
                             flip_prefix_test=False,
-                            random_prefix_test=False):
+                            random_prefix_test=False,
+                            random_test=False,
+                            flip_test=False):
     """_summary_
 
     Parameters
@@ -474,6 +508,12 @@ def main_dataframe_pipeline(log,
                                        case_id,
                                        timestamp)
 
+
+    if random_test:
+        test_df = _shuffle_log_blocks(test_df, case_id, timestamp)
+
+    if flip_test:
+        test_df = _flip_log_blocks(test_df, case_id, timestamp)
 
     # Add 4 numeric time columns ( and 'case_length' to both the train and test df
     train_df = create_numeric_timeCols(train_df, case_id, timestamp, act_label)

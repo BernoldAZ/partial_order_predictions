@@ -18,18 +18,23 @@ Safe to re-run after an interruption.
 
 Supported models
 ----------------
-  suffix_time_v1_seq_prefixrandom  →  results_time_gatv2_seq_gru_nb_v1/   (test_seqgraphdataset_prefixrandom.pt)
-  suffix_time_v1_prefixrandom      →  results_time_gatv2_gru_nb_v1/       (test_graphdataset_prefixrandom.pt)
+  suffix_v2_block_seq_prefixrandom  →  results_time_gatv2_seq_gru_block_v2/  (test_seqgraphdataset_prefixrandom.pt)
+  suffix_v2_seq_prefixrandom  →  results_time_gatv2_seq_gru_nb_v2_actnb/   (test_seqgraphdataset_prefixrandom.pt)
+  suffix_v2_prefixrandom     →  results_time_gatv2_gru_nb_v2_actnb/       (test_graphdataset_prefixrandom.pt)
+  suffix_v2_random            →  results_time_gatv2_gru_nb_v2_actnb/       (test_graphdataset_random.pt)
+      Pre-split variant: shuffled BEFORE the prefix/suffix cut (see
+      dataframes_pipeline._shuffle_log_blocks), so labels differ from the
+      normal test set.  Results → results_suffix_time_gnn_random.csv.
 
 Usage
 -----
-    python run_eval_random.py --model suffix_time_v1_prefixrandom
-    python run_eval_random.py --model suffix_time_v1_seq_prefixrandom --workers 4
-    python run_eval_random.py --model suffix_time_v1_prefixrandom --run-ids 1 2 3   # only these run_X folders
+    python run_eval_random.py --model suffix_v2_prefixrandom
+    python run_eval_random.py --model suffix_v2_seq_prefixrandom --workers 4
+    python run_eval_random.py --model suffix_v2_prefixrandom --run-ids 1 2 3   # only these run_X folders
 
 Arguments
 -----
-   --model {suffix_time_v1_seq_prefixrandom,suffix_time_v1_prefixrandom}
+   --model {suffix_v2_block_seq_prefixrandom,suffix_v2_seq_prefixrandom,suffix_v2_prefixrandom,suffix_v2_random}
                                    which model to evaluate (required)
    --run-ids N [N ...]            only evaluate these run_X folders (default: all found)
    --workers N                    jobs to run in parallel
@@ -38,7 +43,7 @@ Arguments
 
 Docker
 ------
-    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_eval_random.py --workers 2 --model suffix_time_v1_seq_prefixrandom --run-ids 1 
+    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_eval_random.py --workers 8 --model suffix_v2_seq_prefixrandom
 """
 
 import argparse
@@ -71,21 +76,38 @@ EVENT_LOGS = [
 # ─────────────────────────────────────────────
 
 MODEL_CONFIGS = {
-    'suffix_time_v1_seq_prefixrandom': {
-        'module':           'approach_suffix_v2.models_v2.run_suffix_time_v1_seq',
-        'results_subdir':   'results_time_gatv2_seq_gru_nb_v1',
-        'method_name':      'gatv2_seq_gru_nb_v1',
+    'suffix_v2_block_seq_prefixrandom': {
+        'module':           'approach_suffix_v2.models_v2.run_suffix_v2_block_seq',
+        'results_subdir':   'results_time_gatv2_seq_gru_block_v2',
+        'method_name':      'gatv2_seq_gru_block_v2',
         'random_data_file': 'test_seqgraphdataset_prefixrandom.pt',
         'eval_func_name':   'run_eval_prefix_random',
         'result_csv_file':  'results_suffix_time_gnn_prefixrandom.csv',
     },
-    'suffix_time_v1_prefixrandom': {
-        'module':           'approach_suffix_v2.models_v2.run_suffix_time_v1',
-        'results_subdir':   'results_time_gatv2_gru_nb_v1',
-        'method_name':      'gatv2_gru_nb_v1',
+    'suffix_v2_seq_prefixrandom': {
+        'module':           'approach_suffix_v2.models_v2.run_suffix_v2_seq',
+        'results_subdir':   'results_time_gatv2_seq_gru_nb_v2_actnb',
+        'method_name':      'gatv2_seq_gru_nb_v2_actnb',
+        'random_data_file': 'test_seqgraphdataset_prefixrandom.pt',
+        'eval_func_name':   'run_eval_prefix_random',
+        'result_csv_file':  'results_suffix_time_gnn_prefixrandom.csv',
+    },
+    'suffix_v2_prefixrandom': {
+        'module':           'approach_suffix_v2.models_v2.run_suffix_v2',
+        'results_subdir':   'results_time_gatv2_gru_nb_v2_actnb',
+        'method_name':      'gatv2_gru_nb_v2_actnb',
         'random_data_file': 'test_graphdataset_prefixrandom.pt',
         'eval_func_name':   'run_eval_prefix_random',
         'result_csv_file':  'results_suffix_time_gnn_prefixrandom.csv',
+    },
+    # Pre-split random: shuffled before the prefix/suffix cut (labels differ).
+    'suffix_v2_random': {
+        'module':           'approach_suffix_v2.models_v2.run_suffix_v2',
+        'results_subdir':   'results_time_gatv2_gru_nb_v2_actnb',
+        'method_name':      'gatv2_gru_nb_v2_actnb',
+        'random_data_file': 'test_graphdataset_random.pt',
+        'eval_func_name':   'run_eval_random',
+        'result_csv_file':  'results_suffix_time_gnn_random.csv',
     },
 }
 

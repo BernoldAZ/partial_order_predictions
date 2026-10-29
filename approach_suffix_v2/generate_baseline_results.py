@@ -5,27 +5,37 @@ from baselines.results_collector import get_suffix_baseline_results
 
 RESULTS_TXT = "approach_suffix_v2/baseline_results.txt"
 SCALABILITY_TXT = "approach_suffix_v2/scalability_results.txt"
+SPLIT_SUMMARY_CSV = "baselines/split_summary_sutran_best.csv"  # test_pairs per log (same for all models) 
 
-ONLY_RUN = 1  # set to None to aggregate over all runs
+
+
+ONLY_RUN = None  # set to None to aggregate over all runs
 
 OWN_CONFIGS = {
-    "Graph_v1": {
-        "results_sub": "approach_suffix_v2/results_time_gatv2_gru_nb_v2",
+    "Graph_v2": {
+        # "results_sub": "approach_suffix_v2/results_time_gatv2_gru_block_v2", # decoder Block by Block
+        "results_sub": "approach_suffix_v2/results_time_gatv2_gru_nb_v2_actnb", # decoder Event by Event
         "csv_file":    "results_suffix_time_gnn.csv",
-    }
+    },
+    "Oracle-Sequential": {
+        "results_sub": "approach_suffix_v2/results_oracle_sequential",
+        "csv_file":    "results_suffix_time_gnn.csv",
+    },
 }
 
 COL_MAP = {
     "dl_similarity":       "DL similarity ↑",
-    "ges_approx":          "GES ↑",
-    "ttne_mae_minutes":    "MAE TTNE (min) ↓",
-    "rrt_mae_minutes":     "MAE RRT (min) ↓",
-    "first_step_accuracy": "Next act acc ↑",
-    "first_step_f1":       "Next act F1 (wt) ↑",
+    "ges_exact":           "GES ↑",
+    "bo_combined":         "BOS",
+    "bo_order_sim":        "BOS order",
+    "bo_content_f1":       "BOS Content",
+    "first_step_accuracy": "Next act acc",
+    "first_step_f1":       "Next act F1 (wt)",
 }
 
-METRIC_COLS = ["GES ↑", "DL similarity ↑", "MAE TTNE (min) ↓", "MAE RRT (min) ↓",
-               "Next act acc ↑", "Next act F1 (wt) ↑"]
+METRIC_COLS = ["GES ↑", "BOS", "BOS order", "BOS Content", "DL similarity ↑",
+               "Next act acc ↑", "Next act F1 (wt) ↑"
+              ]
 
 
 def fmt_mean_std(mean, std):
@@ -95,26 +105,21 @@ def get_own_results():
     return pd.DataFrame(rows).set_index(["Log", "Model"]) if rows else pd.DataFrame()
 
 
-def run():
+def run(po_source="total"):
+    """po_source: "total" = baseline GES/BOS from the sequential (total-order) suffix,
+    "ttne" = from the TTNE-derived partial order (po_ttne_results.pkl)."""
     logs = [
         d for d in os.listdir("baselines/results_per_log")
         if os.path.isdir(os.path.join("baselines/results_per_log", d))
     ]
 
-    df_baselines = get_suffix_baseline_results(logs, run_id=ONLY_RUN)
+    df_baselines = get_suffix_baseline_results(logs, run_id=ONLY_RUN, po_source=po_source)
     df_own = get_own_results()
     if df_own.empty:
         print("No own results found.")
         return
 
     combined = pd.concat([df_baselines, df_own])
-
-    for log_name, group in combined.groupby(level="Log"):
-        best_mask = group.index.get_level_values("Model") == "BEST"
-        if best_mask.any():
-            for idx in group[best_mask].index:
-                combined.loc[idx, "MAE TTNE (min) ↓ mean"] = np.nan
-                combined.loc[idx, "MAE RRT (min) ↓ mean"]  = np.nan
 
     for col in METRIC_COLS:
         combined[col] = combined.apply(
@@ -130,11 +135,12 @@ def run():
                 [["Model",
                   "Runs",
                   "GES ↑",
+                  "BOS",
+                  "BOS order",
+                  "BOS Content",
                   "DL similarity ↑",
-                  "MAE TTNE (min) ↓",
-                  "MAE RRT (min) ↓",
-                  "Next act acc ↑",
-                  "Next act F1 (wt) ↑",
+                  #"Next act acc ↑",
+                  #"Next act F1 (wt) ↑",
                   "# params"]]
                 .to_string(index=False)
             )
@@ -143,16 +149,22 @@ def run():
             f.write(header + "\n")
             f.write(table_str + "\n")
 
+    test_pairs = pd.read_csv(SPLIT_SUMMARY_CSV).set_index("log")["test_pairs"]
+
     with open(SCALABILITY_TXT, "w", encoding="utf-8") as f:
         for log_name, group in combined.groupby(level="Log"):
             header = f"\n=== Log: {log_name} ==="
+            n_test = test_pairs.get(log_name, float("nan"))
             table_str = (
                 group.reset_index()
                 .sort_values("GES ↑ mean", ascending=False)
+                .assign(per_sample_ms=lambda d: (d["inference_time"] / n_test * 1000).round(3))
                 .rename(columns={"training_time":  "Training time (s)",
                                   "inference_time": "Inference time (s)",
+                                  "per_sample_ms":  "Inference / sample (ms)",
                                   "testing_time":   "Testing time (s)"})
-                [["Model", "Runs", "Training time (s)", "Inference time (s)", "Testing time (s)", "# params"]]
+                [["Model", "Runs", "Training time (s)", "Inference time (s)",
+                  "Inference / sample (ms)", "Testing time (s)", "# params"]]
                 .to_string(index=False)
             )
             print(header)

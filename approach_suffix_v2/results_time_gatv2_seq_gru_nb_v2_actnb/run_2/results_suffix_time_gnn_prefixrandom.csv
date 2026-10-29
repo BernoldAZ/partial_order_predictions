@@ -1,0 +1,4 @@
+log,model,method,dl_similarity,ges_exact,bo_order_sim,bo_content_f1,bo_combined,ttne_mae_minutes,rrt_mae_minutes,nb_f1,nb_accuracy,nb_tp,nb_fp,nb_fn,nb_tn,first_step_f1,first_step_accuracy,testing_time_seconds,num_trainable_params
+Sepsis,suffix_gru_nb_v2,gatv2_seq_gru_nb_v2_actnb,0.487998,0.5299,0.958801,0.644139,0.617408,,,0.690607,0.636153,6308,1443,4209,3574,0.553581,0.5752,26.75,59676
+BPI_Challenge_2012_O,suffix_gru_nb_v2,gatv2_seq_gru_nb_v2_actnb,0.642578,0.671397,1.0,0.684523,0.684523,,,0.802112,0.679794,10711,762,4523,509,0.790456,0.82608,25.67,56883
+BPI_Challenge_2012_A,suffix_gru_nb_v2,gatv2_seq_gru_nb_v2_actnb,0.622554,0.635938,1.0,0.658772,0.658772,,,0.890893,0.830559,16543,0,4052,3319,0.724303,0.759339,41.0,57808

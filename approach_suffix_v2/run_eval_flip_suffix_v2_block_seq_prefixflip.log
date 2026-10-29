@@ -1,0 +1,110 @@
+[2026-10-11 15:48:34] RUNNING | log=Sepsis run=run_1
+[2026-10-11 15:48:34] RUNNING | log=BPI_Challenge_2012_A run=run_1
+[2026-10-11 15:48:34] RUNNING | log=BPI_Challenge_2012_O run=run_1
+[2026-10-11 15:48:34] RUNNING | log=BPIC15_1 run=run_1
+[2026-10-11 15:48:34] RUNNING | log=BPIC15_2 run=run_1
+[2026-10-11 15:48:34] RUNNING | log=BPIC15_3 run=run_1
+[2026-10-11 15:48:34] RUNNING | log=BPIC15_4 run=run_1
+[2026-10-11 15:48:34] RUNNING | log=BPIC15_5 run=run_1
+[2026-10-11 15:48:38] ERROR | log=BPIC15_2 run=run_1
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 260, in _run_one
+        _run_subprocess(_build_eval_code(log_name, run_dir, model, use_cpu=False))
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 225, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-11 15:48:38] ERROR | log=BPI_Challenge_2012_O run=run_1
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 260, in _run_one
+        _run_subprocess(_build_eval_code(log_name, run_dir, model, use_cpu=False))
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 225, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-11 15:48:38] ERROR | log=BPIC15_1 run=run_1
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 260, in _run_one
+        _run_subprocess(_build_eval_code(log_name, run_dir, model, use_cpu=False))
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 225, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-11 15:48:38] ERROR | log=BPIC15_4 run=run_1
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 260, in _run_one
+        _run_subprocess(_build_eval_code(log_name, run_dir, model, use_cpu=False))
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 225, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-11 15:48:38] ERROR | log=BPIC15_3 run=run_1
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 260, in _run_one
+        _run_subprocess(_build_eval_code(log_name, run_dir, model, use_cpu=False))
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 225, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-11 15:48:38] ERROR | log=Sepsis run=run_1
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 260, in _run_one
+        _run_subprocess(_build_eval_code(log_name, run_dir, model, use_cpu=False))
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 225, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-11 15:48:38] ERROR | log=BPI_Challenge_2012_A run=run_1
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 260, in _run_one
+        _run_subprocess(_build_eval_code(log_name, run_dir, model, use_cpu=False))
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 225, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-11 15:48:38] ERROR | log=BPIC15_5 run=run_1
+    Traceback (most recent call last):
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 260, in _run_one
+        _run_subprocess(_build_eval_code(log_name, run_dir, model, use_cpu=False))
+      File "/workspace/approach_suffix_v2/run_eval_flipped.py", line 225, in _run_subprocess
+        raise RuntimeError(
+    RuntimeError: Subprocess exited with code 1
+[2026-10-11 15:49:52] RUNNING | log=Sepsis run=run_1
+[2026-10-11 15:49:52] RUNNING | log=BPI_Challenge_2012_A run=run_1
+[2026-10-11 15:49:52] RUNNING | log=BPI_Challenge_2012_O run=run_1
+[2026-10-11 15:49:52] RUNNING | log=BPIC15_1 run=run_1
+[2026-10-11 15:49:52] RUNNING | log=BPIC15_2 run=run_1
+[2026-10-11 15:49:52] RUNNING | log=BPIC15_3 run=run_1
+[2026-10-11 15:49:52] RUNNING | log=BPIC15_4 run=run_1
+[2026-10-11 15:49:52] RUNNING | log=BPIC15_5 run=run_1
+[2026-10-11 15:50:35] DONE | log=BPI_Challenge_2012_O run=run_1
+[2026-10-11 15:51:07] DONE | log=BPI_Challenge_2012_A run=run_1
+[2026-10-11 15:53:57] DONE | log=Sepsis run=run_1
+[2026-10-11 16:02:29] DONE | log=BPIC15_2 run=run_1
+[2026-10-11 16:02:46] DONE | log=BPIC15_1 run=run_1
+[2026-10-11 16:08:13] DONE | log=BPIC15_3 run=run_1
+[2026-10-11 16:36:13] DONE | log=BPIC15_4 run=run_1
+[2026-10-11 16:43:17] DONE | log=BPIC15_5 run=run_1
+[2026-10-12 08:52:16] RUNNING | log=Sepsis run=run_2
+[2026-10-12 08:52:16] RUNNING | log=BPI_Challenge_2012_A run=run_2
+[2026-10-12 08:52:16] RUNNING | log=BPI_Challenge_2012_O run=run_2
+[2026-10-12 08:52:16] RUNNING | log=BPIC15_1 run=run_2
+[2026-10-12 08:52:16] RUNNING | log=BPIC15_2 run=run_2
+[2026-10-12 08:52:16] RUNNING | log=BPIC15_3 run=run_2
+[2026-10-12 08:52:16] RUNNING | log=BPIC15_4 run=run_2
+[2026-10-12 08:52:16] RUNNING | log=BPIC15_5 run=run_2
+[2026-10-12 08:52:57] DONE | log=BPI_Challenge_2012_O run=run_2
+[2026-10-12 08:52:57] RUNNING | log=Sepsis run=run_3
+[2026-10-12 08:53:37] DONE | log=BPI_Challenge_2012_A run=run_2
+[2026-10-12 08:53:37] RUNNING | log=BPI_Challenge_2012_A run=run_3
+[2026-10-12 08:54:51] DONE | log=BPI_Challenge_2012_A run=run_3
+[2026-10-12 08:54:51] RUNNING | log=BPI_Challenge_2012_O run=run_3
+[2026-10-12 08:55:29] DONE | log=BPI_Challenge_2012_O run=run_3
+[2026-10-12 08:55:29] RUNNING | log=BPIC15_1 run=run_3
+[2026-10-12 08:56:35] DONE | log=Sepsis run=run_2
+[2026-10-12 08:56:35] RUNNING | log=BPIC15_2 run=run_3
+[2026-10-12 08:56:41] DONE | log=Sepsis run=run_3
+[2026-10-12 08:56:41] RUNNING | log=BPIC15_3 run=run_3
+[2026-10-12 09:00:01] RUNNING | log=Sepsis run=run_1
+[2026-10-12 09:00:01] RUNNING | log=BPI_Challenge_2012_A run=run_1
+[2026-10-12 09:00:01] RUNNING | log=BPI_Challenge_2012_O run=run_1
+[2026-10-12 09:00:01] RUNNING | log=BPIC15_1 run=run_1
+[2026-10-12 09:00:01] RUNNING | log=BPIC15_2 run=run_1
+[2026-10-12 09:00:01] RUNNING | log=BPIC15_3 run=run_1
+[2026-10-12 09:00:01] RUNNING | log=BPIC15_4 run=run_1
+[2026-10-12 09:00:01] RUNNING | log=BPIC15_5 run=run_1
+[2026-10-12 09:00:43] DONE | log=BPI_Challenge_2012_O run=run_1
+[2026-10-12 09:01:17] DONE | log=BPI_Challenge_2012_A run=run_1

@@ -18,18 +18,23 @@ Safe to re-run after an interruption.
 
 Supported models
 ----------------
-  suffix_time_v1_seq_prefixflip  →  results_time_gatv2_seq_gru_nb_v1/   (test_seqgraphdataset_prefixflip.pt)
-  suffix_time_v1_prefixflip      →  results_time_gatv2_gru_nb_v1/       (test_graphdataset_prefixflip.pt)
+  suffix_v2_block_seq_prefixflip  →  results_time_gatv2_seq_gru_block_v2/  (test_seqgraphdataset_prefixflip.pt)
+  suffix_v2_seq_prefixflip  →  results_time_gatv2_seq_gru_nb_v2_actnb/   (test_seqgraphdataset_prefixflip.pt)
+  suffix_v2_prefixflip     →  results_time_gatv2_gru_nb_v2_actnb/       (test_graphdataset_prefixflip.pt)
+  suffix_v2_flip            →  results_time_gatv2_gru_nb_v2_actnb/       (test_graphdataset_flip.pt)
+      Pre-split variant: reversed BEFORE the prefix/suffix cut (see
+      dataframes_pipeline._flip_log_blocks), so labels differ from the
+      normal test set.  Results → results_suffix_time_gnn_flip.csv.
 
 Usage
 -----
-    python run_eval_flipped.py --model suffix_time_v1_prefixflip
-    python run_eval_flipped.py --model suffix_time_v1_seq_prefixflip --workers 4
-    python run_eval_flipped.py --model suffix_time_v1_prefixflip --run-ids 1 2 3   # only these run_X folders
+    python run_eval_flipped.py --model suffix_v2_prefixflip
+    python run_eval_flipped.py --model suffix_v2_seq_prefixflip --workers 4
+    python run_eval_flipped.py --model suffix_v2_prefixflip --run-ids 1 2 3   # only these run_X folders
 
 Arguments
 -----
-   --model {suffix_time_v1_seq_prefixflip,suffix_time_v1_prefixflip}
+   --model {suffix_v2_block_seq_prefixflip,suffix_v2_seq_prefixflip,suffix_v2_prefixflip,suffix_v2_flip}
                                    which model to evaluate (required)
    --run-ids N [N ...]            only evaluate these run_X folders (default: all found)
    --workers N                    jobs to run in parallel
@@ -38,8 +43,7 @@ Arguments
 
 Docker
 ------
-   docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_eval_flipped.py --workers 2 --model suffix_time_v1_seq_prefixflip --run-ids 1
-
+    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_eval_flipped.py --workers 8 --model suffix_v2_seq_prefixflip --run-ids 1 2 3 4 5
 """
 
 import argparse
@@ -72,21 +76,38 @@ EVENT_LOGS = [
 # ─────────────────────────────────────────────
 
 MODEL_CONFIGS = {
-    'suffix_time_v1_seq_prefixflip': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v1_seq',
-        'results_subdir':  'results_time_gatv2_seq_gru_nb_v1',
-        'method_name':     'gatv2_seq_gru_nb_v1',
+    'suffix_v2_block_seq_prefixflip': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_v2_block_seq',
+        'results_subdir':  'results_time_gatv2_seq_gru_block_v2',
+        'method_name':     'gatv2_seq_gru_block_v2',
         'flip_data_file':  'test_seqgraphdataset_prefixflip.pt',
         'eval_func_name':  'run_eval_prefix_flip',
         'result_csv_file': 'results_suffix_time_gnn_prefixflip.csv',
     },
-    'suffix_time_v1_prefixflip': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v1',
-        'results_subdir':  'results_time_gatv2_gru_nb_v1',
-        'method_name':     'gatv2_gru_nb_v1',
+    'suffix_v2_seq_prefixflip': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_v2_seq',
+        'results_subdir':  'results_time_gatv2_seq_gru_nb_v2_actnb',
+        'method_name':     'gatv2_seq_gru_nb_v2_actnb',
+        'flip_data_file':  'test_seqgraphdataset_prefixflip.pt',
+        'eval_func_name':  'run_eval_prefix_flip',
+        'result_csv_file': 'results_suffix_time_gnn_prefixflip.csv',
+    },
+    'suffix_v2_prefixflip': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_v2',
+        'results_subdir':  'results_time_gatv2_gru_nb_v2_actnb',
+        'method_name':     'gatv2_gru_nb_v2_actnb',
         'flip_data_file':  'test_graphdataset_prefixflip.pt',
         'eval_func_name':  'run_eval_prefix_flip',
         'result_csv_file': 'results_suffix_time_gnn_prefixflip.csv',
+    },
+    # Pre-split flip: reversed before the prefix/suffix cut (labels differ).
+    'suffix_v2_flip': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_v2',
+        'results_subdir':  'results_time_gatv2_gru_nb_v2_actnb',
+        'method_name':     'gatv2_gru_nb_v2_actnb',
+        'flip_data_file':  'test_graphdataset_flip.pt',
+        'eval_func_name':  'run_eval_flip',
+        'result_csv_file': 'results_suffix_time_gnn_flip.csv',
     },
 }
 

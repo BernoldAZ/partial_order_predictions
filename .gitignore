@@ -1,0 +1,13 @@
+# Python bytecode caches
+__pycache__/
+*.py[cod]
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Event log data
+all_event_logs/
+
+# Experiment results
+baselines/results_per_log/
+approach_suffix_v2/results_per_log/

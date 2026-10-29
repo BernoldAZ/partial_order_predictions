@@ -1,0 +1,9 @@
+log,model,method,dl_similarity,ges_exact,bo_order_sim,bo_content_f1,bo_combined,ttne_mae_minutes,rrt_mae_minutes,nb_f1,nb_accuracy,nb_tp,nb_fp,nb_fn,nb_tn,nb_macro_precision,nb_macro_recall,nb_macro_f1,nb_majority_class,nb_majority_share,first_step_f1,first_step_accuracy,first_block_f1,mean_pred_blocks,mean_true_blocks,training_time_seconds,inference_time_seconds,evaluation_time_seconds,testing_time_seconds,num_trainable_params
+BPI_Challenge_2012_O,suffix_gru_block_v2,gatv2_gru_block_v2,,0.667854,0.998984,0.683847,0.683057,,,,,,,,,,,,,,,,0.825098,2.1309,2.3019,1425.21,21.44,9.75,31.19,56626
+Sepsis,suffix_gru_block_v2,gatv2_gru_block_v2,,0.482256,0.959071,0.576252,0.556135,,,,,,,,,,,,,,,,0.686956,11.1825,4.9585,1524.61,23.42,130.89,154.31,59419
+BPIC15_2,suffix_gru_block_v2,gatv2_gru_block_v2,,0.292318,0.805558,0.474343,0.374936,,,,,,,,,,,,,,,,0.200146,15.0978,3.9798,1570.12,18.03,833.46,851.49,120834
+BPI_Challenge_2012_A,suffix_gru_block_v2,gatv2_gru_block_v2,,0.577204,0.984411,0.627826,0.612236,,,,,,,,,,,,,,,,0.771336,2.4584,1.7021,2921.54,42.22,18.31,60.53,57551
+BPIC15_1,suffix_gru_block_v2,gatv2_gru_block_v2,,0.173724,0.813578,0.391312,0.289192,,,,,,,,,,,,,,,,0.071203,19.8338,3.5361,3423.59,25.9,485.97,511.87,122130
+BPIC15_4,suffix_gru_block_v2,gatv2_gru_block_v2,,0.287511,0.865439,0.448503,0.374545,,,,,,,,,,,,,,,,0.251825,12.8805,3.2209,2264.42,17.68,2217.28,2234.96,116708
+BPIC15_3,suffix_gru_block_v2,gatv2_gru_block_v2,,0.272517,0.828952,0.524258,0.42064,,,,,,,,,,,,,,,,0.273656,17.7467,3.8934,4254.26,20.84,887.65,908.49,121482
+BPIC15_5,suffix_gru_block_v2,gatv2_gru_block_v2,,0.277324,0.86582,0.401206,0.335617,,,,,,,,,,,,,,,,0.25409,10.2619,3.4902,3531.22,8.43,6048.6,6057.03,119243

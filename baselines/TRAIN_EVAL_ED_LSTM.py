@@ -8,7 +8,10 @@ from torch.utils.data import TensorDataset, DataLoader
 import os
 import pickle
 import time
-import networkx as nx
+from concurrent.futures import ProcessPoolExecutor
+from partial_order_metrics import ges_exact_compute_sample, bucket_order_similarity
+
+GES_WORKERS = 4  # processes for the per-sample exact GES (one CBC ILP each)
 
 
 
@@ -75,53 +78,6 @@ def load_checkpoint(model, path_to_checkpoint, train_or_eval, lr):
         model.eval()
         
     return model, optimizer, final_epoch_trained, final_loss
-
-
-def _build_suffix_graph(acts, nb_bits):
-    """Build a NetworkX DiGraph for a suffix.
-
-    Edge structure (Hasse diagram of the partial order):
-      - intra-block: no edges (concurrent events are unconnected)
-      - inter-block: all events in block_i -> all events in block_{i+1}
-
-    Position 0 always starts block 0; nb_bits[i] for i >= 1 determines
-    whether event i starts a new block (True) or is concurrent with the
-    previous event (False).
-    """
-    n = len(acts)
-    G = nx.DiGraph()
-    if n == 0:
-        return G
-    for i in range(n):
-        G.add_node(i, act=int(acts[i]))
-    blocks = [[0]]
-    for i in range(1, n):
-        if nb_bits[i]:
-            blocks.append([i])
-        else:
-            blocks[-1].append(i)
-    for bi in range(len(blocks) - 1):
-        for u in blocks[bi]:
-            for v in blocks[bi + 1]:
-                G.add_edge(u, v)
-    return G
-
-
-def _node_match(n1, n2):
-    return n1['act'] == n2['act']
-
-
-def _graph_edit_similarity(G_pred, G_true):
-    """GES = 1 - GED / max(|V|+|E|) using a fast greedy upper bound."""
-    np_n, np_e = G_pred.number_of_nodes(), G_pred.number_of_edges()
-    nt_n, nt_e = G_true.number_of_nodes(), G_true.number_of_edges()
-    if np_n == 0 and nt_n == 0:
-        return 1.0
-    if np_n == 0 or nt_n == 0:
-        return 0.0
-    denom = (np_n + np_e) + (nt_n + nt_e)
-    ged = next(nx.optimize_graph_edit_distance(G_pred, G_true, node_match=_node_match))
-    return 1.0 - ged / denom
 
 
 def train_eval(log_name,
@@ -467,7 +423,7 @@ def train_eval(log_name,
         os.path.join('results_per_log', log_name, 'test_new_block_labels.pt'))
     end_tok = num_activities - 1
     _W = _acts.shape[1]
-    _ges_vals = []
+    _po_args = []
     _suf_lens = []
     for _i in range(len(_acts)):
         _end_pos = (_acts[_i] == end_tok).nonzero(as_tuple=True)[0]
@@ -475,17 +431,26 @@ def train_eval(log_name,
         _end_lbl_pos = (_act_lbl[_i] == end_tok).nonzero(as_tuple=True)[0]
         _al = int(_end_lbl_pos[0])
         _suf_lens.append(_al)
-        _G_pred = _build_suffix_graph(_acts[_i, :_pl].tolist(), [True] * _pl)
-        _G_true = _build_suffix_graph(
-            _act_lbl[_i, :_al].tolist(),
-            (_nb_labels[_i, :_al] > 0.5).tolist())
-        _sim = _graph_edit_similarity(_G_pred, _G_true)
-        _ges_vals.append(_sim)
+        _po_args.append((_acts[_i, :_pl].tolist(), [True] * _pl,
+                         _act_lbl[_i, :_al].tolist(),
+                         (_nb_labels[_i, :_al] > 0.5).tolist()))
+    with ProcessPoolExecutor(max_workers=GES_WORKERS) as _pool:
+        _ges_vals = list(_pool.map(ges_exact_compute_sample, _po_args))
+    # bucket_order_similarity -> (order_sim, content_f1, combined) per sample
+    _bo_order, _bo_content, _bo_comb = (
+        list(_v) for _v in zip(*[bucket_order_similarity(*_a) for _a in _po_args]))
     ges = sum(_ges_vals) / len(_ges_vals) if _ges_vals else 1.0
     torch.save(torch.tensor(_ges_vals, dtype=torch.float32),
                os.path.join(results_path, 'ges_per_sample.pt'))
+    torch.save({'bo_order_sim':  torch.tensor(_bo_order,   dtype=torch.float32),
+                'bo_content_f1': torch.tensor(_bo_content, dtype=torch.float32),
+                'bo_combined':   torch.tensor(_bo_comb,    dtype=torch.float32)},
+               os.path.join(results_path, 'bo_per_sample.pt'))
     avg_results_dict.update({
-        'ges_approx': round(ges, 6),
+        'ges_exact':     round(ges, 6),
+        'bo_order_sim':  round(sum(_bo_order)   / len(_bo_order),   6),
+        'bo_content_f1': round(sum(_bo_content) / len(_bo_content), 6),
+        'bo_combined':   round(sum(_bo_comb)    / len(_bo_comb),    6),
     })
     path_name_average_results = os.path.join(results_path, 'averaged_results.pkl')
 
@@ -497,17 +462,19 @@ def train_eval(log_name,
 
     _raw_test = torch.load(os.path.join('results_per_log', log_name, 'test_tensordataset.pt'))
     _pref_lens = (_raw_test[num_categoricals_pref - 1] != 0).sum(dim=1).tolist()
-    _ges_by_pref = {}
-    _ges_by_suf = {}
-    for _plen, _slen, _gval in zip(_pref_lens, _suf_lens, _ges_vals):
-        _ges_by_pref.setdefault(int(_plen), []).append(_gval)
-        _ges_by_suf.setdefault(_slen, []).append(_gval)
-    for _plen, _gvals in _ges_by_pref.items():
+    # Appended per length: [..., ges_exact, bo_order, bo_content, bo_combined]
+    _po_by_pref = {}
+    _po_by_suf = {}
+    for _plen, _slen, *_vals in zip(_pref_lens, _suf_lens, _ges_vals,
+                                    _bo_order, _bo_content, _bo_comb):
+        _po_by_pref.setdefault(int(_plen), []).append(_vals)
+        _po_by_suf.setdefault(_slen, []).append(_vals)
+    for _plen, _rows in _po_by_pref.items():
         if _plen in results_dict_pref:
-            results_dict_pref[_plen].append(sum(_gvals) / len(_gvals))
-    for _slen, _gvals in _ges_by_suf.items():
+            results_dict_pref[_plen].extend(sum(_c) / len(_c) for _c in zip(*_rows))
+    for _slen, _rows in _po_by_suf.items():
         if _slen in results_dict_suf:
-            results_dict_suf[_slen].append(sum(_gvals) / len(_gvals))
+            results_dict_suf[_slen].extend(sum(_c) / len(_c) for _c in zip(*_rows))
 
     path_name_prefix = os.path.join(results_path, 'prefix_length_results_dict.pkl')
     path_name_suffix = os.path.join(results_path, 'suffix_length_results_dict.pkl')

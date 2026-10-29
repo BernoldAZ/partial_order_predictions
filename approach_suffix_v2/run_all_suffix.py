@@ -10,26 +10,22 @@ Safe to re-run after an interruption.
 
 Supported models and their output CSVs
 ---------------------------------------
-  suffix_time_v1     → results_time_gatv2_gru_nb_v1/run_N/results_suffix_time_gnn.csv
-  suffix_time_v1_seq → results_time_gatv2_seq_gru_nb_v1/run_N/results_suffix_time_gnn.csv
-  suffix_time_v1_1     → results_time_gatv2_gru_nb_v1_1/run_N/results_suffix_time_gnn.csv
-  suffix_time_v1_1_seq → results_time_gatv2_seq_gru_nb_v1_1/run_N/results_suffix_time_gnn.csv
-  suffix_time_v2     → results_time_gatv2_gru_nb_v2/run_N/results_suffix_time_gnn.csv
-  suffix_time_v3     → results_time_gatv2_gru_nb_v3/run_N/results_suffix_time_gnn.csv
-  suffix_time_v5     → results_time_gatv2_gru_nb_v5/run_N/results_suffix_time_gnn.csv
-  suffix_v6          → results_time_gatv2_tf_nb_v6/run_N/results_suffix_time_gnn.csv
+  suffix_v2          → results_time_gatv2_gru_nb_v2_actnb/run_N/results_suffix_time_gnn.csv
+  suffix_v2_seq      → results_time_gatv2_seq_gru_nb_v2_actnb/run_N/results_suffix_time_gnn.csv
+  suffix_v2_block    → results_time_gatv2_gru_block_v2/run_N/results_suffix_time_gnn.csv
+  suffix_v2_block_seq → results_time_gatv2_seq_gru_block_v2/run_N/results_suffix_time_gnn.csv
 
 Usage
 -----
-    python run_all_suffix.py                                                  # suffix_time_v1, run 1, 1 worker
-    python run_all_suffix.py --workers 4                                      # suffix_time_v1, run 1, 4 logs in parallel
-    python run_all_suffix.py --model suffix_time_v1_seq --run-id 2 --workers 4
+    python run_all_suffix.py                                                  # suffix_v2, run 1, 1 worker
+    python run_all_suffix.py --workers 4                                      # suffix_v2, run 1, 4 logs in parallel
+    python run_all_suffix.py --model suffix_v2 --run-id 2 --workers 4
     python run_all_suffix.py --logs-dir /path/to/logs
     python run_all_suffix.py --run-ids 1 2 3 4 5 --workers 8                   # all runs, one shared pool
 
 Arguments
 -----
-   --model {suffix_time_v1, suffix_time_v1_seq, suffix_time_v1_1, suffix_time_v1_1_seq, suffix_time_v2, suffix_time_v3, suffix_time_v5, suffix_v6}
+   --model {suffix_v2, suffix_v2_seq, suffix_v2_block, suffix_v2_block_seq}
    --run-id N            repetition index (1-5)
    --run-ids N [N ...]   run several repetitions with one shared worker pool
    --workers N           event logs trained in parallel
@@ -41,7 +37,7 @@ Arguments
 
 Docker
 ------
-    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --workers 1 --model suffix_v6
+    docker run -it --rm -v $(pwd):/workspace --gpus all ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --workers 8 --model suffix_v2_block --run-ids 1 2 3 4 5
 """
 
 import argparse
@@ -82,60 +78,32 @@ EVENT_LOGS = [
 # ─────────────────────────────────────────────
 
 MODEL_CONFIGS = {
-    'suffix_time_v1': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v1',
+    'suffix_v2': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_v2',
         'version':         None,
         'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_gru_nb_v1',
+        'results_subdir':  'results_time_gatv2_gru_nb_v2_actnb',
         'csv_file':        'results_suffix_time_gnn.csv',
     },
-    'suffix_time_v1_seq': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v1_seq',
+    'suffix_v2_seq': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_v2_seq',
         'version':         None,
         'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_seq_gru_nb_v1',
+        'results_subdir':  'results_time_gatv2_seq_gru_nb_v2_actnb',
         'csv_file':        'results_suffix_time_gnn.csv',
     },
-    'suffix_time_v1_1': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v1_1',
+    'suffix_v2_block': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_v2_block',
         'version':         None,
         'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_gru_nb_v1_1',
+        'results_subdir':  'results_time_gatv2_gru_block_v2',
         'csv_file':        'results_suffix_time_gnn.csv',
     },
-    'suffix_time_v1_1_seq': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v1_1_seq',
+    'suffix_v2_block_seq': {
+        'module':          'approach_suffix_v2.models_v2.run_suffix_v2_block_seq',
         'version':         None,
         'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_seq_gru_nb_v1_1',
-        'csv_file':        'results_suffix_time_gnn.csv',
-    },
-    'suffix_time_v2': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v2',
-        'version':         None,
-        'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_gru_nb_v2',
-        'csv_file':        'results_suffix_time_gnn.csv',
-    },
-    'suffix_time_v3': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v3',
-        'version':         None,
-        'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_gru_nb_v3',
-        'csv_file':        'results_suffix_time_gnn.csv',
-    },
-    'suffix_time_v5': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_time_v5',
-        'version':         None,
-        'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_gru_nb_v5',
-        'csv_file':        'results_suffix_time_gnn.csv',
-    },
-    'suffix_v6': {
-        'module':          'approach_suffix_v2.models_v2.run_suffix_v6',
-        'version':         None,
-        'no_log_path':     True,
-        'results_subdir':  'results_time_gatv2_tf_nb_v6',
+        'results_subdir':  'results_time_gatv2_seq_gru_block_v2',
         'csv_file':        'results_suffix_time_gnn.csv',
     },
 }
@@ -314,7 +282,7 @@ def _run_one(log_file, log_name, results_dir, model, progress_file,
 # Main runner
 # ─────────────────────────────────────────────
 
-def run_all(model='suffix_time_v1', run_id=1, progress_file=None, logs_dir=None, workers=1,
+def run_all(model='suffix_v2', run_id=1, progress_file=None, logs_dir=None, workers=1,
             do_train=True, do_eval=True, force=False):
     if model not in MODEL_CONFIGS:
         raise ValueError(f"Unknown model {model!r}. Choose from: {list(MODEL_CONFIGS)}")
@@ -362,7 +330,7 @@ def run_all(model='suffix_time_v1', run_id=1, progress_file=None, logs_dir=None,
                 print(f"[LOG-FATAL] log={ln}\n{traceback.format_exc()}", flush=True)
 
 
-def run_all_repeats(model='suffix_time_v1', run_ids=(1, 2, 3, 4, 5), progress_file=None,
+def run_all_repeats(model='suffix_v2', run_ids=(1, 2, 3, 4, 5), progress_file=None,
                     logs_dir=None, workers=1, do_train=True, do_eval=True, force=False):
     """Run `model` on all event logs for every run_id in `run_ids` using a single
     shared thread pool, so exactly `workers` subprocesses stay busy across the
@@ -426,9 +394,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--model",
-        default="suffix_time_v1",
+        default="suffix_v2",
         choices=sorted(MODEL_CONFIGS.keys()),
-        help="Which model to run (default: suffix_time_v1)",
+        help="Which model to run (default: suffix_v2)",
     )
     parser.add_argument(
         "--run-id",

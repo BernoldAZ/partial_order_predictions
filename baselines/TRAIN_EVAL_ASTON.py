@@ -227,7 +227,9 @@ def train_eval(log_name, run_id=1, results_dir=None, do_train=True, do_eval=True
     # Evaluation: identical to TRAIN_EVAL_BEST
     # -----------------------------------------------------------------------
     from BEST.inference_procedure_best import inference_loop
-    from TRAIN_EVAL_BEST import _build_suffix_graph, _graph_edit_similarity
+    from concurrent.futures import ProcessPoolExecutor
+    from partial_order_metrics import ges_exact_compute_sample, bucket_order_similarity
+    from TRAIN_EVAL_BEST import GES_WORKERS
 
     def load_dict(path_name):
         with open(path_name, 'rb') as file:
@@ -291,37 +293,52 @@ def train_eval(log_name, run_id=1, results_dir=None, do_train=True, do_eval=True
         'next_act_f1_weighted': round(next_f1, 6),
     })
     _nb_labels = torch.load(os.path.join(sutran_dir, 'test_new_block_labels.pt'), weights_only=False)
-    _ges_vals = []
+    _po_args = []
     _suf_lens = []
     for _i in range(len(_acts)):
         _end_pos = (_acts[_i] == eos).nonzero(as_tuple=True)[0]
         _pl = int(_end_pos[0]) if len(_end_pos) > 0 else W
         _al = int((_act_lbl[_i] == eos).nonzero(as_tuple=True)[0][0])
         _suf_lens.append(_al)
-        _G_pred = _build_suffix_graph(_acts[_i, :_pl].tolist(), [True] * _pl)
-        _G_true = _build_suffix_graph(_act_lbl[_i, :_al].tolist(),
-                                      (_nb_labels[_i, :_al] > 0.5).tolist())
-        _ges_vals.append(_graph_edit_similarity(_G_pred, _G_true))
+        _po_args.append((_acts[_i, :_pl].tolist(), [True] * _pl,
+                         _act_lbl[_i, :_al].tolist(),
+                         (_nb_labels[_i, :_al] > 0.5).tolist()))
+    with ProcessPoolExecutor(max_workers=GES_WORKERS) as _pool:
+        _ges_vals = list(_pool.map(ges_exact_compute_sample, _po_args))
+    # bucket_order_similarity -> (order_sim, content_f1, combined) per sample
+    _bo_order, _bo_content, _bo_comb = (
+        list(_v) for _v in zip(*[bucket_order_similarity(*_a) for _a in _po_args]))
     ges = sum(_ges_vals) / len(_ges_vals) if _ges_vals else 1.0
     torch.save(torch.tensor(_ges_vals, dtype=torch.float32),
                os.path.join(results_path, 'ges_per_sample.pt'))
-    avg_results_dict.update({'ges_approx': round(ges, 6)})
+    torch.save({'bo_order_sim':  torch.tensor(_bo_order,   dtype=torch.float32),
+                'bo_content_f1': torch.tensor(_bo_content, dtype=torch.float32),
+                'bo_combined':   torch.tensor(_bo_comb,    dtype=torch.float32)},
+               os.path.join(results_path, 'bo_per_sample.pt'))
+    avg_results_dict.update({
+        'ges_exact':     round(ges, 6),
+        'bo_order_sim':  round(sum(_bo_order)   / len(_bo_order),   6),
+        'bo_content_f1': round(sum(_bo_content) / len(_bo_content), 6),
+        'bo_combined':   round(sum(_bo_comb)    / len(_bo_comb),    6),
+    })
     with open(os.path.join(results_path, 'averaged_results.pkl'), 'wb') as f:
         pickle.dump(avg_results_dict, f)
 
     # ── Per-length result dictionaries (GES appended, as in TRAIN_EVAL_BEST) ─
     _pref_lens = (test_dataset[num_categoricals_pref - 1] != 0).sum(dim=1).tolist()
-    _ges_by_pref = {}
-    _ges_by_suf = {}
-    for _plen, _slen, _gval in zip(_pref_lens, _suf_lens, _ges_vals):
-        _ges_by_pref.setdefault(int(_plen), []).append(_gval)
-        _ges_by_suf.setdefault(_slen, []).append(_gval)
-    for _plen, _gvals in _ges_by_pref.items():
+    # Appended per length: [..., ges_exact, bo_order, bo_content, bo_combined]
+    _po_by_pref = {}
+    _po_by_suf = {}
+    for _plen, _slen, *_vals in zip(_pref_lens, _suf_lens, _ges_vals,
+                                    _bo_order, _bo_content, _bo_comb):
+        _po_by_pref.setdefault(int(_plen), []).append(_vals)
+        _po_by_suf.setdefault(_slen, []).append(_vals)
+    for _plen, _rows in _po_by_pref.items():
         if _plen in results_dict_pref:
-            results_dict_pref[_plen].append(sum(_gvals) / len(_gvals))
-    for _slen, _gvals in _ges_by_suf.items():
+            results_dict_pref[_plen].extend(sum(_c) / len(_c) for _c in zip(*_rows))
+    for _slen, _rows in _po_by_suf.items():
         if _slen in results_dict_suf:
-            results_dict_suf[_slen].append(sum(_gvals) / len(_gvals))
+            results_dict_suf[_slen].extend(sum(_c) / len(_c) for _c in zip(*_rows))
     with open(os.path.join(results_path, 'prefix_length_results_dict.pkl'), 'wb') as f:
         pickle.dump(results_dict_pref, f)
     with open(os.path.join(results_path, 'suffix_length_results_dict.pkl'), 'wb') as f:

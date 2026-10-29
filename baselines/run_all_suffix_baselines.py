@@ -35,8 +35,8 @@ Train / eval control (mirrors approach_suffix_v2/run_all_suffix.py):
         # then evaluate (fails if no saved model exists for that run id)
 
 Usage with docker (run from baselines/):
-    docker run -it --rm -v $(pwd):/app --gpus all ppm-sutran-best python3 run_all_suffix_baselines.py --workers 3 --run-id 1
-    docker run -it --rm -v $(pwd):/app --gpus all ppm-sutran-best python3 run_all_suffix_baselines.py --workers 8 --run-ids 1 2 3 4 5
+    docker run -it --rm -v $(pwd):/app --gpus all ppm-sutran-best python3 run_all_suffix_baselines.py --workers 15 --run-id 1
+    docker run -it --rm -v $(pwd):/app --gpus all ppm-sutran-best python3 run_all_suffix_baselines.py --workers 2 --run-ids 1 2 3 4 5
 
 Arguments
 -----
@@ -64,10 +64,10 @@ from datetime import datetime
 # ---------------------------------------------------------------------------
 
 MODELS = [
-    #"SuTraN_DA",
+    "SuTraN_DA",
     "SuTraN_NDA",
     #"CRTP_LSTM_DA",
-    "CRTP_LSTM_NDA",
+    #"CRTP_LSTM_NDA",
     "ED_LSTM",
     "SEP_LSTM",
     "BEST",

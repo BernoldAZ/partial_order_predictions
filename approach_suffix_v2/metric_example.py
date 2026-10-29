@@ -15,7 +15,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # find models_v2 from any working directory
-from models_v2.partial_order_metrics import bucket_order_similarity, ges_compute_sample
+from models_v2.partial_order_metrics import bucket_order_similarity, ges_compute_sample, ges_exact_compute_sample
 
 TRUTH = "A->{B,C,D}->E->{F,G}"
 
@@ -37,6 +37,7 @@ CASES = [
     ("Deletion",    "Missing D (in block)",   "A->{B,C}->E->{F,G}"),
     ("Deletion",    "Missing E (sequential)", "A->{B,C,D}->{F,G}"),
     ("Deletion",    "Early stop",             "A->{B,C,D}"),
+    ("Deletion",    "Only sequential",        "A->B->E->F"),
     ("Deletion",    "Empty prediction",       ""),
     ("Mixed",       "Sequential + missing D", "A->B->C->E->{F,G}"),
     ("Mixed",       "Merge + substitution",   "A->{B,C,Y,E}->{F,G}"),
@@ -90,6 +91,7 @@ def _bo(pred, truth):
 METRICS = {
     "DL":          lambda pred, truth: dl_similarity(pred[0], truth[0]),
     "GES":         lambda pred, truth: ges_compute_sample((pred[0], pred[1], truth[0], truth[1])),
+    "GES exact":   lambda pred, truth: ges_exact_compute_sample((pred[0], pred[1], truth[0], truth[1])),
     "BO combined": lambda pred, truth: _bo(pred, truth)[2],
     "BO order":    lambda pred, truth: _bo(pred, truth)[0],
     "BO content":  lambda pred, truth: _bo(pred, truth)[1],
