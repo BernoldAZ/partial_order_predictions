@@ -264,3 +264,23 @@ Options: `--runs 1,2,3,4,5`, `--run N`, `--alpha 0.05`. Outputs go to
 `cd_<table>_<metric>.png`.
 
 ---
+
+## 7. Check partial orders in other event logs
+
+`Check_logs.ipynb` (repository root, `ml-jupyter-gpu`) measures how much partial order an event log
+contains, i.e. how often events in a case share a timestamp. Use it to check whether another log is
+suitable for this approach:
+
+1. Download event logs, e.g. from <https://www.processmining.org/> or <https://data.4tu.nl/>.
+2. Create a folder `all_event_logs/` in the repository root and save the logs there as `.xes` or
+   `.xes.gz` files. The folder is git-ignored.
+3. Open `Check_logs.ipynb` and run the cells.
+
+For every log, the notebook reports:
+- the number of traces and variants
+- the share of traces that contain events with the same timestamp (`multiple_ts_%`)
+- the share of concurrent activities (`%_conc_act`)
+- block sizes and trace lengths
+
+The table is saved to `all_logs_analysis.csv`. The last cells of the notebook draw the block graph of
+single traces from a log.
