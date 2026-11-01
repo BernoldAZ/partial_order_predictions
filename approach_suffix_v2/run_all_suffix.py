@@ -197,7 +197,7 @@ _CLEANUP = (
 )
 
 
-def _build_code(log_path, log_name, results_dir, model, use_cpu=False,
+def _build_code(log_path, log_name, results_dir, model, run_id, use_cpu=False,
                 do_train=True, do_eval=True):
     cfg       = MODEL_CONFIGS[model]
     module    = cfg['module']
@@ -210,6 +210,7 @@ def _build_code(log_path, log_name, results_dir, model, use_cpu=False,
         call_args = f"log_name={log_name!r}, results_dir={results_dir!r}"
     else:
         call_args = f"log_path={log_path!r}, log_name={log_name!r}, results_dir={results_dir!r}"
+    call_args += f", run_id={run_id}"
     if not do_train:
         call_args += ", do_train=False"
     if not do_eval:
@@ -262,16 +263,16 @@ def _log_progress(progress_file, status, log_name, detail=None):
 # Per-job runner
 # ─────────────────────────────────────────────
 
-def _run_one(log_file, log_name, results_dir, model, progress_file,
+def _run_one(log_file, log_name, results_dir, model, run_id, progress_file,
              do_train=True, do_eval=True):
     _log_progress(progress_file, "RUNNING", log_name)
     try:
         try:
-            _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=False,
+            _run_subprocess(_build_code(log_file, log_name, results_dir, model, run_id, use_cpu=False,
                                         do_train=do_train, do_eval=do_eval))
         except _OOMError:
             _log_progress(progress_file, "OOM→CPU", log_name)
-            _run_subprocess(_build_code(log_file, log_name, results_dir, model, use_cpu=True,
+            _run_subprocess(_build_code(log_file, log_name, results_dir, model, run_id, use_cpu=True,
                                         do_train=do_train, do_eval=do_eval))
         _log_progress(progress_file, "DONE", log_name)
     except Exception:
@@ -318,7 +319,7 @@ def run_all(model='suffix_v2', run_id=1, progress_file=None, logs_dir=None, work
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
-            pool.submit(_run_one, lf, ln, results_dir, model, progress_file,
+            pool.submit(_run_one, lf, ln, results_dir, model, run_id, progress_file,
                         do_train, do_eval): ln
             for lf, ln in jobs
         }
@@ -356,7 +357,7 @@ def run_all_repeats(model='suffix_v2', run_ids=(1, 2, 3, 4, 5), progress_file=No
     print(f"Total logs         : {len(EVENT_LOGS)}")
     print(f"Logs directory     : {logs_dir}\n", flush=True)
 
-    jobs = []  # (log_file, log_name, results_dir, progress_file)
+    jobs = []  # (log_file, log_name, results_dir, run_id, progress_file)
     for run_id in run_ids:
         pf = progress_file or _progress_file(model, run_id)
         rd = _results_dir(model, run_id)
@@ -369,12 +370,12 @@ def run_all_repeats(model='suffix_v2', run_ids=(1, 2, 3, 4, 5), progress_file=No
                 print(f"[MISSING] run={run_id} | log={log_name} — not found in "
                       f"{logs_dir} (.xes.gz or .xes)", flush=True)
                 continue
-            jobs.append((log_file, log_name, rd, pf))
+            jobs.append((log_file, log_name, rd, run_id, pf))
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
-            pool.submit(_run_one, lf, ln, rd, model, pf, do_train, do_eval): ln
-            for lf, ln, rd, pf in jobs
+            pool.submit(_run_one, lf, ln, rd, model, rid, pf, do_train, do_eval): ln
+            for lf, ln, rd, rid, pf in jobs
         }
         for fut in concurrent.futures.as_completed(futures):
             try:

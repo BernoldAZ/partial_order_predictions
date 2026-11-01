@@ -1,108 +1,266 @@
-# Partial_Order_Predictions
+# Partial-Order Suffix Prediction
 
-## Logs used for training and evaluation
+Predictive process monitoring for event logs with **partial orders**: events in a case that share
+a timestamp form a concurrent block. Our approach (**POPS**) encodes the prefix as a block graph
+(GATv2 encoder) and decodes the suffix event by event with a GRU. Each step predicts the activity
+and a *new-block* bit, so the predicted suffix is itself a partial order.
 
-BPIC15_1
-BPIC15_2
-BPIC15_3
-BPIC15_4
-BPIC15_5
-RequestForPayment
-Sepsis
-Hospital_Billing
-BPI Challenge 2017
-DomesticDeclarations
-BPI_Challenge_2012
-Road_Traffic_Fine_Management_Process
-PrepaidTravelCost
-InternationalDeclarations
+We compare POPS against the suffix-prediction baselines SEP-LSTM, ED-LSTM and SuTraN (NDA), plus an
+Oracle-Sequential reference point. All of them use the same splits and the same metric code.
 
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+## Repository layout
 
 ```
-cd existing_repo
-git remote add origin https://git01lab.cs.univie.ac.at/bernolda00/partial_order_predictions.git
-git branch -M main
-git push -uf origin main
+partial_order_predictions/
+├── dockerfile                 # image "ml-jupyter-gpu"  (approach, results, statistics)
+├── requirements.txt
+├── evaluate_suffix.ipynb      # results tables, ablation tables, plots, metric example
+├── Check_logs.ipynb           # exploratory statistics on concurrency in the logs
+├── approach_suffix_v2/        # our approach (POPS)
+│   ├── Logs/                  # raw event logs (.xes / .xes.gz)
+│   ├── Generate_splits.ipynb  # preprocessing of the approach
+│   ├── data_creation/         # graph / sequence dataset builders (+ Preprocessing/)
+│   ├── models_v2/             # models, train/eval scripts, metrics, oracle
+│   ├── run_all_suffix.py      # train + evaluate a variant on all logs, 5 runs
+│   ├── run_eval_flipped.py    # ablation: evaluate on prefix-flipped test sets
+│   ├── run_eval_random.py     # ablation: evaluate on prefix-shuffled test sets
+│   ├── generate_baseline_results.py   # main results table
+│   ├── generate_ablation_results.py   # ablation tables
+│   └── significance_tests.py          # Friedman + Nemenyi / CD diagrams
+└── baselines/
+    ├── dockerfile             # image "ppm-sutran-best"  (baselines)
+    ├── requirements.txt
+    ├── Logs/                  # raw event logs (same files as approach_suffix_v2/Logs)
+    ├── run_evaluate_suffix_baselines.ipynb  # preprocessing of the baselines
+    ├── create_general_data.py # preprocessing (SuTraN pipeline)
+    ├── run_all_suffix_baselines.py          # train + evaluate all baselines on all logs, 5 runs
+    ├── eval_ttne_partial_order.py           # partial order from predicted TTNE -> GES / BOS
+    └── SuTraN/, LSTM_seq2seq/, OneStepAheadBenchmarks/, ...  # model code
 ```
 
-## Integrate with your tools
+## Event logs
 
-* [Set up project integrations](https://git01lab.cs.univie.ac.at/bernolda00/partial_order_predictions/-/settings/integrations)
+We use these 8 logs:
 
-## Collaborate with your team
+| Log name (file stem)    | Source |
+|-------------------------|--------|
+| `BPIC15_1` … `BPIC15_5` | BPI Challenge 2015, municipalities 1–5 |
+| `BPI_Challenge_2012_A`  | BPI Challenge 2012, `A_` sub-process |
+| `BPI_Challenge_2012_O`  | BPI Challenge 2012, `O_` sub-process |
+| `Sepsis`                | Sepsis Cases |
 
-* [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+Put the files (`<name>.xes` or `<name>.xes.gz`) in **both** `approach_suffix_v2/Logs/` and
+`baselines/Logs/`. The two folders must contain identical files. The file stem is used as the log name everywhere.
 
-## Test and Deploy
+## Metrics
 
-Use the built-in continuous integration in GitLab.
+All metrics compare the predicted suffix with the ground-truth suffix. **The END token is
+excluded from every metric**: both suffixes are cut at their first END token.
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+- **GES**: graph edit similarity between the block graphs of the two suffixes. It uses the exact GED, solved as a binary program with PuLP/CBC.
+- **BOS**: bucket-order similarity, i.e. the Kendall distance with penalty ½ on the shared activity occurrences (*BOS order*), multiplied by the content F1 (*BOS content*).
+- **DLS**: normalised Damerau-Levenshtein similarity of the activity sequences.
 
-***
+The metric code is `partial_order_metrics.py`, and the same file is used in both folders. The baselines predict
+a total order, so we derive their blocks from the predicted time-till-next-event (see
+[Run the baselines](#4-run-the-baselines)).
 
-# Editing this README
+---
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+## 1. Docker and Jupyter
 
-## Suggestions for a good README
+You need two images. Both expose JupyterLab on port 8887. On PowerShell, write `${PWD}` instead of `$(pwd)`.
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+### `ml-jupyter-gpu`: approach, results, statistics
 
-## Name
-Choose a self-explaining name for your project.
+Built from the root `dockerfile` (PyTorch 2.4, CUDA 12.4, PyTorch Geometric). Build and run it from the
+**repository root**:
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+```bash
+docker build -t ml-jupyter-gpu .
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+# JupyterLab on http://localhost:8887
+docker run -it --rm --gpus all -p 8887:8887 -v $(pwd):/workspace ml-jupyter-gpu
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+# or run a single script
+docker run -it --rm --gpus all -v $(pwd):/workspace ml-jupyter-gpu python approach_suffix_v2/run_all_suffix.py --help
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### `ppm-sutran-best`: baselines
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Built from `baselines/dockerfile` (CUDA 11.8, PyTorch 2.1). Build and run it from **inside `baselines/`**:
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+```bash
+cd baselines
+docker build -t ppm-sutran-best .
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+# JupyterLab on http://localhost:8887
+docker run -it --rm --gpus all -p 127.0.0.1:8887:8887 -v $(pwd):/app ppm-sutran-best
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+# or run a single script
+docker run -it --rm --gpus all -v $(pwd):/app ppm-sutran-best python3 run_all_suffix_baselines.py --help
+```
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+Inside JupyterLab, open a notebook and run its cells from top to bottom. Each notebook already uses
+the working directory its paths expect.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+---
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+## 2. Preprocessing
 
-## License
-For open source projects, say how it is licensed.
+Both sides use the same SuTraN preprocessing pipeline with the same defaults:
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+- chronological out-of-time split, `preferred` mode
+- 20 % test, and 20 % of the remaining cases for validation
+- window size = 98.5th percentile of the case lengths
+- standardisation with training statistics
+
+So the train / validation / test partitions are identical.
+
+### Approach (`ml-jupyter-gpu`)
+
+Open `approach_suffix_v2/Generate_splits.ipynb` and run:
+
+| Cell | Output in `approach_suffix_v2/results_per_log/<log>/` | Needed for |
+|------|-------------------------------------------------------|------------|
+| *Graph input* | `{train,val,test}_graphdataset.pt`, summary `split_summary.csv` | main approach, decoder ablation |
+| *Sequential* | `{train,val,test}_seqgraphdataset.pt`, `split_summary_seq.csv` | input ablation |
+| *Sequential prefix random order* | `test_seqgraphdataset_prefixrandom.pt` | input ablation |
+| *Sequential prefix flipped order* | `test_seqgraphdataset_prefixflip.pt` | input ablation |
+
+### Baselines (`ppm-sutran-best`)
+
+Open `baselines/run_evaluate_suffix_baselines.ipynb` and run the cell *Preproses all datasets sutran*.
+It writes the tensors to `baselines/results_per_log/<log>/` and the summary to
+`split_summary_sutran_best.csv`. You can skip this step: `run_all_suffix_baselines.py` builds any missing
+datasets itself before training.
+
+**Check:** `approach_suffix_v2/split_summary.csv` and `baselines/split_summary_sutran_best.csv`
+must report the same `n_train / train_pairs / n_val / val_pairs / n_test / test_pairs` per log.
+
+---
+
+## 3. Run the approach (POPS)
+
+In `ml-jupyter-gpu`, from the repository root:
+
+```bash
+python approach_suffix_v2/run_all_suffix.py --model suffix_v2 --run-ids 1 2 3 4 5 --workers 8
+```
+
+- Each log runs in its own subprocess. If a log runs out of GPU memory, it is retried on the CPU.
+- Run *N* uses random seed *N*.
+- Results go to `approach_suffix_v2/results_time_gatv2_gru_nb_v2_actnb/run_N/`:
+  - `results_suffix_time_gnn.csv`: one row per log
+  - the trained model `<log>_gatv2_gru_nb_v2_actnb.pt`
+  - per-sample metrics `<log>_per_sample_metrics.pt`
+  - per prefix/suffix-length dicts
+- Logs that already have a result are skipped, so an interrupted run can simply be restarted.
+
+| Flag | Effect |
+|------|--------|
+| `--model` | `suffix_v2` (POPS), `suffix_v2_seq`, `suffix_v2_block`, `suffix_v2_block_seq` |
+| `--run-ids 1 2 3 4 5` | several repetitions with one shared worker pool (`--run-id N` for one) |
+| `--workers N` | logs trained in parallel |
+| `--no-train` | load the saved model instead of training |
+| `--no-eval` | only time the inference (writes `inference_times.csv`) |
+| `--force` | re-evaluate even if a result exists (implies `--no-train`) |
+
+**Oracle-Sequential** is a reference point. It predicts every activity correctly, but places each event in its own block.
+It needs no training:
+
+```bash
+python approach_suffix_v2/models_v2/run_oracle_sequential.py
+# -> approach_suffix_v2/results_oracle_sequential/run_1/results_suffix_time_gnn.csv
+```
+
+---
+
+## 4. Run the baselines
+
+In `ppm-sutran-best`, from inside `baselines/`:
+
+```bash
+# 1. train + evaluate every model on every log, 5 repetitions (seed = run id)
+python3 run_all_suffix_baselines.py --run-ids 1 2 3 4 5 --workers 8
+
+# 2. derive the partial order from the predicted TTNE and compute GES / BOS
+python3 eval_ttne_partial_order.py --workers 10 --chunksize 1
+```
+
+- Step 1 writes `results_per_log/<log>/<MODEL>_results_runN/TEST_SET_RESULTS/`, including
+  `averaged_results.pkl` (with `'DL sim'`) and the decoded predictions. The flags `--no-train`,
+  `--no-eval` and `--force` work as for the approach.
+- Step 2 builds the baselines' blocks: suffix event *j* joins the block of event *j−1* when its predicted TTNE is ≤ *X*.
+  - *X* is rate-matched per log, model and run: it is the *q*-quantile of the predicted test TTNEs, where *q* is the fraction of concurrent events in the training suffixes. No test labels are used.
+  - It writes `po_ttne_results.pkl` next to each run and the summary `po_ttne_summary.csv`.
+  - Optional: `python3 eval_ttne_partial_order_zero.py` compares this threshold with a fixed threshold *X = 0* (`po_ttne_zero_vs_theta.csv`).
+
+The comparison uses **SEP-LSTM, ED-LSTM and SuTraN (NDA)**. The scripts also contain SuTraN (DA),
+BEST, CRTP-LSTM and ASTON (`create_aston_data.py`, `TRAIN_EVAL_ASTON.py`). These are not part of the reported results.
+
+---
+
+## 5. Ablation tests
+
+All ablations run in `ml-jupyter-gpu`, from the repository root. They reuse the same 5 runs.
+
+**Input structure.** The decoder is the same and only the prefix encoding changes. The variants are block graph (POPS), sequential chain, and sequential chain with the
+within-block order of the prefix reversed or randomly shuffled. The prefix is changed only on the test set, after the
+prefix/suffix cut, so the labels are unchanged.
+
+```bash
+python approach_suffix_v2/run_all_suffix.py   --model suffix_v2_seq --run-ids 1 2 3 4 5 --workers 8
+python approach_suffix_v2/run_eval_flipped.py --model suffix_v2_seq_prefixflip   --workers 8
+python approach_suffix_v2/run_eval_random.py  --model suffix_v2_seq_prefixrandom --workers 8
+```
+
+The flip and random evaluations load the trained `suffix_v2_seq` models. They write
+`results_suffix_time_gnn_prefixflip.csv` and `results_suffix_time_gnn_prefixrandom.csv` next to the
+normal results.
+
+**Decoder structure.** This compares the event-at-a-time decoder (POPS) with a block-at-a-time decoder, on the same graph input:
+
+```bash
+python approach_suffix_v2/run_all_suffix.py --model suffix_v2_block --run-ids 1 2 3 4 5 --workers 8
+```
+
+---
+
+## 6. Results and statistical tests
+
+### Tables (`evaluate_suffix.ipynb`, `ml-jupyter-gpu`)
+
+Open `evaluate_suffix.ipynb` in the repository root:
+
+- **Evaluate metrics using running example**: the GES / BOS / DLS values on a toy suffix.
+- **Compare with baselines**: `generate_baseline_results.run("ttne")`.
+  - It takes the mean ± std over the runs, per log, for POPS, Oracle-Sequential and the baselines. The baselines' GES/BOS come from the TTNE-derived partial order.
+  - Output: `approach_suffix_v2/baseline_results.txt` (quality) and `approach_suffix_v2/scalability_results.txt` (training / inference time, parameters).
+- **Ablation tests**: `generate_ablation_results.run()` prints the input and decoder ablation tables.
+- **Results: per prefix-suffix len**: GES / BOS as a function of suffix length. Output: `approach_suffix_v2/ges_bos_*.pdf`.
+
+### Significance tests
+
+From the repository root (`ml-jupyter-gpu`):
+
+```bash
+python approach_suffix_v2/significance_tests.py all
+```
+
+- For each metric (GES, BOS, DLS), the test runs across the 8 logs (block = log, score = mean over runs).
+- It runs a Friedman test, then a Nemenyi post-hoc test with a critical-difference diagram if the Friedman test is significant.
+- With only two models, it runs a sign test instead.
+
+| Mode | Comparison |
+|------|------------|
+| `main` | POPS vs SEP-LSTM, ED-LSTM, SuTraN (NDA) |
+| `ablation-input` | Graph vs Seq vs SeqFlip (`--input-variants` to choose) |
+| `ablation-decoder` | event-at-a-time vs block-at-a-time decoder (GES, BOS) |
+| `all` | all three |
+
+Options: `--runs 1,2,3,4,5`, `--run N`, `--alpha 0.05`. Outputs go to
+`approach_suffix_v2/significance_tests/`: `significance_tests.txt`, `significance_tests.csv` and
+`cd_<table>_<metric>.png`.
+
+---
